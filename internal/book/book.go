@@ -95,6 +95,64 @@ func titleCase(s string) string {
 	}, s)
 }
 
+// FormatParagraphs takes raw lines and produces display-ready lines with
+// paragraph indentation and spacing. Each non-empty raw line is treated as
+// a paragraph. Non-first paragraphs get a 2-space indent on their first
+// wrapped line, and a blank line is inserted between paragraphs.
+func FormatParagraphs(rawLines []string, width int) []string {
+	if width < 1 {
+		width = 80
+	}
+
+	var result []string
+	firstParagraph := true
+
+	for _, raw := range rawLines {
+		trimmed := strings.TrimSpace(raw)
+
+		// Blank lines in source: preserve as spacing
+		if trimmed == "" {
+			// Only add a blank line if we haven't just added one
+			if len(result) > 0 && result[len(result)-1] != "" {
+				result = append(result, "")
+			}
+			continue
+		}
+
+		// Insert blank line between paragraphs (not before the first)
+		if !firstParagraph {
+			if len(result) > 0 && result[len(result)-1] != "" {
+				result = append(result, "")
+			}
+		}
+
+		// Detect if this is a heading or special line (don't indent those)
+		isSpecial := strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---") || strings.HasPrefix(trimmed, "    ")
+
+		// For non-first, non-special paragraphs: wrap at width-2 to leave room
+		// for the 2-space indent, then prepend it to the first line.
+		shouldIndent := !firstParagraph && !isSpecial
+		wrapWidth := width
+		if shouldIndent {
+			wrapWidth = width - 2
+			if wrapWidth < 10 {
+				wrapWidth = 10
+			}
+		}
+
+		wrapped := WrapLines([]string{raw}, wrapWidth)
+
+		if shouldIndent && len(wrapped) > 0 {
+			wrapped[0] = "  " + wrapped[0]
+		}
+
+		result = append(result, wrapped...)
+		firstParagraph = false
+	}
+
+	return result
+}
+
 // Paginate splits raw lines into pages of the given dimensions, wrapping long lines.
 func Paginate(rawLines []string, width, height int) []Page {
 	if width < 1 {
@@ -104,20 +162,20 @@ func Paginate(rawLines []string, width, height int) []Page {
 		height = 20
 	}
 
-	wrapped := WrapLines(rawLines, width)
-	if len(wrapped) == 0 {
+	formatted := FormatParagraphs(rawLines, width)
+	if len(formatted) == 0 {
 		// Return a single empty page for empty content
 		return []Page{{Lines: []string{}, Links: []Link{}}}
 	}
 
 	var pages []Page
-	for i := 0; i < len(wrapped); i += height {
+	for i := 0; i < len(formatted); i += height {
 		end := i + height
-		if end > len(wrapped) {
-			end = len(wrapped)
+		if end > len(formatted) {
+			end = len(formatted)
 		}
 		pageLines := make([]string, end-i)
-		copy(pageLines, wrapped[i:end])
+		copy(pageLines, formatted[i:end])
 		pages = append(pages, Page{Lines: pageLines, Links: []Link{}})
 	}
 	return pages
@@ -220,16 +278,17 @@ func (b *Book) PageForAnchor(anchor string) int {
 		return -1
 	}
 
-	// We need to figure out which page this raw line ended up on after wrapping.
-	// Rewrap lines up to lineIdx to count how many wrapped lines precede it.
-	wrappedBefore := 0
-	for i := 0; i < lineIdx && i < len(b.RawLines); i++ {
-		w := WrapLines([]string{b.RawLines[i]}, b.PageWidth)
-		wrappedBefore += len(w)
-	}
-
 	if b.PageHeight <= 0 {
 		return 0
 	}
-	return wrappedBefore / b.PageHeight
+
+	// Find the formatted line index for this raw line by using the map
+	fmtToRaw := BuildFormattedToRawMap(b.RawLines, b.PageWidth)
+	for fi, ri := range fmtToRaw {
+		if ri == lineIdx {
+			return fi / b.PageHeight
+		}
+	}
+
+	return -1
 }

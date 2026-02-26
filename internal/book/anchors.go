@@ -66,53 +66,96 @@ func ExtractLinks(line string) []Link {
 }
 
 // AttachLinks scans pages for internal links and attaches them.
-func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
-	// First, build a mapping from wrapped line index to original line index
-	wrapped := WrapLines(rawLines, width)
+// BuildFormattedToRawMap builds a mapping from formatted line indices to raw
+// line indices. Blank lines inserted by formatting map to -1.
+func BuildFormattedToRawMap(rawLines []string, width int) []int {
+	formatted := FormatParagraphs(rawLines, width)
+	fmtToRaw := make([]int, len(formatted))
+	for i := range fmtToRaw {
+		fmtToRaw[i] = -1
+	}
 
-	wrappedToRaw := make([]int, len(wrapped))
-	wi := 0
-	for ri, line := range rawLines {
-		w := WrapLines([]string{line}, width)
-		for range w {
-			if wi < len(wrappedToRaw) {
-				wrappedToRaw[wi] = ri
-				wi++
+	// Walk rawLines and formatted in lockstep.
+	// FormatParagraphs processes rawLines sequentially, so the formatted
+	// output for raw line ri appears as a contiguous block in the output.
+	fi := 0
+	firstParagraph := true
+	for ri, raw := range rawLines {
+		trimmed := strings.TrimSpace(raw)
+
+		if trimmed == "" {
+			// Blank raw line may have produced a spacer
+			if fi < len(formatted) && formatted[fi] == "" {
+				fmtToRaw[fi] = ri
+				fi++
+			}
+			continue
+		}
+
+		// Non-first paragraphs have a blank spacer before content
+		if !firstParagraph && fi < len(formatted) && formatted[fi] == "" {
+			fmtToRaw[fi] = -1
+			fi++
+		}
+
+		// Determine how many formatted lines this raw line produced
+		isSpecial := strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---") || strings.HasPrefix(trimmed, "    ")
+		wrapWidth := width
+		if !firstParagraph && !isSpecial {
+			wrapWidth = width - 2
+			if wrapWidth < 10 {
+				wrapWidth = 10
 			}
 		}
+		w := WrapLines([]string{raw}, wrapWidth)
+
+		for range w {
+			if fi < len(fmtToRaw) {
+				fmtToRaw[fi] = ri
+				fi++
+			}
+		}
+
+		firstParagraph = false
 	}
+	return fmtToRaw
+}
+
+func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
+	fmtToRaw := BuildFormattedToRawMap(rawLines, width)
 
 	for pi := range pages {
 		var pageLinks []Link
 		startLine := pi * height
 		for li, line := range pages[pi].Lines {
-			globalWrappedIdx := startLine + li
-			if globalWrappedIdx >= len(wrappedToRaw) {
+			globalIdx := startLine + li
+			if globalIdx >= len(fmtToRaw) {
 				continue
 			}
-			rawIdx := wrappedToRaw[globalWrappedIdx]
+			rawIdx := fmtToRaw[globalIdx]
+			if rawIdx < 0 || rawIdx >= len(rawLines) {
+				continue // spacer line
+			}
 			rawLine := rawLines[rawIdx]
 			links := ExtractLinks(rawLine)
 			for _, lnk := range links {
 				lnk.LineOnPage = li
 				pageLinks = append(pageLinks, lnk)
 			}
-			// Also check if the wrapped line itself has links
-			if rawIdx < len(rawLines) {
-				lineLinks := ExtractLinks(line)
-				for _, lnk := range lineLinks {
-					lnk.LineOnPage = li
-					// Deduplicate
-					found := false
-					for _, existing := range pageLinks {
-						if existing.Target == lnk.Target && existing.LineOnPage == lnk.LineOnPage {
-							found = true
-							break
-						}
+			// Also check the formatted line itself for links
+			lineLinks := ExtractLinks(line)
+			for _, lnk := range lineLinks {
+				lnk.LineOnPage = li
+				// Deduplicate
+				found := false
+				for _, existing := range pageLinks {
+					if existing.Target == lnk.Target && existing.LineOnPage == lnk.LineOnPage {
+						found = true
+						break
 					}
-					if !found {
-						pageLinks = append(pageLinks, lnk)
-					}
+				}
+				if !found {
+					pageLinks = append(pageLinks, lnk)
 				}
 			}
 		}

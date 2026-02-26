@@ -209,10 +209,12 @@ func TestAdversarial_WrapWidth0(t *testing.T) {
 // ==================== BUG HUNT: Paginate with height=1 ====================
 
 func TestAdversarial_PaginateHeight1(t *testing.T) {
+	// 3 raw lines -> "a", "", "  b", "", "  c" = 5 formatted lines
+	// At height 1: 5 pages, each with 1 line
 	lines := []string{"a", "b", "c"}
 	pages := Paginate(lines, 80, 1)
-	if len(pages) != 3 {
-		t.Errorf("expected 3 pages at height 1, got %d", len(pages))
+	if len(pages) != 5 {
+		t.Errorf("expected 5 pages at height 1 (3 content + 2 spacers), got %d", len(pages))
 	}
 	for i, p := range pages {
 		if len(p.Lines) != 1 {
