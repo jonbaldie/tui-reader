@@ -253,8 +253,7 @@ func (m Model) renderContent() string {
 
 	contentStyle := lipgloss.NewStyle().
 		Width(m.contentWidth).
-		Height(m.contentHeight).
-		Padding(0, 1)
+		Height(m.contentHeight)
 
 	// Render each line
 	var rendered []string
