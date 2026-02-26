@@ -70,8 +70,8 @@ func (m Model) recalcLayout() Model {
 		m.contentWidth = 20
 	}
 
-	// Content height: terminal height minus header (3) and footer (3)
-	m.contentHeight = m.termHeight - 6
+	// Content height: terminal height minus header (2), footer (3), and top/bottom padding (2)
+	m.contentHeight = m.termHeight - 7
 	if m.contentHeight < 5 {
 		m.contentHeight = 5
 	}
@@ -196,11 +196,12 @@ func (m Model) View() string {
 	content := m.renderContent()
 	footer := m.renderFooter()
 
-	// Stack vertically and center horizontally
+	// Stack vertically and center horizontally in terminal
 	full := lipgloss.JoinVertical(lipgloss.Center, header, content, footer)
 
-	// Center in terminal
-	return lipgloss.Place(m.termWidth, m.termHeight, lipgloss.Center, lipgloss.Center, full)
+	// Place with horizontal centering; use top position so we control vertical padding
+	// Add 1 empty line top padding for symmetry with the bottom padding
+	return "\n" + lipgloss.Place(m.termWidth, m.termHeight-1, lipgloss.Center, lipgloss.Top, full)
 }
 
 func (m Model) renderError() string {
