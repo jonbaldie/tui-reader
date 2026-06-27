@@ -65,74 +65,25 @@ func ExtractLinks(line string) []Link {
 	return links
 }
 
-// AttachLinks scans pages for internal links and attaches them.
-// BuildFormattedToRawMap builds a mapping from formatted line indices to raw
-// line indices. Blank lines inserted by formatting map to -1.
-func BuildFormattedToRawMap(rawLines []string, width int) []int {
-	formatted := FormatParagraphs(rawLines, width)
-	fmtToRaw := make([]int, len(formatted))
-	for i := range fmtToRaw {
-		fmtToRaw[i] = -1
-	}
-
-	// Walk rawLines and formatted in lockstep.
-	// FormatParagraphs processes rawLines sequentially, so the formatted
-	// output for raw line ri appears as a contiguous block in the output.
-	fi := 0
-	firstParagraph := true
-	for ri, raw := range rawLines {
-		trimmed := strings.TrimSpace(raw)
-
-		if trimmed == "" {
-			// Blank raw line may have produced a spacer
-			if fi < len(formatted) && formatted[fi] == "" {
-				fmtToRaw[fi] = ri
-				fi++
-			}
-			continue
-		}
-
-		// Non-first paragraphs have a blank spacer before content
-		if !firstParagraph && fi < len(formatted) && formatted[fi] == "" {
-			fmtToRaw[fi] = -1
-			fi++
-		}
-
-		// Determine how many formatted lines this raw line produced
-		isSpecial := strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---") || strings.HasPrefix(trimmed, "    ")
-		wrapWidth := width
-		if !firstParagraph && !isSpecial {
-			wrapWidth = width - 2
-			if wrapWidth < 10 {
-				wrapWidth = 10
-			}
-		}
-		w := WrapLines([]string{raw}, wrapWidth)
-
-		for range w {
-			if fi < len(fmtToRaw) {
-				fmtToRaw[fi] = ri
-				fi++
-			}
-		}
-
-		firstParagraph = false
-	}
-	return fmtToRaw
+func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
+	formatted := formatParagraphsWithProvenance(rawLines, width)
+	return attachLinks(pages, rawLines, formatted, height)
 }
 
-func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
-	fmtToRaw := BuildFormattedToRawMap(rawLines, width)
+func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int) []Page {
+	if height < 1 {
+		height = 20
+	}
 
 	for pi := range pages {
 		var pageLinks []Link
 		startLine := pi * height
 		for li, line := range pages[pi].Lines {
 			globalIdx := startLine + li
-			if globalIdx >= len(fmtToRaw) {
+			if globalIdx >= len(formatted) {
 				continue
 			}
-			rawIdx := fmtToRaw[globalIdx]
+			rawIdx := formatted[globalIdx].raw
 			if rawIdx < 0 || rawIdx >= len(rawLines) {
 				continue // spacer line
 			}

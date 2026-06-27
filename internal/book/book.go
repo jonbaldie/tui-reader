@@ -36,6 +36,8 @@ type Book struct {
 	Anchors    map[string]int // anchor name -> line index in RawLines
 	PageWidth  int
 	PageHeight int
+
+	rawLinePages map[int]int
 }
 
 // Load reads a file from disk and returns its raw content lines.
@@ -102,6 +104,13 @@ func titleCase(s string) string {
 type formattedLine struct {
 	text string
 	raw  int
+}
+
+type bookLayout struct {
+	formatted    []formattedLine
+	pages        []Page
+	rawLinePages map[int]int
+	height       int
 }
 
 // formatParagraphsWithProvenance is the single owner of the paragraph
@@ -182,14 +191,28 @@ func FormatParagraphs(rawLines []string, width int) []string {
 
 // Paginate splits raw lines into pages of the given dimensions, wrapping long lines.
 func Paginate(rawLines []string, width, height int) []Page {
-	if width < 1 {
-		width = 80
-	}
-	if height < 1 {
-		height = 20
-	}
+	return buildBookLayout(rawLines, width, height).pages
+}
 
-	formatted := FormatParagraphs(rawLines, width)
+func buildBookLayout(rawLines []string, width, height int) bookLayout {
+	formatted := formatParagraphsWithProvenance(rawLines, width)
+	height = normalizePageHeight(height)
+	return bookLayout{
+		formatted:    formatted,
+		pages:        paginateFormatted(formatted, height),
+		rawLinePages: rawLinePages(formatted, height),
+		height:       height,
+	}
+}
+
+func normalizePageHeight(height int) int {
+	if height < 1 {
+		return 20
+	}
+	return height
+}
+
+func paginateFormatted(formatted []formattedLine, height int) []Page {
 	if len(formatted) == 0 {
 		// Return a single empty page for empty content
 		return []Page{{Lines: []string{}, Links: []Link{}}}
@@ -202,8 +225,23 @@ func Paginate(rawLines []string, width, height int) []Page {
 			end = len(formatted)
 		}
 		pageLines := make([]string, end-i)
-		copy(pageLines, formatted[i:end])
+		for j, fl := range formatted[i:end] {
+			pageLines[j] = fl.text
+		}
 		pages = append(pages, Page{Lines: pageLines, Links: []Link{}})
+	}
+	return pages
+}
+
+func rawLinePages(formatted []formattedLine, height int) map[int]int {
+	pages := make(map[int]int)
+	for fi, fl := range formatted {
+		if fl.raw < 0 {
+			continue
+		}
+		if _, ok := pages[fl.raw]; !ok {
+			pages[fl.raw] = fi / height
+		}
 	}
 	return pages
 }
@@ -276,16 +314,17 @@ func NewBook(path string, width, height int) (*Book, error) {
 	}
 
 	anchors := ExtractAnchors(lines)
-	pages := Paginate(lines, width, height)
-	pages = AttachLinks(pages, lines, width, height)
+	layout := buildBookLayout(lines, width, height)
+	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height)
 
 	return &Book{
-		Title:      title,
-		RawLines:   lines,
-		Pages:      pages,
-		Anchors:    anchors,
-		PageWidth:  width,
-		PageHeight: height,
+		Title:        title,
+		RawLines:     lines,
+		Pages:        pages,
+		Anchors:      anchors,
+		PageWidth:    width,
+		PageHeight:   height,
+		rawLinePages: layout.rawLinePages,
 	}, nil
 }
 
@@ -293,8 +332,9 @@ func NewBook(path string, width, height int) (*Book, error) {
 func (b *Book) Reflow(width, height int) {
 	b.PageWidth = width
 	b.PageHeight = height
-	b.Pages = Paginate(b.RawLines, width, height)
-	b.Pages = AttachLinks(b.Pages, b.RawLines, width, height)
+	layout := buildBookLayout(b.RawLines, width, height)
+	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height)
+	b.rawLinePages = layout.rawLinePages
 }
 
 // PageForAnchor returns the page index containing the given anchor.
@@ -309,12 +349,13 @@ func (b *Book) PageForAnchor(anchor string) int {
 		return 0
 	}
 
-	// Find the formatted line index for this raw line by using the map
-	fmtToRaw := BuildFormattedToRawMap(b.RawLines, b.PageWidth)
-	for fi, ri := range fmtToRaw {
-		if ri == lineIdx {
-			return fi / b.PageHeight
-		}
+	if b.rawLinePages == nil {
+		layout := buildBookLayout(b.RawLines, b.PageWidth, b.PageHeight)
+		b.rawLinePages = layout.rawLinePages
+	}
+
+	if page, ok := b.rawLinePages[lineIdx]; ok {
+		return page
 	}
 
 	return -1

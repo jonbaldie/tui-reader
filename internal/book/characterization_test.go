@@ -107,6 +107,33 @@ func TestNav_FollowingLinkLandsOnHeadingPage(t *testing.T) {
 	}
 }
 
+func TestNav_ReflowUpdatesAnchorPages(t *testing.T) {
+	var sb strings.Builder
+	sb.WriteString("# Intro\n\n")
+	for i := 0; i < 10; i++ {
+		sb.WriteString("Filler paragraph occupies space before target.\n\n")
+	}
+	sb.WriteString("# Target\n\nBody.\n")
+
+	b := bookFromContent(t, sb.String(), 60, 20)
+	before := b.PageForAnchor("target")
+	if before < 0 {
+		t.Fatal("PageForAnchor(target) before reflow = -1")
+	}
+
+	b.Reflow(60, 4)
+	after := b.PageForAnchor("target")
+	if after < 0 {
+		t.Fatal("PageForAnchor(target) after reflow = -1")
+	}
+	if after <= before {
+		t.Fatalf("PageForAnchor(target) after reflow = %d, want greater than before %d", after, before)
+	}
+	if !pageContains(b.Pages[after], "Target") {
+		t.Errorf("page %d after reflow does not contain target heading; lines=%v", after, b.Pages[after].Lines)
+	}
+}
+
 // countLinks returns the total number of links attached across all pages.
 func countLinks(b *book.Book) int {
 	n := 0
