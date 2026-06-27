@@ -1,0 +1,42 @@
+name: Mutation Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          # mutago v2.7.5 requires Go >= 1.26.3, newer than the module's
+          # go.mod directive. Go is backward compatible, so the project's
+          # tests still build under it.
+          go-version: '1.26.3'
+
+      - name: Install mutago
+        run: go install github.com/quality-gates/mutago/v2/cmd/mutago@v2.7.5
+
+      - name: Run mutation testing
+        # --coverage generates a coverage profile before mutating so mutants on
+        # untested lines are excluded from the covered-MSI denominator.
+        # --min-msi / --min-covered-msi enforce the quality gates (exit code 4
+        # when a gate is not met). No baseline is used: the gate is purely
+        # threshold-based, so any regression below the thresholds fails CI.
+        # --logger-github annotates escaped mutants on the PR diff.
+        run: |
+          mutago \
+            --coverage \
+            --min-msi 70 \
+            --min-covered-msi 80 \
+            --logger-github \
+            --no-diffs \
+            ./...
