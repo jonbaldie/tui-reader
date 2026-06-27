@@ -95,34 +95,45 @@ func titleCase(s string) string {
 	}, s)
 }
 
-// FormatParagraphs takes raw lines and produces display-ready lines with
-// paragraph indentation and spacing. Each non-empty raw line is treated as
-// a paragraph. Non-first paragraphs get a 2-space indent on their first
-// wrapped line, and a blank line is inserted between paragraphs.
-func FormatParagraphs(rawLines []string, width int) []string {
+// formattedLine is one display line paired with its raw-line provenance: the
+// 0-based index of the source line it came from, or -1 for a blank line that
+// formatting inserted as a paragraph spacer. Across a document the raw indices
+// are non-decreasing.
+type formattedLine struct {
+	text string
+	raw  int
+}
+
+// formatParagraphsWithProvenance is the single owner of the paragraph
+// formatting rules. In one pass it produces each display line together with the
+// raw source line it came from, so callers never re-derive the formatting
+// algorithm to recover provenance. FormatParagraphs is a thin projection over
+// it.
+func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLine {
 	if width < 1 {
 		width = 80
 	}
 
-	var result []string
+	var result []formattedLine
 	firstParagraph := true
 
-	for _, raw := range rawLines {
+	for ri, raw := range rawLines {
 		trimmed := strings.TrimSpace(raw)
 
-		// Blank lines in source: preserve as spacing
+		// Blank lines in source: preserve as spacing, mapped to the source line.
 		if trimmed == "" {
 			// Only add a blank line if we haven't just added one
-			if len(result) > 0 && result[len(result)-1] != "" {
-				result = append(result, "")
+			if len(result) > 0 && result[len(result)-1].text != "" {
+				result = append(result, formattedLine{text: "", raw: ri})
 			}
 			continue
 		}
 
-		// Insert blank line between paragraphs (not before the first)
+		// Insert blank line between paragraphs (not before the first). This
+		// spacer has no source line, so its provenance is -1.
 		if !firstParagraph {
-			if len(result) > 0 && result[len(result)-1] != "" {
-				result = append(result, "")
+			if len(result) > 0 && result[len(result)-1].text != "" {
+				result = append(result, formattedLine{text: "", raw: -1})
 			}
 		}
 
@@ -146,10 +157,26 @@ func FormatParagraphs(rawLines []string, width int) []string {
 			wrapped[0] = "  " + wrapped[0]
 		}
 
-		result = append(result, wrapped...)
+		// Every wrapped line of this paragraph shares the same source line.
+		for _, w := range wrapped {
+			result = append(result, formattedLine{text: w, raw: ri})
+		}
 		firstParagraph = false
 	}
 
+	return result
+}
+
+// FormatParagraphs takes raw lines and produces display-ready lines with
+// paragraph indentation and spacing. Each non-empty raw line is treated as
+// a paragraph. Non-first paragraphs get a 2-space indent on their first
+// wrapped line, and a blank line is inserted between paragraphs.
+func FormatParagraphs(rawLines []string, width int) []string {
+	formatted := formatParagraphsWithProvenance(rawLines, width)
+	result := make([]string, len(formatted))
+	for i, fl := range formatted {
+		result[i] = fl.text
+	}
 	return result
 }
 
