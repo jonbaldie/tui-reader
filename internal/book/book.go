@@ -271,34 +271,36 @@ func wrapLine(line string, width int) []string {
 		return []string{""}
 	}
 
-	var lines []string
-	current := ""
+	lines := make([]string, 0, len(line)/width+1)
+	current := make([]rune, 0, width)
+
+	flush := func() {
+		if len(current) > 0 {
+			lines = append(lines, string(current))
+			current = current[:0]
+		}
+	}
+	appendWord := func(word string) {
+		for _, r := range word {
+			current = append(current, r)
+			if len(current) == width {
+				lines = append(lines, string(current))
+				current = current[:0]
+			}
+		}
+	}
 
 	for _, word := range words {
-		if current == "" {
-			current = word
-		} else if runeLen(current)+1+runeLen(word) <= width {
-			current += " " + word
-		} else {
-			// Flush current, hard-breaking if needed
-			for runeLen(current) > width {
-				lines = append(lines, string([]rune(current)[:width]))
-				current = string([]rune(current)[width:])
-			}
-			if current != "" {
-				lines = append(lines, current)
-			}
-			current = word
+		wordLength := runeLen(word)
+		if len(current) > 0 && len(current)+1+wordLength > width {
+			flush()
 		}
-		// Hard-break current if it's a single word longer than width
-		for runeLen(current) > width {
-			lines = append(lines, string([]rune(current)[:width]))
-			current = string([]rune(current)[width:])
+		if len(current) > 0 {
+			current = append(current, ' ')
 		}
+		appendWord(word)
 	}
-	if current != "" {
-		lines = append(lines, current)
-	}
+	flush()
 	return lines
 }
 
