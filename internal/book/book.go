@@ -283,8 +283,8 @@ func wrapLine(line string, width int) []string {
 		return []string{line}
 	}
 
-	words := strings.Fields(line)
-	if len(words) == 0 {
+	tokens := wrapTokens(line)
+	if len(tokens) == 0 {
 		return []string{""}
 	}
 
@@ -297,29 +297,88 @@ func wrapLine(line string, width int) []string {
 			current = current[:0]
 		}
 	}
-	appendWord := func(word string) {
-		for _, r := range word {
-			current = append(current, r)
-			if len(current) == width {
-				lines = append(lines, string(current))
-				current = current[:0]
-			}
-		}
-	}
 
-	for _, word := range words {
-		wordLength := runeLen(word)
-		if len(current) > 0 {
-			if len(current)+1+wordLength > width {
-				flush()
-			} else {
-				current = append(current, ' ')
-			}
+	for _, token := range tokens {
+		wordLength := runeLen(token.text)
+		if shouldFlush(len(current), len(current) > 0, token.spaceBefore, wordLength, width) {
+			flush()
 		}
-		appendWord(word)
+		if len(current) > 0 && token.spaceBefore {
+			current = append(current, ' ')
+		}
+		if token.link {
+			current = append(current, []rune(token.text)...)
+			continue
+		}
+		appendWordRunes(&current, token.text, width, &lines)
 	}
 	flush()
 	return lines
+}
+
+// shouldFlush reports whether the current line should be flushed before adding
+// a word of wordLen, optionally preceded by a space separator.
+func shouldFlush(currentLen int, hasContent, hasSpaceBefore bool, wordLen, width int) bool {
+	if !hasContent {
+		return false
+	}
+	if hasSpaceBefore {
+		return currentLen+1+wordLen > width
+	}
+	return currentLen+wordLen > width
+}
+
+// appendWordRunes appends a word's runes to current, flushing when the line
+// reaches the configured width.
+func appendWordRunes(current *[]rune, word string, width int, lines *[]string) {
+	for _, r := range word {
+		*current = append(*current, r)
+		if len(*current) == width {
+			*lines = append(*lines, string(*current))
+			*current = (*current)[:0]
+		}
+	}
+}
+
+type wrapToken struct {
+	text        string
+	spaceBefore bool
+	link        bool
+}
+
+func wrapTokens(line string) []wrapToken {
+	var tokens []wrapToken
+	spaceBefore := false
+	n := len(line)
+	for i := 0; i < n; {
+		r, size := utf8.DecodeRuneInString(line[i:])
+		if unicode.IsSpace(r) {
+			spaceBefore = true
+			i += size
+			continue
+		}
+
+		if line[i] == '[' {
+			if match := linkRegex.FindStringIndex(line[i:]); match != nil && match[0] == 0 {
+				tokens = append(tokens, wrapToken{text: line[i : i+match[1]], spaceBefore: spaceBefore, link: true})
+				i += match[1]
+				spaceBefore = false
+				continue
+			}
+		}
+
+		start := i
+		for i < n {
+			r, size = utf8.DecodeRuneInString(line[i:])
+			if unicode.IsSpace(r) {
+				break
+			}
+			i += size
+		}
+		tokens = append(tokens, wrapToken{text: line[start:i], spaceBefore: spaceBefore})
+		spaceBefore = false
+	}
+	return tokens
 }
 
 func runeLen(s string) int {
