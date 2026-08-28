@@ -24,7 +24,7 @@ jobs:
           go-version: '1.26.3'
 
       - name: Install messgo
-        run: go install github.com/quality-gates/messgo/cmd/messgo@v0.2.2
+        run: go install github.com/quality-gates/messgo/cmd/messgo@latest
 
       - name: Run messgo
         # The github format annotates violations on the PR diff.
