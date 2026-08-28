@@ -75,42 +75,63 @@ func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, hei
 		height = 20
 	}
 
-	for pi := range pages {
-		var pageLinks []Link
-		startLine := pi * height
-		for li, line := range pages[pi].Lines {
-			globalIdx := startLine + li
-			if globalIdx >= len(formatted) {
+	type location struct {
+		first int
+		links map[Link][]int
+	}
+
+	sourceLinks := make(map[int][]Link)
+	sourceOrder := make([]int, 0)
+	for rawIndex, rawLine := range rawLines {
+		if links := ExtractLinks(rawLine); len(links) > 0 {
+			sourceLinks[rawIndex] = links
+			sourceOrder = append(sourceOrder, rawIndex)
+		}
+	}
+
+	locations := make(map[int]*location, len(sourceLinks))
+	for formattedIndex, line := range formatted {
+		if line.raw < 0 || line.raw >= len(rawLines) {
+			continue
+		}
+		if _, ok := sourceLinks[line.raw]; !ok {
+			continue
+		}
+		entry := locations[line.raw]
+		if entry == nil {
+			entry = &location{first: formattedIndex}
+			locations[line.raw] = entry
+		}
+		for _, link := range ExtractLinks(line.text) {
+			if entry.links == nil {
+				entry.links = make(map[Link][]int)
+			}
+			entry.links[link] = append(entry.links[link], formattedIndex)
+		}
+	}
+
+	for pageIndex := range pages {
+		pages[pageIndex].Links = nil
+	}
+	for _, rawIndex := range sourceOrder {
+		links := sourceLinks[rawIndex]
+		entry := locations[rawIndex]
+		if entry == nil {
+			continue
+		}
+		for _, link := range links {
+			formattedIndex := entry.first
+			if candidates := entry.links[link]; len(candidates) > 0 {
+				formattedIndex = candidates[0]
+				entry.links[link] = candidates[1:]
+			}
+			pageIndex := formattedIndex / height
+			if formattedIndex < 0 || pageIndex >= len(pages) {
 				continue
 			}
-			rawIdx := formatted[globalIdx].raw
-			if rawIdx < 0 || rawIdx >= len(rawLines) {
-				continue // spacer line
-			}
-			rawLine := rawLines[rawIdx]
-			links := ExtractLinks(rawLine)
-			for _, lnk := range links {
-				lnk.LineOnPage = li
-				pageLinks = append(pageLinks, lnk)
-			}
-			// Also check the formatted line itself for links
-			lineLinks := ExtractLinks(line)
-			for _, lnk := range lineLinks {
-				lnk.LineOnPage = li
-				// Deduplicate
-				found := false
-				for _, existing := range pageLinks {
-					if existing.Target == lnk.Target && existing.LineOnPage == lnk.LineOnPage {
-						found = true
-						break
-					}
-				}
-				if !found {
-					pageLinks = append(pageLinks, lnk)
-				}
-			}
+			link.LineOnPage = formattedIndex % height
+			pages[pageIndex].Links = append(pages[pageIndex].Links, link)
 		}
-		pages[pi].Links = pageLinks
 	}
 	return pages
 }

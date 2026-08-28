@@ -58,6 +58,23 @@ func TestAttachLinks_DeduplicatesSameLink(t *testing.T) {
 	}
 }
 
+func TestAttachLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
+	raw := []string{strings.Repeat("padding ", 10) + "[Chapter 1](#chapter-1) " + strings.Repeat("more ", 10)}
+	pages := Paginate(raw, 20, 20)
+	pages = AttachLinks(pages, raw, 20, 20)
+
+	var links []Link
+	for _, page := range pages {
+		links = append(links, page.Links...)
+	}
+	if len(links) != 1 {
+		t.Fatalf("got %d attached links, want one: %+v", len(links), links)
+	}
+	if links[0].Target != "chapter-1" {
+		t.Errorf("target = %q, want chapter-1", links[0].Target)
+	}
+}
+
 func TestAttachLinks_TwoDistinctLinksSameLine(t *testing.T) {
 	raw := []string{"[One](#one) and [Two](#two)."}
 	pages := Paginate(raw, 80, 20)
