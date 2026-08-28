@@ -131,8 +131,7 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 
 		// Blank lines in source: preserve as spacing, mapped to the source line.
 		if trimmed == "" {
-			// Only add a blank line if we haven't just added one
-			if len(result) > 0 && result[len(result)-1].text != "" {
+			if needsBlankSeparator(result) {
 				result = append(result, formattedLine{text: "", raw: ri})
 			}
 			continue
@@ -140,40 +139,57 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 
 		// Insert blank line between paragraphs (not before the first). This
 		// spacer has no source line, so its provenance is -1.
-		if !firstParagraph {
-			if len(result) > 0 && result[len(result)-1].text != "" {
-				result = append(result, formattedLine{text: "", raw: -1})
-			}
+		if !firstParagraph && needsBlankSeparator(result) {
+			result = append(result, formattedLine{text: "", raw: -1})
 		}
 
-		// Detect if this is a heading or special line (don't indent those)
-		isSpecial := strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---") || strings.HasPrefix(trimmed, "    ")
-
-		// For non-first, non-special paragraphs: wrap at width-2 to leave room
-		// for the 2-space indent, then prepend it to the first line.
-		shouldIndent := !firstParagraph && !isSpecial
-		wrapWidth := width
-		if shouldIndent {
-			wrapWidth = width - 2
-			if wrapWidth < 10 {
-				wrapWidth = 10
-			}
-		}
-
-		wrapped := WrapLines([]string{raw}, wrapWidth)
-
-		if shouldIndent && len(wrapped) > 0 {
-			wrapped[0] = "  " + wrapped[0]
-		}
-
-		// Every wrapped line of this paragraph shares the same source line.
-		for _, w := range wrapped {
-			result = append(result, formattedLine{text: w, raw: ri})
-		}
+		result = append(result, formatParagraph(raw, ri, firstParagraph, width)...)
 		firstParagraph = false
 	}
 
 	return result
+}
+
+// needsBlankSeparator reports whether a blank separator line should be inserted
+// before the next content line: only when there is preceding content whose last
+// line is not already blank.
+func needsBlankSeparator(result []formattedLine) bool {
+	return len(result) > 0 && result[len(result)-1].text != ""
+}
+
+// isSpecialLine reports whether a trimmed line is a heading, horizontal rule, or
+// indented code block — lines that should not receive paragraph indentation.
+func isSpecialLine(trimmed string) bool {
+	return strings.HasPrefix(trimmed, "#") ||
+		strings.HasPrefix(trimmed, "---") ||
+		strings.HasPrefix(trimmed, "    ")
+}
+
+// formatParagraph wraps a single non-blank raw line into display lines with
+// optional 2-space indentation, preserving the source-line index as provenance.
+func formatParagraph(raw string, ri int, firstParagraph bool, width int) []formattedLine {
+	trimmed := strings.TrimSpace(raw)
+	isSpecial := isSpecialLine(trimmed)
+	shouldIndent := !firstParagraph && !isSpecial
+
+	wrapWidth := width
+	if shouldIndent {
+		wrapWidth = width - 2
+		if wrapWidth < 10 {
+			wrapWidth = 10
+		}
+	}
+
+	wrapped := WrapLines([]string{raw}, wrapWidth)
+	if shouldIndent && len(wrapped) > 0 {
+		wrapped[0] = "  " + wrapped[0]
+	}
+
+	lines := make([]formattedLine, len(wrapped))
+	for i, w := range wrapped {
+		lines[i] = formattedLine{text: w, raw: ri}
+	}
+	return lines
 }
 
 // FormatParagraphs takes raw lines and produces display-ready lines with
@@ -219,7 +235,8 @@ func paginateFormatted(formatted []formattedLine, height int) []Page {
 	}
 
 	var pages []Page
-	for i := 0; i < len(formatted); i += height {
+	n := len(formatted)
+	for i := 0; i < n; i += height {
 		end := i + height
 		if end > len(formatted) {
 			end = len(formatted)
@@ -292,11 +309,12 @@ func wrapLine(line string, width int) []string {
 
 	for _, word := range words {
 		wordLength := runeLen(word)
-		if len(current) > 0 && len(current)+1+wordLength > width {
-			flush()
-		}
 		if len(current) > 0 {
-			current = append(current, ' ')
+			if len(current)+1+wordLength > width {
+				flush()
+			} else {
+				current = append(current, ' ')
+			}
 		}
 		appendWord(word)
 	}

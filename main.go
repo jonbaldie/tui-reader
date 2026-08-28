@@ -13,8 +13,10 @@ import (
 
 const usage = "Usage: tui-reader [--dump[=N]] <file>\n"
 
+var osExit = os.Exit
+
 func main() {
-	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
+	osExit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
 // run executes the program and returns a process exit code. args are the

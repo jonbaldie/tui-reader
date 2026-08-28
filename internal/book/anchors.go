@@ -35,7 +35,7 @@ func NormalizeAnchor(text string) string {
 	pendingHyphen := false
 	for _, r := range text {
 		r = unicode.ToLower(r)
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+		if isAnchorChar(r) {
 			if b.Len() > 0 && pendingHyphen {
 				b.WriteByte('-')
 			}
@@ -48,6 +48,12 @@ func NormalizeAnchor(text string) string {
 		}
 	}
 	return b.String()
+}
+
+// isAnchorChar reports whether r is a lowercase letter or digit suitable for
+// an anchor fragment.
+func isAnchorChar(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')
 }
 
 // ExtractLinks finds markdown-style internal links in a line of text.
@@ -71,16 +77,27 @@ func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
 	return attachLinks(pages, rawLines, formatted, height)
 }
 
+// linkLocation tracks where a source line's links appear in the formatted
+// output: the first formatted line index, and per-link candidate indices.
+type linkLocation struct {
+	first int
+	links map[Link][]int
+}
+
 func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int) []Page {
 	if height < 1 {
 		height = 20
 	}
 
-	type location struct {
-		first int
-		links map[Link][]int
-	}
+	sourceLinks, sourceOrder := collectSourceLinks(rawLines)
+	locations := buildLocations(formatted, rawLines, sourceLinks)
+	assignLinksToPages(pages, sourceOrder, sourceLinks, locations, height)
+	return pages
+}
 
+// collectSourceLinks scans raw lines for links, returning a map of raw-line
+// index to links and the order in which source lines with links were found.
+func collectSourceLinks(rawLines []string) (map[int][]Link, []int) {
 	sourceLinks := make(map[int][]Link)
 	sourceOrder := make([]int, 0)
 	for rawIndex, rawLine := range rawLines {
@@ -89,8 +106,13 @@ func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, hei
 			sourceOrder = append(sourceOrder, rawIndex)
 		}
 	}
+	return sourceLinks, sourceOrder
+}
 
-	locations := make(map[int]*location, len(sourceLinks))
+// buildLocations maps each source-line index that has links to a linkLocation,
+// recording the first formatted-line index and all formatted indices per link.
+func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks map[int][]Link) map[int]*linkLocation {
+	locations := make(map[int]*linkLocation, len(sourceLinks))
 	for formattedIndex, line := range formatted {
 		if line.raw < 0 || line.raw >= len(rawLines) {
 			continue
@@ -100,7 +122,7 @@ func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, hei
 		}
 		entry := locations[line.raw]
 		if entry == nil {
-			entry = &location{first: formattedIndex}
+			entry = &linkLocation{first: formattedIndex}
 			locations[line.raw] = entry
 		}
 		for _, link := range ExtractLinks(line.text) {
@@ -110,10 +132,16 @@ func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, hei
 			entry.links[link] = append(entry.links[link], formattedIndex)
 		}
 	}
+	return locations
+}
 
+// assignLinksToPages clears existing page links and places each source link on
+// the page containing its first (or next candidate) formatted line.
+func assignLinksToPages(pages []Page, sourceOrder []int, sourceLinks map[int][]Link, locations map[int]*linkLocation, height int) {
 	for pageIndex := range pages {
 		pages[pageIndex].Links = nil
 	}
+	numPages := len(pages)
 	for _, rawIndex := range sourceOrder {
 		links := sourceLinks[rawIndex]
 		entry := locations[rawIndex]
@@ -127,12 +155,11 @@ func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, hei
 				entry.links[link] = candidates[1:]
 			}
 			pageIndex := formattedIndex / height
-			if formattedIndex < 0 || pageIndex >= len(pages) {
+			if formattedIndex < 0 || pageIndex >= numPages {
 				continue
 			}
 			link.LineOnPage = formattedIndex % height
 			pages[pageIndex].Links = append(pages[pageIndex].Links, link)
 		}
 	}
-	return pages
 }

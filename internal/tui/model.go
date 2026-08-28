@@ -62,38 +62,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) recalcLayout() Model {
 	// Content area: max 72 chars wide, centered, with margins
-	maxWidth := 72
-	m.contentWidth = m.termWidth - 4 // 2 chars padding each side
-	if m.contentWidth > maxWidth {
-		m.contentWidth = maxWidth
-	}
-	if m.contentWidth < 20 {
-		m.contentWidth = 20
-	}
+	m.contentWidth = min(72, max(20, m.termWidth-4))
 
 	// Content height: terminal height minus header (2), footer (3), and top/bottom padding (2)
-	m.contentHeight = m.termHeight - 7
-	if m.contentHeight < 5 {
-		m.contentHeight = 5
-	}
+	m.contentHeight = max(5, m.termHeight-7)
 
 	if m.book != nil {
-		oldPage := m.currentPage
 		m.book.Reflow(m.contentWidth, m.contentHeight)
 		// Try to stay on the same page, clamped
-		if oldPage >= len(m.book.Pages) {
-			m.currentPage = len(m.book.Pages) - 1
-		}
-		if m.currentPage < 0 {
-			m.currentPage = 0
-		}
-		for i, page := range m.history {
-			if page >= len(m.book.Pages) {
-				m.history[i] = len(m.book.Pages) - 1
-			}
-			if m.history[i] < 0 {
-				m.history[i] = 0
-			}
+		numPages := len(m.book.Pages)
+		m.currentPage = max(0, min(m.currentPage, numPages-1))
+		for i := range m.history {
+			m.history[i] = max(0, min(m.history[i], numPages-1))
 		}
 		m.selectedLink = -1
 	}
@@ -102,34 +82,29 @@ func (m Model) recalcLayout() Model {
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
-	// Quit
 	case key.Matches(msg, keys.Quit):
 		m.quitting = true
 		return m, tea.Quit
 
-	// Next page
 	case key.Matches(msg, keys.NextPage):
-		if m.book != nil && m.currentPage < len(m.book.Pages)-1 {
+		if canNextPage(m) {
 			m.currentPage++
 			m.selectedLink = -1
 		}
 		return m, nil
 
-	// Previous page
 	case key.Matches(msg, keys.PrevPage):
-		if m.book != nil && m.currentPage > 0 {
+		if canPrevPage(m) {
 			m.currentPage--
 			m.selectedLink = -1
 		}
 		return m, nil
 
-	// First page
 	case key.Matches(msg, keys.FirstPage):
 		m.currentPage = 0
 		m.selectedLink = -1
 		return m, nil
 
-	// Last page
 	case key.Matches(msg, keys.LastPage):
 		if m.book != nil {
 			m.currentPage = len(m.book.Pages) - 1
@@ -137,46 +112,33 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.selectedLink = -1
 		return m, nil
 
-	// Tab through links
+	default:
+		return m.handleLinkKey(msg)
+	}
+}
+
+func (m Model) handleLinkKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
 	case key.Matches(msg, keys.NextLink):
-		if m.book != nil && m.currentPage < len(m.book.Pages) {
-			page := m.book.Pages[m.currentPage]
-			if len(page.Links) > 0 {
-				m.selectedLink = (m.selectedLink + 1) % len(page.Links)
-			}
+		links := currentLinks(m)
+		if len(links) > 0 {
+			m.selectedLink = (m.selectedLink + 1) % len(links)
 		}
 		return m, nil
 
-	// Shift+Tab: previous link
 	case key.Matches(msg, keys.PrevLink):
-		if m.book != nil && m.currentPage < len(m.book.Pages) {
-			page := m.book.Pages[m.currentPage]
-			if len(page.Links) > 0 {
-				m.selectedLink--
-				if m.selectedLink < 0 {
-					m.selectedLink = len(page.Links) - 1
-				}
+		links := currentLinks(m)
+		if len(links) > 0 {
+			m.selectedLink--
+			if m.selectedLink < 0 {
+				m.selectedLink = len(links) - 1
 			}
 		}
 		return m, nil
 
-	// Enter: follow selected link
 	case key.Matches(msg, keys.FollowLink):
-		if m.book != nil && m.selectedLink >= 0 && m.currentPage < len(m.book.Pages) {
-			page := m.book.Pages[m.currentPage]
-			if m.selectedLink < len(page.Links) {
-				target := page.Links[m.selectedLink].Target
-				dest := m.book.PageForAnchor(target)
-				if dest >= 0 {
-					m.history = append(m.history, m.currentPage)
-					m.currentPage = dest
-					m.selectedLink = -1
-				}
-			}
-		}
-		return m, nil
+		return followLink(m)
 
-	// Back navigation
 	case key.Matches(msg, keys.GoBack):
 		if len(m.history) > 0 {
 			m.currentPage = m.history[len(m.history)-1]
@@ -185,7 +147,45 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
+	return m, nil
+}
 
+// canNextPage reports whether there is a next page to advance to.
+func canNextPage(m Model) bool {
+	return m.book != nil && m.currentPage < len(m.book.Pages)-1
+}
+
+// canPrevPage reports whether there is a previous page to go back to.
+func canPrevPage(m Model) bool {
+	return m.book != nil && m.currentPage > 0
+}
+
+// currentLinks returns the links on the current page, or nil if there is no
+// valid current page.
+func currentLinks(m Model) []book.Link {
+	if m.book == nil || m.currentPage >= len(m.book.Pages) {
+		return nil
+	}
+	return m.book.Pages[m.currentPage].Links
+}
+
+// followLink navigates to the anchor target of the selected link, pushing the
+// current page onto the history stack.
+func followLink(m Model) (tea.Model, tea.Cmd) {
+	links := currentLinks(m)
+	if m.selectedLink < 0 {
+		return m, nil
+	}
+	if m.selectedLink >= len(links) {
+		return m, nil
+	}
+	dest := m.book.PageForAnchor(links[m.selectedLink].Target)
+	if dest < 0 {
+		return m, nil
+	}
+	m.history = append(m.history, m.currentPage)
+	m.currentPage = dest
+	m.selectedLink = -1
 	return m, nil
 }
 
@@ -273,7 +273,8 @@ func (m Model) renderContent() string {
 	}
 
 	// Pad to full height
-	for len(rendered) < m.contentHeight {
+	padCount := m.contentHeight - len(rendered)
+	for i := 0; i < padCount; i++ {
 		rendered = append(rendered, "")
 	}
 
