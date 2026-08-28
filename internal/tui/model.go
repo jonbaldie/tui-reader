@@ -86,6 +86,14 @@ func (m Model) recalcLayout() Model {
 		if m.currentPage < 0 {
 			m.currentPage = 0
 		}
+		for i, page := range m.history {
+			if page >= len(m.book.Pages) {
+				m.history[i] = len(m.book.Pages) - 1
+			}
+			if m.history[i] < 0 {
+				m.history[i] = 0
+			}
+		}
 		m.selectedLink = -1
 	}
 	return m
