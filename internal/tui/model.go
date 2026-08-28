@@ -3,6 +3,7 @@ package tui
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -297,29 +298,47 @@ func (m Model) styleLine(line string, lineIdx int, linkLineSet map[int][]book.Li
 		return textStyle.Render(line)
 	}
 
-	// Highlight links in the line
-	result := line
-	for _, lnk := range links {
-		linkText := lnk.Label
-		if lnk.Target == selectedTarget {
-			// Selected link: inverse colors
-			selectedStyle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("0")).
-				Background(lipgloss.Color("117")).
-				Bold(true).
-				Underline(true)
-			result = strings.Replace(result, linkText, selectedStyle.Render(linkText), 1)
-		} else {
-			linkStyle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("75")).
-				Underline(true)
-			result = strings.Replace(result, linkText, linkStyle.Render(linkText), 1)
-		}
+	linkKeys := make(map[linkKey]struct{}, len(links))
+	for _, link := range links {
+		linkKeys[linkKey{label: link.Label, target: link.Target}] = struct{}{}
 	}
+	result := styleLinkMarkup(line, linkKeys, selectedTarget)
 
 	textStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("252"))
 	return textStyle.Render(result)
+}
+
+type linkKey struct {
+	label  string
+	target string
+}
+
+var internalLinkMarkup = regexp.MustCompile(`\[([^\]]+)\]\(#([^)]+)\)`)
+
+// styleLinkMarkup scans Markdown link markup once from left to right. It keeps
+// link syntax intact and styles only labels that are attached to this page
+// line, so repeated labels do not cause ANSI-decorated text to be revisited.
+func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedTarget string) string {
+	return internalLinkMarkup.ReplaceAllStringFunc(line, func(markup string) string {
+		parts := internalLinkMarkup.FindStringSubmatch(markup)
+		label, target := parts[1], parts[2]
+		if _, ok := links[linkKey{label: label, target: target}]; ok {
+			if target == selectedTarget {
+				return "[" + lipgloss.NewStyle().
+					Foreground(lipgloss.Color("0")).
+					Background(lipgloss.Color("117")).
+					Bold(true).
+					Underline(true).
+					Render(label) + "](#" + target + ")"
+			}
+			return "[" + lipgloss.NewStyle().
+				Foreground(lipgloss.Color("75")).
+				Underline(true).
+				Render(label) + "](#" + target + ")"
+		}
+		return markup
+	})
 }
 
 func isHeading(line string) bool {
