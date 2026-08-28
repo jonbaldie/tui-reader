@@ -58,6 +58,53 @@ func TestAttachLinks_DeduplicatesSameLink(t *testing.T) {
 	}
 }
 
+func TestAttachLinks_WrappedLinkKeepsLabelOnOneLine(t *testing.T) {
+	raw := []string{"# Target", "", "[Open Section 1](#section-1)"}
+	pages := AttachLinks(Paginate(raw, 20, 20), raw, 20, 20)
+
+	var links []Link
+	for _, page := range pages {
+		links = append(links, page.Links...)
+	}
+	if len(links) != 1 {
+		t.Fatalf("attached links = %d, want exactly one", len(links))
+	}
+
+	link := links[0]
+	page := pages[0]
+	if !strings.Contains(page.Lines[link.LineOnPage], link.Label) {
+		t.Fatalf("selected line %q does not contain label %q", page.Lines[link.LineOnPage], link.Label)
+	}
+}
+
+func TestWrapLines_PreservesCompleteInternalLinkMarkup(t *testing.T) {
+	link := "[Open Section 1](#section-1)"
+	got := WrapLines([]string{"before " + link + " after"}, 20)
+	want := []string{"before", link, "after"}
+	if len(got) != len(want) {
+		t.Fatalf("wrapped lines = %q, want %q", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("line %d = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestWrapLines_PreservesPunctuationAfterInternalLink(t *testing.T) {
+	link := "[Open Section 1](#section-1)"
+	got := WrapLines([]string{link + ", then continue"}, 20)
+	want := []string{link, ", then continue"}
+	if len(got) != len(want) {
+		t.Fatalf("wrapped lines = %q, want %q", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("line %d = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
 func TestAttachLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
 	raw := []string{strings.Repeat("padding ", 10) + "[Chapter 1](#chapter-1) " + strings.Repeat("more ", 10)}
 	pages := Paginate(raw, 20, 20)
