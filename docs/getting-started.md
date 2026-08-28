@@ -35,3 +35,12 @@ will display fine as plain text with word wrapping.
 If the file does not exist, you see a centered error
 message. If the file is not valid UTF-8 (e.g. a binary
 file), the reader tells you so. Press q to quit.
+
+## Fuzz Testing
+
+The bounded fuzz checks exercise generated documents through the production
+book and TUI entry points. Run them one at a time to keep the test run
+reproducible on developer machines and CI:
+
+    GOMAXPROCS=2 go test -parallel=1 -run='^$' -fuzz=FuzzBookLayout -fuzztime=15s ./internal/book
+    GOMAXPROCS=2 go test -parallel=1 -run='^$' -fuzz=FuzzModelActions -fuzztime=15s ./internal/tui
