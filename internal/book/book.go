@@ -424,11 +424,10 @@ func (b *Book) PageForAnchor(anchor string) int {
 		return -1
 	}
 
-	if b.PageHeight <= 0 {
-		return 0
-	}
-
 	if b.rawLinePages == nil {
+		// buildBookLayout normalizes a non-positive height to the default,
+		// so a Book built (or mutated) with PageHeight <= 0 is still mapped
+		// to its true pages rather than collapsed onto page 0.
 		layout := buildBookLayout(b.RawLines, b.PageWidth, b.PageHeight)
 		b.rawLinePages = layout.rawLinePages
 	}
