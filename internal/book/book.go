@@ -266,8 +266,8 @@ func wrapLine(line string, width int) []string {
 		return []string{line}
 	}
 
-	words := strings.Fields(line)
-	if len(words) == 0 {
+	tokens := wrapTokens(line)
+	if len(tokens) == 0 {
 		return []string{""}
 	}
 
@@ -290,18 +290,66 @@ func wrapLine(line string, width int) []string {
 		}
 	}
 
-	for _, word := range words {
-		wordLength := runeLen(word)
-		if len(current) > 0 && len(current)+1+wordLength > width {
+	for _, token := range tokens {
+		wordLength := runeLen(token.text)
+		separatorLength := 0
+		if len(current) > 0 && token.spaceBefore {
+			separatorLength = 1
+		}
+		if len(current) > 0 && len(current)+separatorLength+wordLength > width {
 			flush()
 		}
-		if len(current) > 0 {
+		if len(current) > 0 && token.spaceBefore {
 			current = append(current, ' ')
 		}
-		appendWord(word)
+		if token.link {
+			current = append(current, []rune(token.text)...)
+			continue
+		}
+		appendWord(token.text)
 	}
 	flush()
 	return lines
+}
+
+type wrapToken struct {
+	text        string
+	spaceBefore bool
+	link        bool
+}
+
+func wrapTokens(line string) []wrapToken {
+	var tokens []wrapToken
+	spaceBefore := false
+	for i := 0; i < len(line); {
+		r, size := utf8.DecodeRuneInString(line[i:])
+		if unicode.IsSpace(r) {
+			spaceBefore = true
+			i += size
+			continue
+		}
+
+		if line[i] == '[' {
+			if match := linkRegex.FindStringIndex(line[i:]); match != nil && match[0] == 0 {
+				tokens = append(tokens, wrapToken{text: line[i : i+match[1]], spaceBefore: spaceBefore, link: true})
+				i += match[1]
+				spaceBefore = false
+				continue
+			}
+		}
+
+		start := i
+		for i < len(line) {
+			r, size = utf8.DecodeRuneInString(line[i:])
+			if unicode.IsSpace(r) {
+				break
+			}
+			i += size
+		}
+		tokens = append(tokens, wrapToken{text: line[start:i], spaceBefore: spaceBefore})
+		spaceBefore = false
+	}
+	return tokens
 }
 
 func runeLen(s string) int {
