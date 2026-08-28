@@ -3,6 +3,7 @@ package book
 import (
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 var (
@@ -30,23 +31,23 @@ func ExtractAnchors(lines []string) map[string]int {
 // NormalizeAnchor converts heading text to a URL-fragment style anchor.
 // "Chapter 1: Introduction" -> "chapter-1-introduction"
 func NormalizeAnchor(text string) string {
-	text = strings.ToLower(text)
-	// Remove non-alphanumeric chars except spaces and hyphens
 	var b strings.Builder
+	pendingHyphen := false
 	for _, r := range text {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == ' ' || r == '-' {
+		r = unicode.ToLower(r)
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			if b.Len() > 0 && pendingHyphen {
+				b.WriteByte('-')
+			}
 			b.WriteRune(r)
+			pendingHyphen = false
+			continue
+		}
+		if r == ' ' || r == '-' {
+			pendingHyphen = true
 		}
 	}
-	result := b.String()
-	// Replace spaces with hyphens
-	result = strings.ReplaceAll(result, " ", "-")
-	// Collapse multiple hyphens
-	for strings.Contains(result, "--") {
-		result = strings.ReplaceAll(result, "--", "-")
-	}
-	result = strings.Trim(result, "-")
-	return result
+	return b.String()
 }
 
 // ExtractLinks finds markdown-style internal links in a line of text.
