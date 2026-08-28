@@ -1,0 +1,33 @@
+name: Static Analysis (messgo)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  messgo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          # messgo requires Go >= 1.26, newer than the module's go.mod
+          # directive. Go is backward compatible, so the project's code
+          # still builds under it.
+          go-version: '1.26.3'
+
+      - name: Install messgo
+        run: go install github.com/quality-gates/messgo/cmd/messgo@latest
+
+      - name: Run messgo
+        # The github format annotates violations on the PR diff.
+        # --ignore-tests excludes *_test.go files from analysis.
+        # Exit code 2 = violations found, which fails this step.
+        run: messgo . github unusedcode,design,codesize --ignore-tests
