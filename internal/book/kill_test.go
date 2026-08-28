@@ -287,3 +287,38 @@ func TestPageForAnchor_AnchorLineMissingFromMapReturnsNeg1(t *testing.T) {
 		t.Errorf("PageForAnchor for unreachable anchor line = %d, want -1", got)
 	}
 }
+
+// NewBook and Reflow paginate via normalizePageHeight, so a height of 0 means
+// the default height (20). A book built with height 0 is therefore split into
+// the same pages as one built with height 20, and PageForAnchor must give the
+// same answer for both — including anchors that land past the first page.
+func TestPageForAnchor_HeightZeroMatchesDefaultHeight(t *testing.T) {
+	// Push a heading past the first page so its true page index is > 0.
+	var sb strings.Builder
+	for i := 0; i < 30; i++ {
+		sb.WriteString("filler line\n")
+	}
+	sb.WriteString("# Target Heading\n\nbody\n")
+	path := writeTempFile(t, "height0.md", sb.String())
+
+	defaultBook, err := NewBook(path, 60, 20)
+	if err != nil {
+		t.Fatalf("NewBook default: %v", err)
+	}
+	zeroBook, err := NewBook(path, 60, 0)
+	if err != nil {
+		t.Fatalf("NewBook zero: %v", err)
+	}
+	if len(zeroBook.Pages) != len(defaultBook.Pages) {
+		t.Fatalf("height 0 paginated into %d pages, height 20 into %d; 0 must mean default 20",
+			len(zeroBook.Pages), len(defaultBook.Pages))
+	}
+
+	want := defaultBook.PageForAnchor("target-heading")
+	if want <= 0 {
+		t.Fatalf("test setup: heading must land on a page > 0, got %d", want)
+	}
+	if got := zeroBook.PageForAnchor("target-heading"); got != want {
+		t.Errorf("PageForAnchor with height 0 = %d, want %d (height 0 means default 20)", got, want)
+	}
+}
