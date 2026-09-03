@@ -7,6 +7,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/mattn/go-runewidth"
 )
 
 // Anchor represents a named location in the document that can be linked to.
@@ -264,7 +266,7 @@ func rawLinePages(formatted []formattedLine, height int) map[int]int {
 func WrapLines(lines []string, width int) []string {
 	var result []string
 	for _, line := range lines {
-		if runeLen(line) <= width {
+		if stringWidth(line) <= width {
 			result = append(result, line)
 			continue
 		}
@@ -274,7 +276,7 @@ func WrapLines(lines []string, width int) []string {
 	return result
 }
 
-// wrapLine breaks a single line into multiple lines of at most `width` runes.
+// wrapLine breaks a single line into multiple lines of at most `width` columns.
 func wrapLine(line string, width int) []string {
 	if width < 1 {
 		return []string{line}
@@ -287,27 +289,30 @@ func wrapLine(line string, width int) []string {
 
 	lines := make([]string, 0, len(line)/width+1)
 	current := make([]rune, 0, width)
+	currentWidth := 0
 
 	flush := func() {
 		if len(current) > 0 {
 			lines = append(lines, string(current))
 			current = current[:0]
+			currentWidth = 0
 		}
 	}
 
 	for _, token := range tokens {
-		wordLength := runeLen(token.text)
-		if shouldFlush(len(current), len(current) > 0, token.spaceBefore, wordLength, width) {
+		wordLength := stringWidth(token.text)
+		if shouldFlush(currentWidth, len(current) > 0, token.spaceBefore, wordLength, width) {
 			flush()
 		}
 		if len(current) > 0 && token.spaceBefore {
 			current = append(current, ' ')
+			currentWidth++
 		}
 		if token.link {
-			appendLinkRunes(&current, token.text, width, &lines)
+			appendLinkRunes(&current, &currentWidth, token.text, width, &lines)
 			continue
 		}
-		appendWordRunes(&current, token.text, width, &lines)
+		appendWordRunes(&current, &currentWidth, token.text, width, &lines)
 	}
 	flush()
 	return lines
@@ -327,12 +332,20 @@ func shouldFlush(currentLen int, hasContent, hasSpaceBefore bool, wordLen, width
 
 // appendWordRunes appends a word's runes to current, flushing when the line
 // reaches the configured width.
-func appendWordRunes(current *[]rune, word string, width int, lines *[]string) {
+func appendWordRunes(current *[]rune, currentWidth *int, word string, width int, lines *[]string) {
 	for _, r := range word {
-		*current = append(*current, r)
-		if len(*current) == width {
+		rw := runewidth.RuneWidth(r)
+		if len(*current) > 0 && *currentWidth+rw > width {
 			*lines = append(*lines, string(*current))
 			*current = (*current)[:0]
+			*currentWidth = 0
+		}
+		*current = append(*current, r)
+		*currentWidth += rw
+		if *currentWidth >= width {
+			*lines = append(*lines, string(*current))
+			*current = (*current)[:0]
+			*currentWidth = 0
 		}
 	}
 }
@@ -343,12 +356,13 @@ func appendWordRunes(current *[]rune, word string, width int, lines *[]string) {
 // no display line exceeds width. The broken markup is no longer detectable per
 // display line, so link attachment falls back to the source line's first
 // formatted line; the link remains selectable via tab and followable via enter.
-func appendLinkRunes(current *[]rune, text string, width int, lines *[]string) {
-	if runeLen(text) > width {
-		appendWordRunes(current, text, width, lines)
+func appendLinkRunes(current *[]rune, currentWidth *int, text string, width int, lines *[]string) {
+	if stringWidth(text) > width {
+		appendWordRunes(current, currentWidth, text, width, lines)
 		return
 	}
 	*current = append(*current, []rune(text)...)
+	*currentWidth += stringWidth(text)
 }
 
 type wrapToken struct {
@@ -392,8 +406,12 @@ func wrapTokens(line string) []wrapToken {
 	return tokens
 }
 
+func stringWidth(s string) int {
+	return runewidth.StringWidth(s)
+}
+
 func runeLen(s string) int {
-	return utf8.RuneCountInString(s)
+	return stringWidth(s)
 }
 
 // NewBook creates a fully paginated book from a file path.
