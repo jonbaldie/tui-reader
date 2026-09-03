@@ -170,14 +170,11 @@ func isSpecialLine(trimmed string) bool {
 func formatParagraph(raw string, ri int, firstParagraph bool, width int) []formattedLine {
 	trimmed := strings.TrimSpace(raw)
 	isSpecial := isSpecialLine(trimmed)
-	shouldIndent := !firstParagraph && !isSpecial
+	shouldIndent := !firstParagraph && !isSpecial && width >= 3
 
 	wrapWidth := width
 	if shouldIndent {
 		wrapWidth = width - 2
-		if wrapWidth < 10 {
-			wrapWidth = 10
-		}
 	}
 
 	wrapped := WrapLines([]string{raw}, wrapWidth)
