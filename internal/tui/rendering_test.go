@@ -3,6 +3,9 @@ package tui
 import (
 	"strings"
 	"testing"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 func longProseDoc() string {
@@ -135,3 +138,31 @@ func stripAnsi(s string) string {
 	}
 	return result.String()
 }
+
+func TestRendering_MultipleLinksHighlightedOnPage(t *testing.T) {
+	profile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.ANSI256)
+	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
+
+	doc := "# Section\n\nSee [first](#one) and [second](#two) here.\n\nAlso [third](#three) on next line.\n"
+	path := writeTempFile(t, "links.md", doc)
+	m := NewModel(path)
+	m = applyWindowSize(m, 80, 24)
+
+	// Default: selectedLink is -1
+	view := m.View()
+	plain := stripAnsi(view)
+	if !strings.Contains(plain, "[first](#one)") || !strings.Contains(plain, "[second](#two)") {
+		t.Fatalf("expected view to contain link markup, got:\n%s", plain)
+	}
+
+	// Select the second link (index 1)
+	m.selectedLink = 1
+	selectedView := m.View()
+	if selectedView == view {
+		t.Fatal("selected view should differ from unselected view")
+	}
+}
+
+
+

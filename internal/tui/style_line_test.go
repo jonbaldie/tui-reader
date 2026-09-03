@@ -40,3 +40,31 @@ func TestStyleLinkMarkup_SelectedLinkUsesDistinctStyle(t *testing.T) {
 		t.Fatal("selected and unselected links must have distinct ANSI styling")
 	}
 }
+
+func TestStyleLinkMarkup_ExactFormatting(t *testing.T) {
+	profile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.ANSI256)
+	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
+
+	line := "prefix [one](#target1) middle [two](#target2) suffix"
+	links := map[linkKey]struct{}{
+		{label: "one", target: "target1"}: {},
+		{label: "two", target: "target2"}: {},
+	}
+	got := styleLinkMarkup(line, links, "target2")
+
+	want := "prefix [" + lipgloss.NewStyle().
+		Foreground(lipgloss.Color("75")).
+		Underline(true).
+		Render("one") + "](#target1) middle [" + lipgloss.NewStyle().
+		Foreground(lipgloss.Color("0")).
+		Background(lipgloss.Color("117")).
+		Bold(true).
+		Underline(true).
+		Render("two") + "](#target2) suffix"
+
+	if got != want {
+		t.Fatalf("styleLinkMarkup mismatch:\ngot:  %q\nwant: %q", got, want)
+	}
+}
+
