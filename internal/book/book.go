@@ -307,7 +307,7 @@ func wrapLine(line string, width int) []string {
 			current = append(current, ' ')
 		}
 		if token.link {
-			current = append(current, []rune(token.text)...)
+			appendLinkRunes(&current, token.text, width, &lines)
 			continue
 		}
 		appendWordRunes(&current, token.text, width, &lines)
@@ -338,6 +338,20 @@ func appendWordRunes(current *[]rune, word string, width int, lines *[]string) {
 			*current = (*current)[:0]
 		}
 	}
+}
+
+// appendLinkRunes appends a link token to current. A link that fits within the
+// width is kept whole so its markup stays on one display line. A link wider
+// than the page is hard-broken at the character level via appendWordRunes, so
+// no display line exceeds width. The broken markup is no longer detectable per
+// display line, so link attachment falls back to the source line's first
+// formatted line; the link remains selectable via tab and followable via enter.
+func appendLinkRunes(current *[]rune, text string, width int, lines *[]string) {
+	if runeLen(text) > width {
+		appendWordRunes(current, text, width, lines)
+		return
+	}
+	*current = append(*current, []rune(text)...)
 }
 
 type wrapToken struct {
