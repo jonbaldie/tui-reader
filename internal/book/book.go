@@ -39,6 +39,7 @@ type Book struct {
 	PageWidth  int
 	PageHeight int
 
+	sourceLinks  sourceLinkSet
 	rawLinePages map[int]int
 }
 
@@ -49,20 +50,37 @@ func Load(path string) (title string, lines []string, err error) {
 		return "", nil, fmt.Errorf("cannot open file: %w", err)
 	}
 
-	content := string(data)
-	if !utf8.ValidString(content) {
+	if !utf8.Valid(data) {
 		return "", nil, fmt.Errorf("file is not valid UTF-8")
 	}
 
 	// Derive title from filename
 	title = deriveTitle(path)
 
-	// Normalize line endings
-	content = strings.ReplaceAll(content, "\r\n", "\n")
-	content = strings.ReplaceAll(content, "\r", "\n")
-
-	lines = strings.Split(content, "\n")
+	lines = splitLines(data)
 	return title, lines, nil
+}
+
+// splitLines splits data into lines, normalizing CRLF (\r\n), CR (\r),
+// and LF (\n) in a single pass without intermediate full-string copies.
+func splitLines(data []byte) []string {
+	var lines []string
+	start := 0
+	n := len(data)
+	for i := 0; i < n; i++ {
+		if data[i] == '\r' {
+			lines = append(lines, string(data[start:i]))
+			if i+1 < n && data[i+1] == '\n' {
+				i++
+			}
+			start = i + 1
+		} else if data[i] == '\n' {
+			lines = append(lines, string(data[start:i]))
+			start = i + 1
+		}
+	}
+	lines = append(lines, string(data[start:n]))
+	return lines
 }
 
 // deriveTitle extracts a human-readable title from a file path.
@@ -436,8 +454,9 @@ func NewBook(path string, width, height int) (*Book, error) {
 	}
 
 	anchors := ExtractAnchors(lines)
+	sourceLinks := collectSourceLinks(lines)
 	layout := buildBookLayout(lines, width, height)
-	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height)
+	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height, sourceLinks)
 
 	return &Book{
 		Title:        title,
@@ -446,6 +465,7 @@ func NewBook(path string, width, height int) (*Book, error) {
 		Anchors:      anchors,
 		PageWidth:    width,
 		PageHeight:   height,
+		sourceLinks:  sourceLinks,
 		rawLinePages: layout.rawLinePages,
 	}, nil
 }
@@ -454,8 +474,11 @@ func NewBook(path string, width, height int) (*Book, error) {
 func (b *Book) Reflow(width, height int) {
 	b.PageWidth = width
 	b.PageHeight = height
+	if b.sourceLinks.links == nil {
+		b.sourceLinks = collectSourceLinks(b.RawLines)
+	}
 	layout := buildBookLayout(b.RawLines, width, height)
-	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height)
+	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height, b.sourceLinks)
 	b.rawLinePages = layout.rawLinePages
 }
 
@@ -468,11 +491,12 @@ func (b *Book) PageForAnchor(anchor string) int {
 	}
 
 	if b.rawLinePages == nil {
-		// buildBookLayout normalizes a non-positive height to the default,
-		// so a Book built (or mutated) with PageHeight <= 0 is still mapped
-		// to its true pages rather than collapsed onto page 0.
-		layout := buildBookLayout(b.RawLines, b.PageWidth, b.PageHeight)
-		b.rawLinePages = layout.rawLinePages
+		// formatParagraphsWithProvenance normalizes width, and normalizePageHeight
+		// normalizes a non-positive height to the default (20), so a Book built
+		// (or mutated) with PageHeight <= 0 is still mapped to its true pages.
+		height := normalizePageHeight(b.PageHeight)
+		formatted := formatParagraphsWithProvenance(b.RawLines, b.PageWidth)
+		b.rawLinePages = rawLinePages(formatted, height)
 	}
 
 	if page, ok := b.rawLinePages[lineIdx]; ok {

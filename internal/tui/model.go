@@ -62,10 +62,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) recalcLayout() Model {
 	// Content area: max 72 chars wide, centered, with margins
-	m.contentWidth = min(72, max(20, m.termWidth-4))
+	newWidth := min(72, max(20, m.termWidth-4))
 
 	// Content height: terminal height minus header (2), footer (3), and top/bottom padding (2)
-	m.contentHeight = max(5, m.termHeight-7)
+	newHeight := max(5, m.termHeight-7)
+
+	if newWidth == m.contentWidth && newHeight == m.contentHeight {
+		return m
+	}
+
+	m.contentWidth = newWidth
+	m.contentHeight = newHeight
 
 	if m.book != nil {
 		m.book.Reflow(m.contentWidth, m.contentHeight)
@@ -276,7 +283,7 @@ func (m Model) renderContent() string {
 	// Render each line
 	rendered := make([]string, 0, m.contentHeight)
 	for i, line := range page.Lines {
-		styledLine := m.styleLine(line, i, linksByLine, selectedTarget)
+		styledLine := styleLine(line, i, linksByLine, selectedTarget)
 		rendered = append(rendered, styledLine)
 	}
 
@@ -309,7 +316,7 @@ var (
 				Underline(true)
 )
 
-func (m Model) styleLine(line string, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedTarget string) string {
+func styleLine(line string, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedTarget string) string {
 	// Check if this line has links
 	links, hasLinks := linksByLine[lineIdx]
 

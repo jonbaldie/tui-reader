@@ -74,7 +74,7 @@ func ExtractLinks(line string) []Link {
 
 func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
 	formatted := formatParagraphsWithProvenance(rawLines, width)
-	return attachLinks(pages, rawLines, formatted, height)
+	return attachLinks(pages, rawLines, formatted, height, sourceLinkSet{})
 }
 
 // linkLocation tracks where a source line's links appear in the formatted
@@ -84,20 +84,15 @@ type linkLocation struct {
 	links map[Link][]int
 }
 
-func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int) []Page {
-	if height < 1 {
-		height = 20
-	}
-
-	sourceLinks, sourceOrder := collectSourceLinks(rawLines)
-	locations := buildLocations(formatted, rawLines, sourceLinks)
-	assignLinksToPages(pages, sourceOrder, sourceLinks, locations, height)
-	return pages
+// sourceLinkSet holds pre-extracted links from raw document lines and the order
+// in which lines with links were discovered.
+type sourceLinkSet struct {
+	links map[int][]Link
+	order []int
 }
 
-// collectSourceLinks scans raw lines for links, returning a map of raw-line
-// index to links and the order in which source lines with links were found.
-func collectSourceLinks(rawLines []string) (map[int][]Link, []int) {
+// collectSourceLinks scans raw lines for links, returning a sourceLinkSet.
+func collectSourceLinks(rawLines []string) sourceLinkSet {
 	sourceLinks := make(map[int][]Link)
 	sourceOrder := make([]int, 0)
 	for rawIndex, rawLine := range rawLines {
@@ -106,7 +101,21 @@ func collectSourceLinks(rawLines []string) (map[int][]Link, []int) {
 			sourceOrder = append(sourceOrder, rawIndex)
 		}
 	}
-	return sourceLinks, sourceOrder
+	return sourceLinkSet{links: sourceLinks, order: sourceOrder}
+}
+
+func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int, source sourceLinkSet) []Page {
+	if height < 1 {
+		height = 20
+	}
+
+	if source.links == nil {
+		source = collectSourceLinks(rawLines)
+	}
+
+	locations := buildLocations(formatted, rawLines, source.links)
+	assignLinksToPages(pages, source.order, source.links, locations, height)
+	return pages
 }
 
 // buildLocations maps each source-line index that has links to a linkLocation,
@@ -117,7 +126,8 @@ func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks ma
 		if line.raw < 0 || line.raw >= len(rawLines) {
 			continue
 		}
-		if _, ok := sourceLinks[line.raw]; !ok {
+		links, ok := sourceLinks[line.raw]
+		if !ok || len(links) == 0 {
 			continue
 		}
 		entry := locations[line.raw]
@@ -125,14 +135,30 @@ func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks ma
 			entry = &linkLocation{first: formattedIndex}
 			locations[line.raw] = entry
 		}
-		for _, link := range ExtractLinks(line.text) {
-			if entry.links == nil {
-				entry.links = make(map[Link][]int)
-			}
-			entry.links[link] = append(entry.links[link], formattedIndex)
-		}
+		entry.record(line.text, formattedIndex, links)
 	}
 	return locations
+}
+
+func (l *linkLocation) record(line string, formattedIndex int, links []Link) {
+	seen := make(map[Link]struct{}, len(links))
+	for _, link := range links {
+		if _, ok := seen[link]; ok {
+			continue
+		}
+		seen[link] = struct{}{}
+
+		linkMarkup := "[" + link.Label + "](#" + link.Target + ")"
+		count := strings.Count(line, linkMarkup)
+		if count > 0 {
+			if l.links == nil {
+				l.links = make(map[Link][]int)
+			}
+			for k := 0; k < count; k++ {
+				l.links[link] = append(l.links[link], formattedIndex)
+			}
+		}
+	}
 }
 
 // assignLinksToPages clears existing page links and places each source link on
