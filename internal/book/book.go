@@ -159,19 +159,21 @@ func needsBlankSeparator(result []formattedLine) bool {
 	return len(result) > 0 && result[len(result)-1].text != ""
 }
 
-// isSpecialLine reports whether a trimmed line is a heading, horizontal rule, or
-// indented code block — lines that should not receive paragraph indentation.
-func isSpecialLine(trimmed string) bool {
-	return strings.HasPrefix(trimmed, "#") ||
-		strings.HasPrefix(trimmed, "---") ||
-		strings.HasPrefix(trimmed, "    ")
+// isSpecialLine reports whether a line is a heading or horizontal rule — lines
+// that should not receive paragraph indentation.
+func isSpecialLine(raw string) bool {
+	trimmed := strings.TrimSpace(raw)
+	return strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---")
 }
 
 // formatParagraph wraps a single non-blank raw line into display lines with
 // optional 2-space indentation, preserving the source-line index as provenance.
 func formatParagraph(raw string, ri int, firstParagraph bool, width int) []formattedLine {
-	trimmed := strings.TrimSpace(raw)
-	isSpecial := isSpecialLine(trimmed)
+	if strings.HasPrefix(raw, "    ") {
+		return formatCodeBlock(raw, ri, width)
+	}
+
+	isSpecial := isSpecialLine(raw)
 	shouldIndent := !firstParagraph && !isSpecial && width >= 3
 
 	wrapWidth := width
@@ -184,9 +186,21 @@ func formatParagraph(raw string, ri int, firstParagraph bool, width int) []forma
 		wrapped[0] = "  " + wrapped[0]
 	}
 
+	return wrapFormattedLines(wrapped, ri, "")
+}
+
+func formatCodeBlock(raw string, ri int, width int) []formattedLine {
+	if width < 5 {
+		return wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")
+	}
+	code := strings.TrimPrefix(raw, "    ")
+	return wrapFormattedLines(WrapLines([]string{code}, width-4), ri, "    ")
+}
+
+func wrapFormattedLines(wrapped []string, ri int, prefix string) []formattedLine {
 	lines := make([]formattedLine, len(wrapped))
 	for i, w := range wrapped {
-		lines[i] = formattedLine{text: w, raw: ri}
+		lines[i] = formattedLine{text: prefix + w, raw: ri}
 	}
 	return lines
 }
