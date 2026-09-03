@@ -154,3 +154,16 @@ func TestAttachLinks_NoLinksLeavesEmpty(t *testing.T) {
 		}
 	}
 }
+
+func TestAttachLinks_RepeatedIdenticalLinksAcrossLines(t *testing.T) {
+	raw := []string{"[Target](#target) and " + strings.Repeat("filler words ", 10) + " and [Target](#target)"}
+	pages := Paginate(raw, 40, 20)
+	pages = AttachLinks(pages, raw, 40, 20)
+
+	if len(pages[0].Links) != 2 {
+		t.Fatalf("expected 2 attached links, got %d: %+v", len(pages[0].Links), pages[0].Links)
+	}
+	if pages[0].Links[0].LineOnPage == pages[0].Links[1].LineOnPage {
+		t.Errorf("expected links on different lines, got both on line %d", pages[0].Links[0].LineOnPage)
+	}
+}

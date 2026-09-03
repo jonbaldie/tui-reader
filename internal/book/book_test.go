@@ -89,6 +89,46 @@ func TestLoad_ClassicMacLineEndings(t *testing.T) {
 	}
 }
 
+func TestLoad_LineEndingEquivalence(t *testing.T) {
+	cases := []string{
+		"",
+		"single line no newline",
+		"single line with unix\n",
+		"single line with windows\r\n",
+		"single line with mac\r",
+		"one\ntwo\rthree\r\nfour",
+		"trailing\r\n\r\n",
+		"trailing\n\n",
+		"trailing\r\r",
+		"\r\nleading\r\n\r\nmiddle\r\n\r\ntrailing\r\n",
+		"mixed\r\nand\nand\rand\r\nend",
+	}
+
+	for _, tc := range cases {
+		// Canonical reference
+		canon := tc
+		canon = strings.ReplaceAll(canon, "\r\n", "\n")
+		canon = strings.ReplaceAll(canon, "\r", "\n")
+		wantLines := strings.Split(canon, "\n")
+
+		path := writeTempFile(t, "equiv.txt", tc)
+		_, gotLines, err := Load(path)
+		if err != nil {
+			t.Fatalf("unexpected error for %q: %v", tc, err)
+		}
+
+		if len(gotLines) != len(wantLines) {
+			t.Fatalf("case %q: line count mismatch: got %d, want %d", tc, len(gotLines), len(wantLines))
+		}
+		for i := range wantLines {
+			if gotLines[i] != wantLines[i] {
+				t.Fatalf("case %q line %d: got %q, want %q", tc, i, gotLines[i], wantLines[i])
+			}
+		}
+	}
+}
+
+
 // Unhappy paths
 
 func TestLoad_MissingFile(t *testing.T) {
@@ -338,3 +378,54 @@ func TestPageForAnchor_NotFound(t *testing.T) {
 		t.Errorf("expected -1, got %d", page)
 	}
 }
+
+func TestPageForAnchor_CachedAndFallbackParity(t *testing.T) {
+	rawLines := []string{
+		"# Introduction",
+		"",
+		"See [Chapter 1](#chapter-1) or [Chapter 2](#chapter-2).",
+		"",
+		"# Chapter 1",
+		"",
+		"Some long paragraph that will take up several display lines to ensure pagination happens properly across multiple pages.",
+		"",
+		"# Chapter 2",
+		"",
+		"Content of chapter 2.",
+	}
+	anchors := ExtractAnchors(rawLines)
+	layout := buildBookLayout(rawLines, 40, 4)
+	b := &Book{
+		RawLines:     rawLines,
+		Pages:        layout.pages,
+		Anchors:      anchors,
+		PageWidth:    40,
+		PageHeight:   4,
+		rawLinePages: layout.rawLinePages,
+	}
+
+	for anchor := range anchors {
+		cachedPage := b.PageForAnchor(anchor)
+		if cachedPage < 0 {
+			t.Fatalf("expected valid cached page for %q, got %d", anchor, cachedPage)
+		}
+
+		// Clear cache to trigger fallback
+		b.rawLinePages = nil
+		fallbackPage := b.PageForAnchor(anchor)
+
+		if cachedPage != fallbackPage {
+			t.Fatalf("parity mismatch for anchor %q: cached=%d, fallback=%d", anchor, cachedPage, fallbackPage)
+		}
+	}
+
+	// Non-existent anchor
+	if b.PageForAnchor("non-existent") != -1 {
+		t.Fatalf("expected -1 for non-existent anchor")
+	}
+	b.rawLinePages = nil
+	if b.PageForAnchor("non-existent") != -1 {
+		t.Fatalf("expected -1 for non-existent anchor in fallback")
+	}
+}
+

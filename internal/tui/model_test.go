@@ -371,6 +371,39 @@ func TestLink_SelectionResetsOnPageChange(t *testing.T) {
 	}
 }
 
+func TestRecalcLayout_NoReflowWhenDimensionsUnchanged(t *testing.T) {
+	path := writeTempFile(t, "layout.md", simpleDoc())
+	m := NewModel(path)
+	// 80x30 produces contentWidth = min(72, max(20, 76)) = 72, contentHeight = max(5, 23) = 23
+	m = applyWindowSize(m, 80, 30)
+
+	// Select a link
+	m = pressKey(m, "tab")
+	if m.SelectedLink() < 0 {
+		t.Fatal("expected a link to be selected")
+	}
+	selected := m.SelectedLink()
+
+	// Another window size event where clamped content dimensions are identical (e.g. 100x30 still gives 72x23)
+	m = applyWindowSize(m, 100, 30)
+	if m.SelectedLink() != selected {
+		t.Fatalf("expected selected link %d to be preserved when content dimensions do not change, got %d", selected, m.SelectedLink())
+	}
+
+	// Exact duplicate window size event (80x30)
+	m = applyWindowSize(m, 80, 30)
+	if m.SelectedLink() != selected {
+		t.Fatalf("expected selected link %d to be preserved on duplicate WindowSizeMsg, got %d", selected, m.SelectedLink())
+	}
+
+	// Resize that actually changes content dimensions (e.g. 80x20 -> height changes to 13)
+	m = applyWindowSize(m, 80, 20)
+	if m.SelectedLink() != -1 {
+		t.Fatalf("expected selected link to reset to -1 when content dimensions change, got %d", m.SelectedLink())
+	}
+}
+
+
 // ==================== Helpers ====================
 
 func applyWindowSize(m Model, w, h int) Model {

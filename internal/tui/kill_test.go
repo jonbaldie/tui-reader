@@ -97,7 +97,7 @@ func TestRecalcLayout_ResetsSelectedLinkOnResize(t *testing.T) {
 	if m.SelectedLink() != 0 {
 		t.Fatalf("setup: expected selectedLink 0, got %d", m.SelectedLink())
 	}
-	m = applyWindowSize(m, 80, 20)
+	m = applyWindowSize(m, 60, 20)
 	if m.SelectedLink() != -1 {
 		t.Errorf("selectedLink after resize = %d, want -1 (must reset)", m.SelectedLink())
 	}
