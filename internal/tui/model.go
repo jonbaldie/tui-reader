@@ -249,10 +249,18 @@ func (m Model) renderContent() string {
 
 	page := m.book.Pages[m.currentPage]
 
-	// Build a set of link lines for highlighting
-	linkLineSet := make(map[int][]book.Link)
-	for _, lnk := range page.Links {
-		linkLineSet[lnk.LineOnPage] = append(linkLineSet[lnk.LineOnPage], lnk)
+	// Build a set of link keys per line for highlighting
+	var linksByLine map[int]map[linkKey]struct{}
+	if len(page.Links) > 0 {
+		linksByLine = make(map[int]map[linkKey]struct{})
+		for _, lnk := range page.Links {
+			set := linksByLine[lnk.LineOnPage]
+			if set == nil {
+				set = make(map[linkKey]struct{})
+				linksByLine[lnk.LineOnPage] = set
+			}
+			set[linkKey{label: lnk.Label, target: lnk.Target}] = struct{}{}
+		}
 	}
 
 	// Find the selected link if any
@@ -266,9 +274,9 @@ func (m Model) renderContent() string {
 		Height(m.contentHeight)
 
 	// Render each line
-	var rendered []string
+	rendered := make([]string, 0, m.contentHeight)
 	for i, line := range page.Lines {
-		styledLine := m.styleLine(line, i, linkLineSet, selectedTarget)
+		styledLine := m.styleLine(line, i, linksByLine, selectedTarget)
 		rendered = append(rendered, styledLine)
 	}
 
@@ -282,31 +290,38 @@ func (m Model) renderContent() string {
 	return contentStyle.Render(body)
 }
 
-func (m Model) styleLine(line string, lineIdx int, linkLineSet map[int][]book.Link, selectedTarget string) string {
+var (
+	headingStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("117")).
+			Bold(true)
+
+	textStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("252"))
+
+	selectedLinkStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("0")).
+				Background(lipgloss.Color("117")).
+				Bold(true).
+				Underline(true)
+
+	unselectedLinkStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("75")).
+				Underline(true)
+)
+
+func (m Model) styleLine(line string, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedTarget string) string {
 	// Check if this line has links
-	links, hasLinks := linkLineSet[lineIdx]
+	links, hasLinks := linksByLine[lineIdx]
 
 	if !hasLinks {
 		// Check for heading styling
 		if isHeading(line) {
-			headingStyle := lipgloss.NewStyle().
-				Foreground(lipgloss.Color("117")).
-				Bold(true)
 			return headingStyle.Render(line)
 		}
-		textStyle := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("252"))
 		return textStyle.Render(line)
 	}
 
-	linkKeys := make(map[linkKey]struct{}, len(links))
-	for _, link := range links {
-		linkKeys[linkKey{label: link.Label, target: link.Target}] = struct{}{}
-	}
-	result := styleLinkMarkup(line, linkKeys, selectedTarget)
-
-	textStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("252"))
+	result := styleLinkMarkup(line, links, selectedTarget)
 	return textStyle.Render(result)
 }
 
@@ -321,25 +336,42 @@ var internalLinkMarkup = regexp.MustCompile(`\[([^\]]+)\]\(#([^)]+)\)`)
 // link syntax intact and styles only labels that are attached to this page
 // line, so repeated labels do not cause ANSI-decorated text to be revisited.
 func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedTarget string) string {
-	return internalLinkMarkup.ReplaceAllStringFunc(line, func(markup string) string {
-		parts := internalLinkMarkup.FindStringSubmatch(markup)
-		label, target := parts[1], parts[2]
+	matches := internalLinkMarkup.FindAllStringSubmatchIndex(line, -1)
+	if len(matches) == 0 {
+		return line
+	}
+
+	var sb strings.Builder
+	sb.Grow(len(line) + len(matches)*32)
+	lastIdx := 0
+
+	for _, loc := range matches {
+		matchStart, matchEnd := loc[0], loc[1]
+		labelStart, labelEnd := loc[2], loc[3]
+		targetStart, targetEnd := loc[4], loc[5]
+
+		sb.WriteString(line[lastIdx:matchStart])
+		lastIdx = matchEnd
+
+		label := line[labelStart:labelEnd]
+		target := line[targetStart:targetEnd]
+
 		if _, ok := links[linkKey{label: label, target: target}]; ok {
+			sb.WriteByte('[')
 			if target == selectedTarget {
-				return "[" + lipgloss.NewStyle().
-					Foreground(lipgloss.Color("0")).
-					Background(lipgloss.Color("117")).
-					Bold(true).
-					Underline(true).
-					Render(label) + "](#" + target + ")"
+				sb.WriteString(selectedLinkStyle.Render(label))
+			} else {
+				sb.WriteString(unselectedLinkStyle.Render(label))
 			}
-			return "[" + lipgloss.NewStyle().
-				Foreground(lipgloss.Color("75")).
-				Underline(true).
-				Render(label) + "](#" + target + ")"
+			sb.WriteString("](#")
+			sb.WriteString(target)
+			sb.WriteByte(')')
+		} else {
+			sb.WriteString(line[matchStart:matchEnd])
 		}
-		return markup
-	})
+	}
+	sb.WriteString(line[lastIdx:])
+	return sb.String()
 }
 
 func isHeading(line string) bool {
