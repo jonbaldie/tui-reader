@@ -2,19 +2,25 @@
 
 A beautiful, opinionated TUI e-reader for the terminal. Opens any text or markdown file and paginates it like a Kindle — centered, word-wrapped, with internal link navigation. No configuration. No settings. Just reading.
 
-## Install
+## Installation
 
-```
-go build -o tui-reader .
+```bash
+go install github.com/jonbaldie/tui-reader@latest
 ```
 
-## Usage
+*(Or build from source locally with `go build -o tui-reader .`)*
 
+## Quickstart
+
+Open any markdown or text file:
+
+```bash
+tui-reader path/to/book.md
 ```
-./tui-reader book.md
-./tui-reader notes.txt
-./tui-reader ~/documents/anything-utf8.md
-```
+
+- **Turn pages**: `Space` or `→` (forward), `←` (back)
+- **Follow links**: `Tab` to select, `Enter` to jump, `b` to return
+- **Quit**: `q` or `Esc`
 
 ## Controls
 
