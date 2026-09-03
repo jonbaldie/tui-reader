@@ -79,7 +79,10 @@ func TestAttachLinks_WrappedLinkKeepsLabelOnOneLine(t *testing.T) {
 
 func TestWrapLines_PreservesCompleteInternalLinkMarkup(t *testing.T) {
 	link := "[Open Section 1](#section-1)"
-	got := WrapLines([]string{"before " + link + " after"}, 20)
+	// Width 28 fits the link markup exactly, so it is kept whole and isolated
+	// on its own line. The over-wide case (link wider than the page) is covered
+	// by TestLinkOverflow_WideMarkupWrapsToWidth.
+	got := WrapLines([]string{"before " + link + " after"}, 28)
 	want := []string{"before", link, "after"}
 	if len(got) != len(want) {
 		t.Fatalf("wrapped lines = %q, want %q", got, want)
@@ -93,7 +96,7 @@ func TestWrapLines_PreservesCompleteInternalLinkMarkup(t *testing.T) {
 
 func TestWrapLines_PreservesPunctuationAfterInternalLink(t *testing.T) {
 	link := "[Open Section 1](#section-1)"
-	got := WrapLines([]string{link + ", then continue"}, 20)
+	got := WrapLines([]string{link + ", then continue"}, 28)
 	want := []string{link, ", then continue"}
 	if len(got) != len(want) {
 		t.Fatalf("wrapped lines = %q, want %q", got, want)

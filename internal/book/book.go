@@ -307,6 +307,16 @@ func wrapLine(line string, width int) []string {
 			current = append(current, ' ')
 		}
 		if token.link {
+			if wordLength > width {
+				// The link markup is wider than the page. Hard-break it at the
+				// character level so no display line exceeds width, matching how
+				// an over-long word is handled. The split markup is no longer
+				// detectable per display line, so link attachment falls back to
+				// the source line's first formatted line; the link remains
+				// selectable via tab and followable via enter.
+				appendWordRunes(&current, token.text, width, &lines)
+				continue
+			}
 			current = append(current, []rune(token.text)...)
 			continue
 		}
