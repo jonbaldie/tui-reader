@@ -108,6 +108,71 @@ func TestWrapLines_PreservesPunctuationAfterInternalLink(t *testing.T) {
 	}
 }
 
+func TestWrapLines_PreservesInternalLinkWithPrefixPunctuation(t *testing.T) {
+	link := "[Target Heading](#target-heading)"
+	got := WrapLines([]string{"before (" + link + ") after"}, 40)
+	want := []string{"before", "(" + link + ")", "after"}
+	if len(got) != len(want) {
+		t.Fatalf("wrapped lines = %q, want %q", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("line %d = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestWrapLines_KeepsLinkMarkupIntactWithPrefixPunctuation(t *testing.T) {
+	for _, prefix := range []string{"(", `"`, "“"} {
+		link := "[Target Heading](#target-heading)"
+		got := WrapLines([]string{"before " + prefix + link + " after"}, 40)
+		found := false
+		for _, line := range got {
+			if w := stringWidth(line); w > 40 {
+				t.Errorf("prefix %q: line %q exceeds width (%d)", prefix, line, w)
+			}
+			if strings.Contains(line, link) {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("prefix %q: link markup split across lines: %q", prefix, got)
+		}
+	}
+}
+
+func TestAttachLinks_PrefixedLinkAttachesToLabelLine(t *testing.T) {
+	raw := []string{
+		"# Target Heading",
+		"",
+		"Here is some text before ([Target Heading](#target-heading)) and text after.",
+	}
+	pages := AttachLinks(Paginate(raw, 40, 20), raw, 40, 20)
+
+	count := 0
+	for _, page := range pages {
+		for _, link := range page.Links {
+			count++
+			if link.Target != "target-heading" {
+				t.Errorf("target = %q, want target-heading", link.Target)
+			}
+			if link.LineOnPage < 0 || link.LineOnPage >= len(page.Lines) {
+				t.Fatalf("LineOnPage %d out of range", link.LineOnPage)
+			}
+			line := page.Lines[link.LineOnPage]
+			if !strings.Contains(line, "Target Heading") {
+				t.Errorf("link attached to line %q, which lacks the label", line)
+			}
+			if !strings.Contains(line, "](#target-heading)") {
+				t.Errorf("link line %q lacks intact markup", line)
+			}
+		}
+	}
+	if count != 1 {
+		t.Fatalf("attached links = %d, want exactly one", count)
+	}
+}
+
 func TestAttachLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
 	raw := []string{strings.Repeat("padding ", 10) + "[Chapter 1](#chapter-1) " + strings.Repeat("more ", 10)}
 	pages := Paginate(raw, 20, 20)
