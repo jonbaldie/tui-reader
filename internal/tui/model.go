@@ -270,20 +270,16 @@ func (m Model) renderContent() string {
 		}
 	}
 
-	// Find the selected link if any
-	var selectedTarget string
-	if m.selectedLink >= 0 && m.selectedLink < len(page.Links) {
-		selectedTarget = page.Links[m.selectedLink].Target
-	}
-
 	contentStyle := lipgloss.NewStyle().
 		Width(m.contentWidth).
 		Height(m.contentHeight)
 
 	// Render each line
 	rendered := make([]string, 0, m.contentHeight)
+	linkIndex := 0
 	for i, line := range page.Lines {
-		styledLine := styleLine(line, i, linksByLine, selectedTarget)
+		var styledLine string
+		styledLine, linkIndex = styleLine(line, i, linksByLine, m.selectedLink, linkIndex)
 		rendered = append(rendered, styledLine)
 	}
 
@@ -316,20 +312,20 @@ var (
 				Underline(true)
 )
 
-func styleLine(line string, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedTarget string) string {
+func styleLine(line string, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedIndex, linkIndex int) (string, int) {
 	// Check if this line has links
 	links, hasLinks := linksByLine[lineIdx]
 
 	if !hasLinks {
 		// Check for heading styling
 		if isHeading(line) {
-			return headingStyle.Render(line)
+			return headingStyle.Render(line), linkIndex
 		}
-		return textStyle.Render(line)
+		return textStyle.Render(line), linkIndex
 	}
 
-	result := styleLinkMarkup(line, links, selectedTarget)
-	return textStyle.Render(result)
+	result, linkIndex := styleLinkMarkup(line, links, selectedIndex, linkIndex)
+	return textStyle.Render(result), linkIndex
 }
 
 type linkKey struct {
@@ -342,10 +338,10 @@ var internalLinkMarkup = regexp.MustCompile(`\[([^\]]+)\]\(#([^)]+)\)`)
 // styleLinkMarkup scans Markdown link markup once from left to right. It keeps
 // link syntax intact and styles only labels that are attached to this page
 // line, so repeated labels do not cause ANSI-decorated text to be revisited.
-func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedTarget string) string {
+func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedIndex, linkIndex int) (string, int) {
 	matches := internalLinkMarkup.FindAllStringSubmatchIndex(line, -1)
 	if len(matches) == 0 {
-		return line
+		return line, linkIndex
 	}
 
 	var sb strings.Builder
@@ -365,7 +361,7 @@ func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedTarget str
 
 		if _, ok := links[linkKey{label: label, target: target}]; ok {
 			sb.WriteByte('[')
-			if target == selectedTarget {
+			if linkIndex == selectedIndex {
 				sb.WriteString(selectedLinkStyle.Render(label))
 			} else {
 				sb.WriteString(unselectedLinkStyle.Render(label))
@@ -373,12 +369,13 @@ func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedTarget str
 			sb.WriteString("](#")
 			sb.WriteString(target)
 			sb.WriteByte(')')
+			linkIndex++
 		} else {
 			sb.WriteString(line[matchStart:matchEnd])
 		}
 	}
 	sb.WriteString(line[lastIdx:])
-	return sb.String()
+	return sb.String(), linkIndex
 }
 
 func isHeading(line string) bool {
