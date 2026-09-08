@@ -164,5 +164,47 @@ func TestRendering_MultipleLinksHighlightedOnPage(t *testing.T) {
 	}
 }
 
+func TestRendering_DuplicateTargetSelectsOnlyActiveLink(t *testing.T) {
+	profile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.ANSI256)
+	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
+	doc := "# Target\n\nSee [First Link](#target) and [Second Link](#target).\n"
+	path := writeTempFile(t, "same_target.md", doc)
+	m := NewModel(path)
+	m = applyWindowSize(m, 80, 24)
 
+	m = pressKey(m, "tab")
+	if m.SelectedLink() != 0 {
+		t.Fatalf("expected link 0 selected, got %d", m.SelectedLink())
+	}
+	view0 := m.View()
+
+	m = pressKey(m, "tab")
+	if m.SelectedLink() != 1 {
+		t.Fatalf("expected link 1 selected, got %d", m.SelectedLink())
+	}
+	view1 := m.View()
+
+	if view0 == view1 {
+		t.Fatal("selecting first vs second same-target link produced identical views")
+	}
+
+	selectedFirst := selectedLinkStyle.Render("First Link")
+	selectedSecond := selectedLinkStyle.Render("Second Link")
+	unselectedFirst := unselectedLinkStyle.Render("First Link")
+	unselectedSecond := unselectedLinkStyle.Render("Second Link")
+
+	if !strings.Contains(view0, selectedFirst) || !strings.Contains(view0, unselectedSecond) {
+		t.Errorf("view0 should select only First Link\nview0: %q", view0)
+	}
+	if strings.Contains(view0, selectedSecond) {
+		t.Errorf("view0 selected Second Link too\nview0: %q", view0)
+	}
+	if !strings.Contains(view1, selectedSecond) || !strings.Contains(view1, unselectedFirst) {
+		t.Errorf("view1 should select only Second Link\nview1: %q", view1)
+	}
+	if strings.Contains(view1, selectedFirst) {
+		t.Errorf("view1 selected First Link too\nview1: %q", view1)
+	}
+}
