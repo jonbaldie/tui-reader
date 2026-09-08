@@ -415,22 +415,29 @@ func wrapTokens(line string) []wrapToken {
 			continue
 		}
 
-		if line[i] == '[' {
-			if match := linkRegex.FindStringIndex(line[i:]); match != nil && match[0] == 0 {
-				tokens = append(tokens, wrapToken{text: line[i : i+match[1]], spaceBefore: spaceBefore, link: true})
-				i += match[1]
-				spaceBefore = false
-				continue
-			}
-		}
-
+		// Scan a word. A link may start mid-word when prefix punctuation (e.g.
+		// "(", '"') abuts the opening bracket; the prefix stays glued to the
+		// link token so the markup is kept whole on one display line.
 		start := i
+		link := false
 		for i < n {
 			r, size = utf8.DecodeRuneInString(line[i:])
 			if unicode.IsSpace(r) {
 				break
 			}
+			if line[i] == '[' {
+				if match := linkRegex.FindStringIndex(line[i:]); match != nil && match[0] == 0 {
+					tokens = append(tokens, wrapToken{text: line[start : i+match[1]], spaceBefore: spaceBefore, link: true})
+					i += match[1]
+					link = true
+					break
+				}
+			}
 			i += size
+		}
+		if link {
+			spaceBefore = false
+			continue
 		}
 		tokens = append(tokens, wrapToken{text: line[start:i], spaceBefore: spaceBefore})
 		spaceBefore = false
