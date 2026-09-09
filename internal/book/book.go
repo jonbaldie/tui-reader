@@ -41,6 +41,7 @@ type Book struct {
 
 	sourceLinks  sourceLinkSet
 	rawLinePages map[int]int
+	pageRawLines []int
 }
 
 // Load reads a file from disk and returns its raw content lines.
@@ -130,6 +131,7 @@ type bookLayout struct {
 	formatted    []formattedLine
 	pages        []Page
 	rawLinePages map[int]int
+	pageRawLines []int
 	height       int
 }
 
@@ -248,6 +250,7 @@ func buildBookLayout(rawLines []string, width, height int) bookLayout {
 		formatted:    formatted,
 		pages:        paginateFormatted(formatted, height),
 		rawLinePages: rawLinePages(formatted, height),
+		pageRawLines: pageRawLines(formatted, height),
 		height:       height,
 	}
 }
@@ -292,6 +295,53 @@ func rawLinePages(formatted []formattedLine, height int) map[int]int {
 		}
 	}
 	return pages
+}
+
+// pageRawLines maps each page index to a representative raw source line: the
+// last heading displayed on the page — the section the reader was in — else
+// its first content line, falling back to the nearest preceding content
+// line, then to 0. It is the reverse query of rawLinePages and stays in sync
+// with it: both divide formatted indices by the same height.
+func pageRawLines(formatted []formattedLine, height int) []int {
+	if len(formatted) == 0 {
+		// Empty content paginates to a single empty page.
+		return []int{0}
+	}
+	anchors := make([]int, (len(formatted)+height-1)/height)
+	last := 0 // nearest preceding content line's raw
+	for start := 0; start < len(formatted); start += height {
+		end := min(start+height, len(formatted))
+		heading, content := -1, -1
+		for fi := start; fi < end; fi++ {
+			fl := formatted[fi]
+			if fl.text == "" {
+				continue
+			}
+			last = fl.raw
+			if content < 0 {
+				content = fl.raw
+			}
+			if isHeadingLine(fl.text) {
+				heading = fl.raw
+			}
+		}
+		switch {
+		case heading >= 0:
+			anchors[start/height] = heading
+		case content >= 0:
+			anchors[start/height] = content
+		default:
+			// Page of blank separators only: resume from the nearest
+			// preceding content line.
+			anchors[start/height] = last
+		}
+	}
+	return anchors
+}
+
+// isHeadingLine reports whether a display line is a markdown heading.
+func isHeadingLine(text string) bool {
+	return strings.HasPrefix(strings.TrimSpace(text), "#")
 }
 
 // WrapLines wraps each line to fit within the given width.
@@ -474,6 +524,7 @@ func NewBook(path string, width, height int) (*Book, error) {
 		PageHeight:   height,
 		sourceLinks:  sourceLinks,
 		rawLinePages: layout.rawLinePages,
+		pageRawLines: layout.pageRawLines,
 	}, nil
 }
 
@@ -487,6 +538,7 @@ func (b *Book) Reflow(width, height int) {
 	layout := buildBookLayout(b.RawLines, width, height)
 	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height, b.sourceLinks)
 	b.rawLinePages = layout.rawLinePages
+	b.pageRawLines = layout.pageRawLines
 }
 
 // PageForAnchor returns the page index containing the given anchor.
@@ -511,4 +563,58 @@ func (b *Book) PageForAnchor(anchor string) int {
 	}
 
 	return -1
+}
+
+// RawLineForPage returns the raw source line the page is anchored to: the
+// last heading displayed on the page, else its first content line, falling
+// back to the nearest preceding content line, then to 0. Call it before
+// Reflow; PageForRawLine is
+// the matching query after, so a page index survives a re-pagination by
+// round-tripping through its source location.
+func (b *Book) RawLineForPage(page int) int {
+	if len(b.pageRawLines) == 0 {
+		return 0
+	}
+	if page < 0 {
+		return b.pageRawLines[0]
+	}
+	if page >= len(b.pageRawLines) {
+		return b.pageRawLines[len(b.pageRawLines)-1]
+	}
+	return b.pageRawLines[page]
+}
+
+// PageForRawLine returns the page on which the given raw source line is
+// displayed: its first display page, falling back to the nearest preceding
+// raw line, then to a clamp into the page range.
+func (b *Book) PageForRawLine(raw int) int {
+	if page, ok := b.rawLinePages[raw]; ok {
+		return b.clampPage(page)
+	}
+
+	// The raw line is not displayed (e.g. trailing blank lines): fall back
+	// to the nearest preceding raw line. Formatted raw indices are
+	// non-decreasing, so the largest mapped line below raw owns the
+	// largest such page.
+	best := -1
+	for line, page := range b.rawLinePages {
+		if line < raw && page > best {
+			best = page
+		}
+	}
+	if best >= 0 {
+		return b.clampPage(best)
+	}
+
+	return 0
+}
+
+// clampPage pins a page index into the valid page range, treating an empty
+// book as a single page 0.
+func (b *Book) clampPage(page int) int {
+	last := len(b.Pages) - 1
+	if last < 0 {
+		return 0
+	}
+	return max(0, min(page, last))
 }
