@@ -307,10 +307,11 @@ func pageRawLines(formatted []formattedLine, height int) []int {
 		// Empty content paginates to a single empty page.
 		return []int{0}
 	}
-	anchors := make([]int, (len(formatted)+height-1)/height)
+	n := len(formatted)
+	anchors := make([]int, (n+height-1)/height)
 	last := 0 // nearest preceding content line's raw
-	for start := 0; start < len(formatted); start += height {
-		end := min(start+height, len(formatted))
+	for start := 0; start < n; start += height {
+		end := min(start+height, n)
 		heading, content := -1, -1
 		for fi := start; fi < end; fi++ {
 			fl := formatted[fi]
