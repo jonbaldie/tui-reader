@@ -1,0 +1,40 @@
+Confirmed bug evidence — resize loses reading and back-history positions
+Captured through a real PTY; ANSI cursor/style sequences are normalized here to visible text.
+
+Grounded expectations
+  docs/common-questions.md: after resize, "You will not lose your place by much."
+  docs/controls.md: b returns through link history, which saves the previous position.
+
+Replay A — current reading position
+  1. Open evidence/fixtures/reading-journey.md in a 90x24 terminal.
+  2. Press G.
+     Observed: Page 5 of 5, showing paragraphs 22–24 at the end of the document.
+  3. Resize the terminal to 40x12.
+     Observed: Page 5 of 22, showing paragraph 05 near the start of the document.
+  Expected: remain near paragraphs 22–24 after re-pagination.
+
+Replay B — back-history position, run 1
+  1. Open evidence/fixtures/link-history-journey.md in a 90x24 terminal.
+  2. Press Space. Page 2 of 5 contains:
+       ## RETURN MARKER — resume here after going back
+       [Jump to the ending](#the-ending)
+  3. Press Tab, then Enter.
+     Observed: Page 5 of 5 contains `# The Ending` and the destination marker.
+  4. Resize the terminal to 40x12.
+     Observed: Page 5 of 22 now shows opening paragraph 06 rather than the destination.
+  5. Press b.
+     Observed: Page 2 of 22 shows opening paragraph 02. RETURN MARKER is absent.
+  Expected: return to the source position containing RETURN MARKER.
+
+Replay B — clean run 2
+  Starting from a newly launched process, the same Space, Tab, Enter, resize,
+  and b sequence again ended at Page 2 of 22 showing opening paragraph 02.
+
+Control comparison
+  From a clean 90x24 start, Space, Tab, Enter, then b without resizing returned
+  to Page 2 of 5 containing RETURN MARKER. Link history works until reflow.
+
+Impact
+  A common terminal resize can move a reader far backward and corrupt every
+  saved back-navigation location because page numbers are reused after the
+  document has been divided into a different set of pages.

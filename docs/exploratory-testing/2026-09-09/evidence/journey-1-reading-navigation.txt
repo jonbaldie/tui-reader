@@ -1,0 +1,34 @@
+Journey 1 — read and move through a multi-page document
+Captured through a real PTY; ANSI cursor/style sequences are normalized here to visible text.
+
+Start state
+  Command: tui-reader evidence/fixtures/reading-journey.md
+  Terminal: 90 columns x 24 rows
+  Visible result:
+    Reading Journey
+    # A Small Terminal Voyage
+    Page-marker paragraphs 01–05
+    Page 1 of 5
+
+Action: Space
+  Visible result:
+    Page-marker paragraphs 06–10
+    ## The Middle Distance
+    Page 2 of 5
+
+Action: G
+  Visible result:
+    Page-marker paragraphs 22–24
+    Page 5 of 5
+
+Variation: resize the PTY to 40 columns x 12 rows
+  Visible result:
+    Page-marker paragraph 05: Fields pass slowly enough ...
+    Page 5 of 22
+
+Action: q
+  Observable result: process exited with status 0 and restored the terminal.
+
+Classification
+  Ordinary Space/G/q controls: passed.
+  Position after resize: confirmed failure, followed up in bug-resize-position.txt.
