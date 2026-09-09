@@ -233,6 +233,9 @@ func (m Model) renderError() string {
 		Foreground(lipgloss.Color("9")).
 		Bold(true).
 		Padding(1, 2)
+	if m.termWidth > 0 {
+		style = style.Width(m.termWidth)
+	}
 
 	msg := fmt.Sprintf("Error: %v", m.err)
 	box := style.Render(msg)
