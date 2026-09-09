@@ -32,8 +32,8 @@ At 80x24 the complete missing-file reason was visible; the compiled binary used 
 
 ## Confirmed bugs
 
-1. Reflow reuses page indices instead of preserving document positions, so resize can move the current reading location far backward and make link-history `b` return to the wrong content. Reproduced twice from clean processes, with a fixed-size control comparison.
-2. Error text is horizontally clipped at narrow but usable terminal widths, hiding the filename suffix and operating-system reason. Reproduced by resize and by starting a clean 40x12 PTY.
+1. [#61 — Terminal resize loses reading and back-history positions](https://github.com/jonbaldie/tui-reader/issues/61). Reflow reuses page indices instead of preserving document positions, so resize can move the current reading location far backward and make link-history `b` return to the wrong content. Reproduced twice from clean processes, with a fixed-size control comparison.
+2. [#62 — Error messages are clipped in narrow terminals](https://github.com/jonbaldie/tui-reader/issues/62). Error text is horizontally clipped at narrow but usable terminal widths, hiding the filename suffix and operating-system reason. Reproduced by resize and by starting a clean 40x12 PTY.
 
 No matching open or closed report was found among GitHub issues 1–56 before filing.
 
