@@ -1,0 +1,76 @@
+Exploratory evidence: terminal layout clipping
+===============================================
+
+Build under test
+---------------
+Revision: origin/main at 4639b9365a92d211e91dc73b69d96679ba7493af
+Binary: /tmp/tui-reader-exploratory-20260910
+Interface: live TUI driven through real PTYs; ANSI control sequences removed
+from the transcript below
+
+Width boundary — 18x12 PTY
+--------------------------
+Fixture: evidence/fixtures/small-terminal.md
+
+Clean run 1 (exit 0):
+
+       Small Terminal
+    ──────────────────
+    # Small Terminal
+    Probe
+      Line 01 exists t
+    make the document
+    ──────────────────
+        Page 1 of 25
+    ←/→ page • tab lin
+     • enter follow •
+       back • q quit
+
+Clean run 2 produced the same output and also exited with code 0. The line
+would fit the configured 20-column content area as `  Line 01 exists to`, but
+the final `o` is outside the 18-column terminal. The footer similarly exposes
+only `tab lin` instead of `tab link`.
+
+Height boundary — 40x10 PTY
+---------------------------
+Fixture: evidence/fixtures/small-terminal.md
+
+Clean run 1 (exit 0), numbered after ANSI cleanup:
+
+    01: '  ────────────────────────────────────'
+    02: '  # Small Terminal Probe'
+    03: ''
+    04: '    Line 01 exists to make the'
+    05: '  document long enough to paginate'
+    06: '  at compact sizes.'
+    07: '  ────────────────────────────────────'
+    08: '              Page 1 of 17'
+    09: '  ←/→ page • tab link • enter follow •'
+    10: '            b back • q quit'
+
+Clean run 2 produced the same output and exited with code 0. The title line
+`Small Terminal` is absent even though the document, page indicator, and help
+still render.
+
+Wrapped filename title — 80x24 PTY
+----------------------------------
+Fixture: the deliberately long basename in evidence/fixtures/ whose body is
+`# Maximum Filename Probe`.
+
+Clean runs 1 and 2 both rendered this title prefix:
+
+    Title Header Can Grow Beyond Two Lines And Hide The Footer And Controls
+       Without Clipping The Reading Content Or Page Indicator Or Key Help
+                            During Real Terminal Use
+
+The derived title actually begins with `This Is An Extremely Long Reader
+File Name Created To Test Whether The`; that prefix is missing from the
+visible header. The body, page indicator, and help remained visible and q
+exited with code 0 in both runs.
+
+Expected
+--------
+The TUI should keep the full title or deliberately constrain it, and should
+keep content and controls within the actual terminal viewport. A terminal
+smaller than the 72-column reading cap should adapt without clipping visible
+text or key help.
