@@ -152,6 +152,7 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 
 	var result []formattedLine
 	firstParagraph := true
+	previousRawWasCode := false
 
 	for ri, raw := range rawLines {
 		trimmed := strings.TrimSpace(raw)
@@ -161,17 +162,21 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 			if needsBlankSeparator(result) {
 				result = append(result, formattedLine{text: "", raw: ri})
 			}
+			previousRawWasCode = false
 			continue
 		}
 
 		// Insert blank line between paragraphs (not before the first). This
 		// spacer has no source line, so its provenance is -1.
-		if !firstParagraph && needsBlankSeparator(result) {
+		isCode := IsIndentedCodeLine(raw)
+		continuesCodeBlock := previousRawWasCode && isCode
+		if !firstParagraph && !continuesCodeBlock && needsBlankSeparator(result) {
 			result = append(result, formattedLine{text: "", raw: -1})
 		}
 
 		result = append(result, formatParagraph(raw, ri, firstParagraph, width)...)
 		firstParagraph = false
+		previousRawWasCode = isCode
 	}
 
 	return result

@@ -1,6 +1,7 @@
 package book
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -132,4 +133,61 @@ func TestFormatter_SpacerIsMinusOne(t *testing.T) {
 			t.Errorf("line %d raw = %d, want %d", i, lines[i].raw, w)
 		}
 	}
+}
+
+func TestFormatter_IndentedCodeSpacingAndProvenance(t *testing.T) {
+	tests := []struct {
+		name     string
+		raw      []string
+		wantText []string
+		wantRaw  []int
+	}{
+		{
+			name:     "adjacent code lines stay consecutive",
+			raw:      []string{"    first", "    second", "    third"},
+			wantText: []string{"    first", "    second", "    third"},
+			wantRaw:  []int{0, 1, 2},
+		},
+		{
+			name:     "source blank stays inside code block",
+			raw:      []string{"    first", "", "    second"},
+			wantText: []string{"    first", "", "    second"},
+			wantRaw:  []int{0, 1, 2},
+		},
+		{
+			name:     "paragraph before code",
+			raw:      []string{"paragraph", "    code"},
+			wantText: []string{"paragraph", "", "    code"},
+			wantRaw:  []int{0, -1, 1},
+		},
+		{
+			name:     "code before paragraph",
+			raw:      []string{"    code", "paragraph"},
+			wantText: []string{"    code", "", "  paragraph"},
+			wantRaw:  []int{0, -1, 1},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := FormatParagraphs(tt.raw, 80); !reflect.DeepEqual(got, tt.wantText) {
+				t.Fatalf("FormatParagraphs = %q, want %q", got, tt.wantText)
+			}
+			lines := formatParagraphsWithProvenance(tt.raw, 80)
+			if got := projectText(lines); !reflect.DeepEqual(got, tt.wantText) {
+				t.Fatalf("text = %q, want %q", got, tt.wantText)
+			}
+			if got := formattedRawLines(lines); !reflect.DeepEqual(got, tt.wantRaw) {
+				t.Fatalf("raw provenance = %v, want %v", got, tt.wantRaw)
+			}
+		})
+	}
+}
+
+func formattedRawLines(lines []formattedLine) []int {
+	raw := make([]int, len(lines))
+	for i, line := range lines {
+		raw[i] = line.raw
+	}
+	return raw
 }
