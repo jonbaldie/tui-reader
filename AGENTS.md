@@ -18,6 +18,8 @@ Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/age
 
 For mutation tests, set `GOMAXPROCS=1` and pass `--workers=1` to `mutago` to keep the host responsive.
 
+## Behavioral guidelines
+
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
