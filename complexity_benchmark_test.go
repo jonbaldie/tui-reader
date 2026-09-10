@@ -19,7 +19,7 @@ func BenchmarkParseArgs(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 			for range b.N {
-				_, _, _ = parseArgs(args)
+				_, _, _, _ = parseArgs(args)
 			}
 		})
 	}

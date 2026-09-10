@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -27,7 +28,12 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	path, dumpMode, dumpPages := parseArgs(args)
+	path, dumpMode, dumpPages, err := parseArgs(args)
+
+	if err != nil {
+		fmt.Fprint(stderr, usage)
+		return 1
+	}
 
 	if path == "" {
 		fmt.Fprint(stderr, usage)
@@ -56,18 +62,23 @@ func run(args []string, stdout, stderr io.Writer) int {
 // parseArgs parses CLI arguments into a file path and dump options. The last
 // non-flag argument wins as the path. --dump dumps all pages; --dump=N limits
 // the dump to N pages.
-func parseArgs(args []string) (path string, dumpMode bool, dumpPages int) {
+func parseArgs(args []string) (path string, dumpMode bool, dumpPages int, err error) {
 	for _, arg := range args {
 		if arg == "--dump" {
 			dumpMode = true
 		} else if strings.HasPrefix(arg, "--dump=") {
+			value := strings.TrimPrefix(arg, "--dump=")
+			pages, parseErr := strconv.Atoi(value)
+			if parseErr != nil || pages <= 0 {
+				return path, dumpMode, dumpPages, fmt.Errorf("invalid dump page count %q", value)
+			}
 			dumpMode = true
-			fmt.Sscanf(arg, "--dump=%d", &dumpPages)
+			dumpPages = pages
 		} else {
 			path = arg
 		}
 	}
-	return path, dumpMode, dumpPages
+	return path, dumpMode, dumpPages, nil
 }
 
 // renderDump renders a textual dump of the book's pages. maxPages limits the
