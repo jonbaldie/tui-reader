@@ -19,6 +19,9 @@ var (
 func ExtractAnchors(lines []string) map[string]int {
 	anchors := make(map[string]int)
 	for i, line := range lines {
+		if IsIndentedCodeLine(line) {
+			continue
+		}
 		trimmed := strings.TrimSpace(line)
 		if m := headingRegex.FindStringSubmatch(trimmed); m != nil {
 			anchor := NormalizeAnchor(m[2])
@@ -96,6 +99,9 @@ func collectSourceLinks(rawLines []string) sourceLinkSet {
 	sourceLinks := make(map[int][]Link)
 	sourceOrder := make([]int, 0)
 	for rawIndex, rawLine := range rawLines {
+		if IsIndentedCodeLine(rawLine) {
+			continue
+		}
 		if links := ExtractLinks(rawLine); len(links) > 0 {
 			sourceLinks[rawIndex] = links
 			sourceOrder = append(sourceOrder, rawIndex)

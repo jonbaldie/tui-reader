@@ -390,6 +390,9 @@ func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedIndex, lin
 }
 
 func isHeading(line string) bool {
+	if book.IsIndentedCodeLine(line) {
+		return false
+	}
 	trimmed := strings.TrimSpace(line)
 	return len(trimmed) > 0 && trimmed[0] == '#'
 }
