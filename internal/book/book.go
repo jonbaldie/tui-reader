@@ -135,6 +135,11 @@ type bookLayout struct {
 	height       int
 }
 
+// IsIndentedCodeLine reports whether raw is an indented Markdown code line.
+func IsIndentedCodeLine(raw string) bool {
+	return strings.HasPrefix(raw, "    ")
+}
+
 // formatParagraphsWithProvenance is the single owner of the paragraph
 // formatting rules. In one pass it produces each display line together with the
 // raw source line it came from, so callers never re-derive the formatting
@@ -189,7 +194,7 @@ func isSpecialLine(raw string) bool {
 // formatParagraph wraps a single non-blank raw line into display lines with
 // optional 2-space indentation, preserving the source-line index as provenance.
 func formatParagraph(raw string, ri int, firstParagraph bool, width int) []formattedLine {
-	if strings.HasPrefix(raw, "    ") {
+	if IsIndentedCodeLine(raw) {
 		return formatCodeBlock(raw, ri, width)
 	}
 
@@ -342,6 +347,9 @@ func pageRawLines(formatted []formattedLine, height int) []int {
 
 // isHeadingLine reports whether a display line is a markdown heading.
 func isHeadingLine(text string) bool {
+	if IsIndentedCodeLine(text) {
+		return false
+	}
 	return strings.HasPrefix(strings.TrimSpace(text), "#")
 }
 
