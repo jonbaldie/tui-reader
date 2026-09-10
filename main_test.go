@@ -23,69 +23,87 @@ func writeTempFile(t *testing.T, name, content string) string {
 // ==================== parseArgs ====================
 
 func TestParseArgs_PlainPath(t *testing.T) {
-	path, dumpMode, dumpPages := parseArgs([]string{"book.md"})
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	parsed, err := parseArgs([]string{"book.md"})
+	if err != nil {
+		t.Fatalf("parseArgs: %v", err)
 	}
-	if dumpMode {
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
+	}
+	if parsed.dumpMode {
 		t.Error("dumpMode = true, want false")
 	}
-	if dumpPages != 0 {
-		t.Errorf("dumpPages = %d, want 0", dumpPages)
+	if parsed.dumpPages != 0 {
+		t.Errorf("dumpPages = %d, want 0", parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_DumpFlag(t *testing.T) {
-	path, dumpMode, dumpPages := parseArgs([]string{"--dump", "book.md"})
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	parsed, err := parseArgs([]string{"--dump", "book.md"})
+	if err != nil {
+		t.Fatalf("parseArgs: %v", err)
 	}
-	if !dumpMode {
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
+	}
+	if !parsed.dumpMode {
 		t.Error("dumpMode = false, want true")
 	}
-	if dumpPages != 0 {
-		t.Errorf("dumpPages = %d, want 0", dumpPages)
+	if parsed.dumpPages != 0 {
+		t.Errorf("dumpPages = %d, want 0", parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_DumpWithCount(t *testing.T) {
-	path, dumpMode, dumpPages := parseArgs([]string{"--dump=3", "book.md"})
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	parsed, err := parseArgs([]string{"--dump=3", "book.md"})
+	if err != nil {
+		t.Fatalf("parseArgs: %v", err)
 	}
-	if !dumpMode {
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
+	}
+	if !parsed.dumpMode {
 		t.Error("dumpMode = false, want true")
 	}
-	if dumpPages != 3 {
-		t.Errorf("dumpPages = %d, want 3", dumpPages)
+	if parsed.dumpPages != 3 {
+		t.Errorf("dumpPages = %d, want 3", parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_OnlyFlagNoPath(t *testing.T) {
-	path, dumpMode, _ := parseArgs([]string{"--dump"})
-	if path != "" {
-		t.Errorf("path = %q, want empty", path)
+	parsed, err := parseArgs([]string{"--dump"})
+	if err != nil {
+		t.Fatalf("parseArgs: %v", err)
 	}
-	if !dumpMode {
+	if parsed.path != "" {
+		t.Errorf("path = %q, want empty", parsed.path)
+	}
+	if !parsed.dumpMode {
 		t.Error("dumpMode = false, want true")
 	}
 }
 
 func TestParseArgs_OrderIndependent(t *testing.T) {
-	path, dumpMode, dumpPages := parseArgs([]string{"book.md", "--dump=5"})
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	parsed, err := parseArgs([]string{"book.md", "--dump=5"})
+	if err != nil {
+		t.Fatalf("parseArgs: %v", err)
 	}
-	if !dumpMode || dumpPages != 5 {
-		t.Errorf("dumpMode=%v dumpPages=%d, want true 5", dumpMode, dumpPages)
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
+	}
+	if !parsed.dumpMode || parsed.dumpPages != 5 {
+		t.Errorf("dumpMode=%v dumpPages=%d, want true 5", parsed.dumpMode, parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_NoDumpKeepsPagesZero(t *testing.T) {
 	// Guards against dumpPages being parsed from a plain path.
-	_, _, dumpPages := parseArgs([]string{"chapter5.md"})
-	if dumpPages != 0 {
-		t.Errorf("dumpPages = %d, want 0", dumpPages)
+	parsed, err := parseArgs([]string{"chapter5.md"})
+	if err != nil {
+		t.Fatalf("parseArgs: %v", err)
+	}
+	if parsed.dumpPages != 0 {
+		t.Errorf("dumpPages = %d, want 0", parsed.dumpPages)
 	}
 }
 
@@ -334,6 +352,37 @@ func TestRun_DumpWithCountLimitsOutput(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "Page 1 of") {
 		t.Error("expected page 1 in output")
+	}
+}
+
+func TestRun_DumpInvalidCount(t *testing.T) {
+	path := writeTempFile(t, "doc.md", "# Title\n\nSome content here.\n")
+	tests := []struct {
+		name  string
+		value string
+	}{
+		{name: "non-numeric", value: "abc"},
+		{name: "numeric-prefix", value: "1abc"},
+		{name: "empty", value: ""},
+		{name: "negative", value: "-1"},
+		{name: "zero", value: "0"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var out, errBuf bytes.Buffer
+			code := run([]string{"--dump=" + tt.value, path}, &out, &errBuf)
+
+			if code == 0 {
+				t.Errorf("exit code = %d, want nonzero", code)
+			}
+			if !strings.Contains(errBuf.String(), "Usage:") {
+				t.Errorf("expected usage on stderr, got %q", errBuf.String())
+			}
+			if out.Len() != 0 {
+				t.Errorf("expected no stdout on error, got %q", out.String())
+			}
+		})
 	}
 }
 
