@@ -47,17 +47,16 @@ from clean processes. See [`bug-terminal-layout.txt`](evidence/bug-terminal-layo
 1. **Markdown source-line boundaries create false paragraph breaks.** A
    standard soft-wrapped paragraph and adjacent list items receive extra
    blank rows and indentation, wasting reading space and changing pagination.
-   Issue: to be added after this evidence is published.
+   [Issue #77](https://github.com/jonbaldie/tui-reader/issues/77).
 
 2. **Internal links inside inline code are selectable and navigable.** A
    literal backtick example can unexpectedly move the reader to a matching
-   heading when the user presses the normal link controls. Issue: to be added
-   after this evidence is published.
+   heading when the user presses the normal link controls. [Issue #78](https://github.com/jonbaldie/tui-reader/issues/78).
 
 3. **The TUI clips layout at compact dimensions and with long titles.** The
    minimum content width exceeds an 18-column terminal, the fixed layout drops
    the title at 40x10, and a wrapped filename title loses its beginning at
-   80x24. Issue: to be added after this evidence is published.
+   80x24. [Issue #79](https://github.com/jonbaldie/tui-reader/issues/79).
 
 ## Passed, rejected, and unexplored
 
