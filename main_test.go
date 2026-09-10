@@ -23,87 +23,87 @@ func writeTempFile(t *testing.T, name, content string) string {
 // ==================== parseArgs ====================
 
 func TestParseArgs_PlainPath(t *testing.T) {
-	path, dumpMode, dumpPages, err := parseArgs([]string{"book.md"})
+	parsed, err := parseArgs([]string{"book.md"})
 	if err != nil {
 		t.Fatalf("parseArgs: %v", err)
 	}
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
 	}
-	if dumpMode {
+	if parsed.dumpMode {
 		t.Error("dumpMode = true, want false")
 	}
-	if dumpPages != 0 {
-		t.Errorf("dumpPages = %d, want 0", dumpPages)
+	if parsed.dumpPages != 0 {
+		t.Errorf("dumpPages = %d, want 0", parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_DumpFlag(t *testing.T) {
-	path, dumpMode, dumpPages, err := parseArgs([]string{"--dump", "book.md"})
+	parsed, err := parseArgs([]string{"--dump", "book.md"})
 	if err != nil {
 		t.Fatalf("parseArgs: %v", err)
 	}
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
 	}
-	if !dumpMode {
+	if !parsed.dumpMode {
 		t.Error("dumpMode = false, want true")
 	}
-	if dumpPages != 0 {
-		t.Errorf("dumpPages = %d, want 0", dumpPages)
+	if parsed.dumpPages != 0 {
+		t.Errorf("dumpPages = %d, want 0", parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_DumpWithCount(t *testing.T) {
-	path, dumpMode, dumpPages, err := parseArgs([]string{"--dump=3", "book.md"})
+	parsed, err := parseArgs([]string{"--dump=3", "book.md"})
 	if err != nil {
 		t.Fatalf("parseArgs: %v", err)
 	}
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
 	}
-	if !dumpMode {
+	if !parsed.dumpMode {
 		t.Error("dumpMode = false, want true")
 	}
-	if dumpPages != 3 {
-		t.Errorf("dumpPages = %d, want 3", dumpPages)
+	if parsed.dumpPages != 3 {
+		t.Errorf("dumpPages = %d, want 3", parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_OnlyFlagNoPath(t *testing.T) {
-	path, dumpMode, _, err := parseArgs([]string{"--dump"})
+	parsed, err := parseArgs([]string{"--dump"})
 	if err != nil {
 		t.Fatalf("parseArgs: %v", err)
 	}
-	if path != "" {
-		t.Errorf("path = %q, want empty", path)
+	if parsed.path != "" {
+		t.Errorf("path = %q, want empty", parsed.path)
 	}
-	if !dumpMode {
+	if !parsed.dumpMode {
 		t.Error("dumpMode = false, want true")
 	}
 }
 
 func TestParseArgs_OrderIndependent(t *testing.T) {
-	path, dumpMode, dumpPages, err := parseArgs([]string{"book.md", "--dump=5"})
+	parsed, err := parseArgs([]string{"book.md", "--dump=5"})
 	if err != nil {
 		t.Fatalf("parseArgs: %v", err)
 	}
-	if path != "book.md" {
-		t.Errorf("path = %q, want %q", path, "book.md")
+	if parsed.path != "book.md" {
+		t.Errorf("path = %q, want %q", parsed.path, "book.md")
 	}
-	if !dumpMode || dumpPages != 5 {
-		t.Errorf("dumpMode=%v dumpPages=%d, want true 5", dumpMode, dumpPages)
+	if !parsed.dumpMode || parsed.dumpPages != 5 {
+		t.Errorf("dumpMode=%v dumpPages=%d, want true 5", parsed.dumpMode, parsed.dumpPages)
 	}
 }
 
 func TestParseArgs_NoDumpKeepsPagesZero(t *testing.T) {
 	// Guards against dumpPages being parsed from a plain path.
-	_, _, dumpPages, err := parseArgs([]string{"chapter5.md"})
+	parsed, err := parseArgs([]string{"chapter5.md"})
 	if err != nil {
 		t.Fatalf("parseArgs: %v", err)
 	}
-	if dumpPages != 0 {
-		t.Errorf("dumpPages = %d, want 0", dumpPages)
+	if parsed.dumpPages != 0 {
+		t.Errorf("dumpPages = %d, want 0", parsed.dumpPages)
 	}
 }
 

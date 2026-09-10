@@ -16,6 +16,12 @@ const usage = "Usage: tui-reader [--dump[=N]] <file>\n"
 
 var osExit = os.Exit
 
+type parsedArgs struct {
+	path      string
+	dumpMode  bool
+	dumpPages int
+}
+
 func main() {
 	osExit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
@@ -28,29 +34,29 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	path, dumpMode, dumpPages, err := parseArgs(args)
+	parsed, err := parseArgs(args)
 
 	if err != nil {
 		fmt.Fprint(stderr, usage)
 		return 1
 	}
 
-	if path == "" {
+	if parsed.path == "" {
 		fmt.Fprint(stderr, usage)
 		return 1
 	}
 
-	if dumpMode {
-		b, err := book.NewBook(path, 62, 20)
+	if parsed.dumpMode {
+		b, err := book.NewBook(parsed.path, 62, 20)
 		if err != nil {
 			fmt.Fprintf(stderr, "Error: %v\n", err)
 			return 1
 		}
-		fmt.Fprint(stdout, renderDump(b, dumpPages))
+		fmt.Fprint(stdout, renderDump(b, parsed.dumpPages))
 		return 0
 	}
 
-	model := tui.NewModel(path)
+	model := tui.NewModel(parsed.path)
 	p := tea.NewProgram(model, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(stderr, "Error: %v\n", err)
@@ -62,23 +68,25 @@ func run(args []string, stdout, stderr io.Writer) int {
 // parseArgs parses CLI arguments into a file path and dump options. The last
 // non-flag argument wins as the path. --dump dumps all pages; --dump=N limits
 // the dump to N pages.
-func parseArgs(args []string) (path string, dumpMode bool, dumpPages int, err error) {
+func parseArgs(args []string) (parsedArgs, error) {
+	var parsed parsedArgs
+
 	for _, arg := range args {
 		if arg == "--dump" {
-			dumpMode = true
+			parsed.dumpMode = true
 		} else if strings.HasPrefix(arg, "--dump=") {
 			value := strings.TrimPrefix(arg, "--dump=")
 			pages, parseErr := strconv.Atoi(value)
 			if parseErr != nil || pages <= 0 {
-				return path, dumpMode, dumpPages, fmt.Errorf("invalid dump page count %q", value)
+				return parsed, fmt.Errorf("invalid dump page count %q", value)
 			}
-			dumpMode = true
-			dumpPages = pages
+			parsed.dumpMode = true
+			parsed.dumpPages = pages
 		} else {
-			path = arg
+			parsed.path = arg
 		}
 	}
-	return path, dumpMode, dumpPages, nil
+	return parsed, nil
 }
 
 // renderDump renders a textual dump of the book's pages. maxPages limits the
