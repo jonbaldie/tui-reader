@@ -1,0 +1,55 @@
+Exploratory evidence: Markdown block formatting
+================================================
+
+Build under test
+---------------
+Revision: origin/main at 4639b9365a92d211e91dc73b69d96679ba7493af
+Binary: /tmp/tui-reader-exploratory-20260910
+Interface: supported --dump renderer and live TUI
+Fixture: evidence/fixtures/soft-wrap.md
+
+The fixture contains two consecutive non-blank source lines in one Markdown
+paragraph (lines 3-4), followed by two adjacent list items (lines 8-9).
+
+Clean run 1 — --dump
+--------------------
+The dump frame uses `[blank display row]` below to make an otherwise empty
+display row visible in this transcript.
+
+┌─── Soft Wrap ── Page 1 of 1 ───┐
+│
+│  # Soft Wrap Probe
+│  [blank display row]
+│    This is one Markdown paragraph deliberately split across
+│  physical source lines without a blank line. The reader
+│  should reflow the prose continuously rather than treating
+│  each source line as a new paragraph.
+│  [blank display row]
+│    The second source line continues the same paragraph and
+│  should not receive a blank display row or a new paragraph
+│  indent.
+│  [blank display row]
+│    The next paragraph is separated by a real blank source line.
+│  [blank display row]
+│    - first list item
+│  [blank display row]
+│    - second list item
+│  [blank display row]
+│
+│
+│
+│
+└────────────────────────────────┘
+
+Clean run 2 — --dump
+--------------------
+The output was byte-for-byte the same as clean run 1. The live 80x24 TUI
+showed the same extra blank display rows and paragraph indentation between
+the two source lines and between the adjacent list items; q exited with code
+0.
+
+Expected
+--------
+Markdown source lines without a blank line should remain in one logical
+paragraph and reflow continuously. Adjacent list items should not acquire a
+paragraph-sized blank row merely because they are on separate source lines.

@@ -1,0 +1,25 @@
+Exploratory evidence: normal links, history, and resize
+========================================================
+
+Build under test
+---------------
+Revision: origin/main at 4639b9365a92d211e91dc73b69d96679ba7493af
+Binary: /tmp/tui-reader-exploratory-20260910
+Interface: live TUI in a real PTY
+Fixture: ../2026-09-09/evidence/fixtures/link-history-journey.md
+
+Sequence and observed state
+---------------------------
+
+    start 80x24       Page 1 of 5
+    two spaces        Page 3 of 5
+    h                 Page 2 of 5; `## RETURN MARKER` visible
+    Tab, Enter        Page 5 of 5; `# The Ending` visible
+    resize to 40x12   Page 21 of 22; `# The Ending` still visible
+    b                 Page 9 of 22; `## RETURN MARKER` visible
+    q                 process exited with code 0
+
+This clean run passed the ordinary internal-link and history journey,
+including the resize variation. It was repeated through the same PTY driver
+after a separate fixed-size manual run; no position-loss bug was observed on
+the current revision.

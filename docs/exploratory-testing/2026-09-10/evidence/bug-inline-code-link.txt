@@ -1,0 +1,41 @@
+Exploratory evidence: links inside inline code
+===============================================
+
+Build under test
+---------------
+Revision: origin/main at 4639b9365a92d211e91dc73b69d96679ba7493af
+Binary: /tmp/tui-reader-exploratory-20260910
+Interface: live TUI in an 80x24 PTY
+Fixture: evidence/fixtures/inline-code.md
+
+The only link-shaped text in the fixture is line 3:
+
+    This sentence shows a literal Markdown example: `[not a link](#actual-target)`.
+
+The text is enclosed in backticks and is therefore an inline-code literal, not
+a Markdown link. The real heading target is line 18.
+
+Clean run 1
+-----------
+Initial screen: Page 1 of 2, containing the literal
+`[not a link](#actual-target)`.
+
+Action: Tab, Enter.
+
+Observed screen: Page 2 of 2, containing `# Actual Target` and
+`This is the real destination.`
+
+Action: b, then q.
+
+Observed: returned to Page 1 of 2; process exited with code 0.
+
+Clean run 2
+-----------
+Starting a new process and repeating Tab, Enter again landed on Page 2 of 2
+at `# Actual Target`; q exited with code 0.
+
+Expected
+--------
+Inline-code contents should be displayed literally and should not be offered
+as selectable or navigable internal links. Tab should find no link on this
+page, and Enter should not navigate to the heading.
