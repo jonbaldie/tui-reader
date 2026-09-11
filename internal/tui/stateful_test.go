@@ -149,7 +149,7 @@ func statefulDocument() string {
 	var content strings.Builder
 	content.WriteString("# Contents\n\n")
 	for chapter := 1; chapter <= 8; chapter++ {
-		fmt.Fprintf(&content, "[Chapter %d](#chapter-%d)\n", chapter, chapter)
+		fmt.Fprintf(&content, "[Chapter %d](#chapter-%d)\n\n", chapter, chapter)
 	}
 	for chapter := 1; chapter <= 8; chapter++ {
 		fmt.Fprintf(&content, "\n# Chapter %d\n\n", chapter)
@@ -157,7 +157,7 @@ func statefulDocument() string {
 			fmt.Fprintf(&content, "[Next chapter](#chapter-%d)\n\n", chapter+1)
 		}
 		for line := 0; line < 12; line++ {
-			fmt.Fprintf(&content, "Chapter %d filler line %d has enough words to wrap in a narrow terminal.\n", chapter, line)
+			fmt.Fprintf(&content, "Chapter %d filler line %d has enough words to wrap in a narrow terminal.\n\n", chapter, line)
 		}
 	}
 	return content.String()
