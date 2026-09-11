@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jonbaldie/tui-reader/internal/book"
+	"github.com/mattn/go-runewidth"
 )
 
 // Model is the Bubble Tea model for the reader.
@@ -62,7 +63,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) recalcLayout() Model {
 	// Content area: max 72 chars wide, centered, with margins
-	newWidth := min(72, max(20, m.termWidth-4))
+	newWidth := min(72, max(1, m.termWidth-4))
 
 	// Content height: terminal height minus header (2), footer (3), and top/bottom padding (2)
 	newHeight := max(5, m.termHeight-7)
@@ -216,16 +217,35 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
-	header := m.renderHeader()
+	header := renderHeader(m.book, m.contentWidth)
 	content := m.renderContent()
-	footer := m.renderFooter()
+	footer := renderFooter(m.book, m.currentPage, m.contentWidth)
 
 	// Stack vertically and center horizontally in terminal
 	full := lipgloss.JoinVertical(lipgloss.Center, header, content, footer)
 
-	// Place with horizontal centering; use top position so we control vertical padding
-	// Add 1 empty line top padding for symmetry with the bottom padding
-	return "\n" + lipgloss.Place(m.termWidth, m.termHeight-1, lipgloss.Center, lipgloss.Top, full)
+	if m.termHeight <= 0 {
+		return full
+	}
+
+	fullH := lipgloss.Height(full)
+	if fullH < m.termHeight {
+		return "\n" + lipgloss.Place(m.termWidth, m.termHeight-1, lipgloss.Center, lipgloss.Top, full)
+	}
+	return lipgloss.Place(m.termWidth, m.termHeight, lipgloss.Center, lipgloss.Top, full)
+}
+
+func truncate(s string, width int) string {
+	if width <= 0 {
+		return ""
+	}
+	if runewidth.StringWidth(s) <= width {
+		return s
+	}
+	if width <= 3 {
+		return "..."[:width]
+	}
+	return runewidth.Truncate(s, width-3, "") + "..."
 }
 
 func (m Model) renderError() string {
@@ -242,21 +262,24 @@ func (m Model) renderError() string {
 	return lipgloss.Place(m.termWidth, m.termHeight, lipgloss.Center, lipgloss.Center, box)
 }
 
-func (m Model) renderHeader() string {
-	title := m.book.Title
+func renderHeader(b *book.Book, contentWidth int) string {
+	var title string
+	if b != nil {
+		title = truncate(b.Title, contentWidth)
+	}
 
 	titleStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("229")).
 		Bold(true).
 		Align(lipgloss.Center).
-		Width(m.contentWidth)
+		Width(contentWidth)
 
 	dividerStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("240")).
 		Align(lipgloss.Center).
-		Width(m.contentWidth)
+		Width(contentWidth)
 
-	divider := dividerStyle.Render(strings.Repeat("─", m.contentWidth))
+	divider := dividerStyle.Render(strings.Repeat("─", contentWidth))
 	return lipgloss.JoinVertical(lipgloss.Center, titleStyle.Render(title), divider)
 }
 
@@ -397,27 +420,33 @@ func isHeading(line string) bool {
 	return len(trimmed) > 0 && trimmed[0] == '#'
 }
 
-func (m Model) renderFooter() string {
+const helpText = "←/→ page • tab link • enter follow • b back • q quit"
+
+func renderFooter(b *book.Book, currentPage, contentWidth int) string {
 	dividerStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("240")).
 		Align(lipgloss.Center).
-		Width(m.contentWidth)
+		Width(contentWidth)
 
-	pageInfo := fmt.Sprintf("Page %d of %d", m.currentPage+1, len(m.book.Pages))
+	totalPages := 0
+	if b != nil {
+		totalPages = len(b.Pages)
+	}
+	pageInfo := fmt.Sprintf("Page %d of %d", currentPage+1, totalPages)
 
 	infoStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("245")).
 		Align(lipgloss.Center).
-		Width(m.contentWidth)
+		Width(contentWidth)
 
 	helpStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("241")).
 		Align(lipgloss.Center).
-		Width(m.contentWidth)
+		Width(contentWidth)
 
-	divider := dividerStyle.Render(strings.Repeat("─", m.contentWidth))
+	divider := dividerStyle.Render(strings.Repeat("─", contentWidth))
 	info := infoStyle.Render(pageInfo)
-	help := helpStyle.Render("←/→ page • tab link • enter follow • b back • q quit")
+	help := helpStyle.Render(truncate(helpText, contentWidth))
 
 	return lipgloss.JoinVertical(lipgloss.Center, divider, info, help)
 }
