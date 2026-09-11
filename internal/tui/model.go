@@ -290,17 +290,22 @@ func (m Model) renderContent() string {
 
 	page := m.book.Pages[m.currentPage]
 
-	// Build a set of link keys per line for highlighting
+	// Build a set of link keys and recording starting link index per line for highlighting
 	var linksByLine map[int]map[linkKey]struct{}
+	var lineLinkStartIndex map[int]int
 	if len(page.Links) > 0 {
 		linksByLine = make(map[int]map[linkKey]struct{})
-		for _, lnk := range page.Links {
+		lineLinkStartIndex = make(map[int]int)
+		for idx, lnk := range page.Links {
 			set := linksByLine[lnk.LineOnPage]
 			if set == nil {
 				set = make(map[linkKey]struct{})
 				linksByLine[lnk.LineOnPage] = set
 			}
 			set[linkKey{label: lnk.Label, target: lnk.Target}] = struct{}{}
+			if _, ok := lineLinkStartIndex[lnk.LineOnPage]; !ok {
+				lineLinkStartIndex[lnk.LineOnPage] = idx
+			}
 		}
 	}
 
@@ -310,10 +315,9 @@ func (m Model) renderContent() string {
 
 	// Render each line
 	rendered := make([]string, 0, m.contentHeight)
-	linkIndex := 0
 	for i, line := range page.Lines {
-		var styledLine string
-		styledLine, linkIndex = styleLine(line, i, linksByLine, m.selectedLink, linkIndex)
+		linkIndex := lineLinkStartIndex[i]
+		styledLine, _ := styleLine(line, i, linksByLine, m.selectedLink, linkIndex)
 		rendered = append(rendered, styledLine)
 	}
 
