@@ -60,19 +60,80 @@ func isAnchorChar(r rune) bool {
 }
 
 // ExtractLinks finds markdown-style internal links in a line of text.
+// Link markup inside an inline code span is literal text, not a link.
 func ExtractLinks(line string) []Link {
-	matches := linkRegex.FindAllStringSubmatch(line, -1)
+	matches := linkRegex.FindAllStringSubmatchIndex(line, -1)
 	if matches == nil {
 		return nil
 	}
+	spans := codeSpans(line)
 	var links []Link
 	for _, m := range matches {
+		if overlapsCodeSpan(m[0], m[1], spans) {
+			continue
+		}
 		links = append(links, Link{
-			Label:  m[1],
-			Target: m[2],
+			Label:  line[m[2]:m[3]],
+			Target: line[m[4]:m[5]],
 		})
 	}
 	return links
+}
+
+// codeSpans returns the [start, end) byte ranges of inline code spans: a run
+// of backticks closed by the next run of the same length.
+func codeSpans(line string) [][2]int {
+	var spans [][2]int
+	n := len(line)
+	for i := 0; i < n; {
+		if line[i] != '`' {
+			i++
+			continue
+		}
+		start := i
+		for i < n && line[i] == '`' {
+			i++
+		}
+		run := i - start
+		if end := closingBacktickRun(line, i, run); end >= 0 {
+			spans = append(spans, [2]int{start, end})
+			i = end
+		}
+	}
+	return spans
+}
+
+// closingBacktickRun returns the end of the first backtick run of exactly
+// length run at or after from, or -1 if there is none.
+func closingBacktickRun(line string, from, run int) int {
+	n := len(line)
+	for j := from; j < n; {
+		if line[j] != '`' {
+			j++
+			continue
+		}
+		k := j
+		for k < n && line[k] == '`' {
+			k++
+		}
+		if k-j == run {
+			return k
+		}
+		j = k
+	}
+	return -1
+}
+
+// overlapsCodeSpan reports whether [start, end) intersects a code span it does
+// not wholly contain; a link label may contain code, but code cannot contain
+// or split a link.
+func overlapsCodeSpan(start, end int, spans [][2]int) bool {
+	for _, s := range spans {
+		if s[0] < end && start < s[1] && (s[0] < start || s[1] > end) {
+			return true
+		}
+	}
+	return false
 }
 
 func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
