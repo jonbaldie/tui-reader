@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.6 (2026-09-11)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.5...v0.1.6
+
+### Bug Fixes
+
+- **Ignore indented code in navigation extraction (#70, fixes #67).** Anchor and source-link extraction scanned raw lines independently of the formatter's four-space code-line rule, so headings and links inside indented code blocks were exposed as navigable Markdown. The indented-code predicate is now shared across formatting, extraction, position anchoring, and TUI heading styling.
+- **Keep adjacent indented code lines together (#71, fixes #68).** The formatter inserted an inter-paragraph spacer before every nonblank raw line after the first, including continuations of an indented code block. Only code-block continuations now suppress the spacer; paragraph transitions retain it.
+- **Reject malformed `--dump=N` values (#72, fixes #69).** Malformed `--dump=N` values were silently accepted and changed dump scope; they are now rejected.
+
+### CI
+
+- **Bump pinned Go to 1.26.8 for mutago v2.10.7 (#76, fixes #75).** mutago v2.10.7 requires Go >= 1.26.6, so the pinned 1.26.5 failed the mutation workflow's install step.
+
+### Documentation
+
+- **Cap local Mutago runs at one worker (#74, fixes #73).**
+- **Preserve 2026-09-10 exploratory testing report (#80).**
+
 ## v0.1.5 (2026-09-10)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.4...v0.1.5
