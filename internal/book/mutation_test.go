@@ -16,20 +16,22 @@ import (
 // Mutation: changing `i += height` to `i += height-1` or `i += height+1`
 // would produce overlapping or gapped pages. Verify continuity.
 func TestMutation_PaginationContinuity(t *testing.T) {
-	lines := make([]string, 25)
+	lines := make([]string, 49)
 	for i := range lines {
-		lines[i] = "line"
+		if i%2 == 0 {
+			lines[i] = "line"
+		}
 	}
 	pages := Paginate(lines, 80, 10)
 
 	// All formatted lines must appear exactly once across all pages
-	// 25 raw lines -> 25 content + 24 spacers = 49 formatted lines
+	// 25 paragraphs separated by blanks -> 25 content + 24 blanks = 49 formatted lines
 	totalLines := 0
 	for _, p := range pages {
 		totalLines += len(p.Lines)
 	}
 	if totalLines != 49 {
-		t.Errorf("expected 49 total lines across pages (25 + 24 spacers), got %d", totalLines)
+		t.Errorf("expected 49 total lines across pages (25 + 24 blanks), got %d", totalLines)
 	}
 
 	// No page should exceed height
@@ -43,11 +45,13 @@ func TestMutation_PaginationContinuity(t *testing.T) {
 // Mutation: changing `end > len(wrapped)` guard to `>=` or removing it
 // would cause out-of-bounds or missing last lines.
 func TestMutation_LastPageInclusion(t *testing.T) {
-	// 11 raw lines -> 11 + 10 spacers = 21 formatted lines
+	// 11 paragraphs separated by blanks -> 11 content + 10 blanks = 21 formatted lines
 	// at height 10: pages of 10, 10, 1
-	lines := make([]string, 11)
+	lines := make([]string, 21)
 	for i := range lines {
-		lines[i] = "x"
+		if i%2 == 0 {
+			lines[i] = "x"
+		}
 	}
 	pages := Paginate(lines, 80, 10)
 	if len(pages) < 2 {
@@ -159,15 +163,17 @@ func TestMutation_LinkRejectsRelativePaths(t *testing.T) {
 
 // Mutation: off-by-one in page calculation.
 func TestMutation_PageForAnchor_Precision(t *testing.T) {
-	// Put a heading at raw line 20 with page height 10
-	// With spacing: lines 0-19 = 20 content + 19 spacers = 39 formatted lines
-	// Heading at raw 20 = formatted line 39 (spacer) + 40 (heading)
+	// Put a heading at raw line 39 with page height 10
+	// 20 paragraphs separated by blanks = 20 content + 19 blanks = 39 formatted lines
+	// Heading at raw 39 = formatted line 39 (spacer) + 40 (heading)
 	// Page = 40 / 10 = page 4
-	lines := make([]string, 25)
+	lines := make([]string, 45)
 	for i := range lines {
-		lines[i] = "text"
+		if i%2 == 0 {
+			lines[i] = "text"
+		}
 	}
-	lines[20] = "# Exact"
+	lines[39] = "# Exact"
 
 	path := writeTempFileMut(t, "precision.md", strings.Join(lines, "\n"))
 	b, err := NewBook(path, 80, 10)

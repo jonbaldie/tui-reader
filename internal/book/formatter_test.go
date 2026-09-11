@@ -107,10 +107,10 @@ func TestFormatter_Invariants(t *testing.T) {
 
 // TestFormatter_ExactProvenance pins the precise raw index of each formatted
 // line: a heading (0), a preserved blank source line (1), an unindented first
-// paragraph (2), an inserted inter-paragraph spacer (-1), and a second
-// paragraph (3). Mutating any single provenance assignment breaks this.
+// paragraph (2), an inserted inter-block spacer (-1), and a code block (3).
+// Mutating any single provenance assignment breaks this.
 func TestFormatter_ExactProvenance(t *testing.T) {
-	raw := []string{"# Heading", "", "First para.", "Second para."}
+	raw := []string{"# Heading", "", "First para.", "    code block"}
 	lines := checkFormatterInvariants(t, raw, 60)
 	want := []int{0, 1, 2, -1, 3}
 	if len(lines) != len(want) {
@@ -124,9 +124,9 @@ func TestFormatter_ExactProvenance(t *testing.T) {
 }
 
 // TestFormatter_SpacerIsMinusOne pins that the spacer inserted between two
-// adjacent paragraphs carries -1, not the index of either neighbour.
+// adjacent distinct blocks carries -1, not the index of either neighbour.
 func TestFormatter_SpacerIsMinusOne(t *testing.T) {
-	lines := checkFormatterInvariants(t, []string{"Alpha.", "Beta."}, 60)
+	lines := checkFormatterInvariants(t, []string{"Alpha.", "    code"}, 60)
 	want := []int{0, -1, 1}
 	for i, w := range want {
 		if lines[i].raw != w {
@@ -166,6 +166,42 @@ func TestFormatter_IndentedCodeSpacingAndProvenance(t *testing.T) {
 			wantText: []string{"    code", "", "  paragraph"},
 			wantRaw:  []int{0, -1, 1},
 		},
+		{
+			name:     "heading before paragraph",
+			raw:      []string{"# Title", "paragraph"},
+			wantText: []string{"# Title", "", "  paragraph"},
+			wantRaw:  []int{0, -1, 1},
+		},
+		{
+			name:     "paragraph before heading",
+			raw:      []string{"paragraph", "# Title"},
+			wantText: []string{"paragraph", "", "# Title"},
+			wantRaw:  []int{0, -1, 1},
+		},
+		{
+			name:     "list before paragraph",
+			raw:      []string{"- item", "paragraph"},
+			wantText: []string{"- item", "", "  paragraph"},
+			wantRaw:  []int{0, -1, 1},
+		},
+		{
+			name:     "paragraph before list",
+			raw:      []string{"paragraph", "- item"},
+			wantText: []string{"paragraph", "", "- item"},
+			wantRaw:  []int{0, -1, 1},
+		},
+		{
+			name:     "hr before paragraph",
+			raw:      []string{"---", "paragraph"},
+			wantText: []string{"---", "", "  paragraph"},
+			wantRaw:  []int{0, -1, 1},
+		},
+		{
+			name:     "paragraph before hr",
+			raw:      []string{"paragraph", "---"},
+			wantText: []string{"paragraph", "", "---"},
+			wantRaw:  []int{0, -1, 1},
+		},
 	}
 
 	for _, tt := range tests {
@@ -190,4 +226,20 @@ func formattedRawLines(lines []formattedLine) []int {
 		raw[i] = line.raw
 	}
 	return raw
+}
+
+func TestFormatter_MultiLineParagraphProvenance(t *testing.T) {
+	raw := []string{
+		"Line zero words here.",
+		"Line one words here.",
+		"Line two words here.",
+	}
+	lines := formatParagraphsWithProvenance(raw, 25)
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 lines, got %d: %+v", len(lines), lines)
+	}
+	wantRaw := []int{0, 1, 2}
+	if got := formattedRawLines(lines); !reflect.DeepEqual(got, wantRaw) {
+		t.Errorf("raw provenance = %v, want %v", got, wantRaw)
+	}
 }

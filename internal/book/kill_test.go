@@ -93,7 +93,7 @@ func TestFormatParagraphs_NoConsecutiveBlanks(t *testing.T) {
 }
 
 func TestFormatParagraphs_SecondParagraphIndented(t *testing.T) {
-	out := FormatParagraphs([]string{"First paragraph.", "Second paragraph."}, 60)
+	out := FormatParagraphs([]string{"First paragraph.", "", "Second paragraph."}, 60)
 	var second string
 	for _, l := range out {
 		if strings.Contains(l, "Second") {
@@ -127,7 +127,7 @@ func TestPaginate_EmptyPageHasNonNilSlices(t *testing.T) {
 func TestPaginate_EveryPageHasNonNilLinks(t *testing.T) {
 	var raw []string
 	for i := 0; i < 30; i++ {
-		raw = append(raw, "line of content here")
+		raw = append(raw, "line of content here", "")
 	}
 	pages := Paginate(raw, 80, 20)
 	if len(pages) < 2 {
@@ -144,7 +144,7 @@ func TestPaginate_HeightZeroResetsTo20(t *testing.T) {
 	// Each full page must hold exactly 20 lines; a reset to 19 would shrink them.
 	var raw []string
 	for i := 0; i < 40; i++ {
-		raw = append(raw, "content line")
+		raw = append(raw, "content line", "")
 	}
 	pages := Paginate(raw, 80, 0)
 	if len(pages) < 2 {
@@ -296,7 +296,7 @@ func TestPageForAnchor_HeightZeroMatchesDefaultHeight(t *testing.T) {
 	// Push a heading past the first page so its true page index is > 0.
 	var sb strings.Builder
 	for i := 0; i < 30; i++ {
-		sb.WriteString("filler line\n")
+		sb.WriteString("filler line\n\n")
 	}
 	sb.WriteString("# Target Heading\n\nbody\n")
 	path := writeTempFile(t, "height0.md", sb.String())

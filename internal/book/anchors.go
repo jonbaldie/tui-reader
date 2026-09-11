@@ -128,22 +128,52 @@ func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, hei
 // recording the first formatted-line index and all formatted indices per link.
 func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks map[int][]Link) map[int]*linkLocation {
 	locations := make(map[int]*linkLocation, len(sourceLinks))
+	n := len(rawLines)
 	for formattedIndex, line := range formatted {
-		if line.raw < 0 || line.raw >= len(rawLines) {
+		if line.raw < 0 || line.raw >= n {
 			continue
 		}
-		links, ok := sourceLinks[line.raw]
-		if !ok || len(links) == 0 {
-			continue
-		}
-		entry := locations[line.raw]
-		if entry == nil {
-			entry = &linkLocation{first: formattedIndex}
-			locations[line.raw] = entry
-		}
-		entry.record(line.text, formattedIndex, links)
+		recordFormattedLine(locations, formattedIndex, line, sourceLinks)
 	}
 	return locations
+}
+
+func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, sourceLinks map[int][]Link) {
+	// Direct raw fallback: ensures links wider than page width (broken across lines)
+	// are still assigned a location.
+	if links, ok := sourceLinks[line.raw]; ok && len(links) > 0 {
+		entry := locations[line.raw]
+		if entry == nil {
+			entry = &linkLocation{first: fi}
+			locations[line.raw] = entry
+		}
+		entry.record(line.text, fi, links)
+	}
+	recordReflowedLinks(locations, fi, line.text, line.raw, sourceLinks)
+}
+
+func recordReflowedLinks(locations map[int]*linkLocation, fi int, text string, lineRaw int, sourceLinks map[int][]Link) {
+	for rawIndex, links := range sourceLinks {
+		if rawIndex == lineRaw {
+			continue
+		}
+		recordMatchingLinks(locations, fi, text, rawIndex, links)
+	}
+}
+
+func recordMatchingLinks(locations map[int]*linkLocation, fi int, text string, rawIndex int, links []Link) {
+	for _, link := range links {
+		linkMarkup := "[" + link.Label + "](#" + link.Target + ")"
+		if strings.Contains(text, linkMarkup) {
+			entry := locations[rawIndex]
+			if entry == nil {
+				entry = &linkLocation{first: fi}
+				locations[rawIndex] = entry
+			}
+			entry.record(text, fi, links)
+			break
+		}
+	}
 }
 
 func (l *linkLocation) record(line string, formattedIndex int, links []Link) {

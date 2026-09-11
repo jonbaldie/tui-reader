@@ -152,34 +152,74 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 
 	var result []formattedLine
 	firstParagraph := true
-	previousRawWasCode := false
+	prevCode := false
+	prevList := false
+	n := len(rawLines)
 
-	for ri, raw := range rawLines {
-		trimmed := strings.TrimSpace(raw)
-
-		// Blank lines in source: preserve as spacing, mapped to the source line.
-		if trimmed == "" {
+	for ri := 0; ri < n; ri++ {
+		raw := rawLines[ri]
+		if strings.TrimSpace(raw) == "" {
 			if needsBlankSeparator(result) {
 				result = append(result, formattedLine{text: "", raw: ri})
 			}
-			previousRawWasCode = false
+			prevCode, prevList = false, false
 			continue
 		}
 
-		// Insert blank line between paragraphs (not before the first). This
-		// spacer has no source line, so its provenance is -1.
-		isCode := IsIndentedCodeLine(raw)
-		continuesCodeBlock := previousRawWasCode && isCode
-		if !firstParagraph && !continuesCodeBlock && needsBlankSeparator(result) {
-			result = append(result, formattedLine{text: "", raw: -1})
-		}
-
-		result = append(result, formatParagraph(raw, ri, firstParagraph, width)...)
+		var lines []formattedLine
+		lines, prevCode, prevList, ri = formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
+		result = append(result, lines...)
 		firstParagraph = false
-		previousRawWasCode = isCode
 	}
 
 	return result
+}
+
+func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) ([]formattedLine, bool, bool, int) {
+	raw := rawLines[ri]
+	if IsIndentedCodeLine(raw) {
+		var lines []formattedLine
+		if needsBlockSeparator(firstParagraph, prevCode, result) {
+			lines = append(lines, formattedLine{text: "", raw: -1})
+		}
+		lines = append(lines, formatCodeBlock(raw, ri, width)...)
+		return lines, true, false, ri
+	}
+
+	if isListItem(raw) {
+		var lines []formattedLine
+		if needsBlockSeparator(firstParagraph, prevList, result) {
+			lines = append(lines, formattedLine{text: "", raw: -1})
+		}
+		lines = append(lines, formatParagraph(raw, ri, true, width)...)
+		return lines, false, true, ri
+	}
+
+	if isSpecialLine(raw) {
+		var lines []formattedLine
+		if needsBlockSeparator(firstParagraph, false, result) {
+			lines = append(lines, formattedLine{text: "", raw: -1})
+		}
+		lines = append(lines, formatParagraph(raw, ri, true, width)...)
+		return lines, false, false, ri
+	}
+
+	end := findProseBlockEnd(rawLines, ri)
+	var lines []formattedLine
+	if needsBlockSeparator(firstParagraph, false, result) {
+		lines = append(lines, formattedLine{text: "", raw: -1})
+	}
+	lines = append(lines, formatMultiLineParagraph(rawLines[ri:end], ri, firstParagraph, width)...)
+	return lines, false, false, end - 1
+}
+
+func findProseBlockEnd(rawLines []string, start int) int {
+	n := len(rawLines)
+	end := start + 1
+	for end < n && isProseLine(rawLines[end]) {
+		end++
+	}
+	return end
 }
 
 // needsBlankSeparator reports whether a blank separator line should be inserted
@@ -189,11 +229,103 @@ func needsBlankSeparator(result []formattedLine) bool {
 	return len(result) > 0 && result[len(result)-1].text != ""
 }
 
-// isSpecialLine reports whether a line is a heading or horizontal rule — lines
-// that should not receive paragraph indentation.
+// needsBlockSeparator reports whether a blank separator line should be inserted
+// between two blocks: only when this is not the first block, does not continue
+// the previous block, and preceding content does not already end with a blank line.
+func needsBlockSeparator(firstParagraph, continuesBlock bool, result []formattedLine) bool {
+	return !firstParagraph && !continuesBlock && needsBlankSeparator(result)
+}
+
+func isOrderedListItem(trimmed string) bool {
+	tLen := len(trimmed)
+	i := 0
+	for i < tLen && trimmed[i] >= '0' && trimmed[i] <= '9' {
+		i++
+	}
+	return i > 0 && i < tLen && (strings.HasPrefix(trimmed[i:], ". ") || strings.HasPrefix(trimmed[i:], ") "))
+}
+
+// isListItem reports whether raw is a markdown list item (ordered or unordered).
+func isListItem(raw string) bool {
+	if IsIndentedCodeLine(raw) {
+		return false
+	}
+	trimmed := strings.TrimLeft(raw, " ")
+	if strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") || strings.HasPrefix(trimmed, "+ ") {
+		return true
+	}
+	return isOrderedListItem(trimmed)
+}
+
+// isSpecialLine reports whether a line is a heading, horizontal rule, or list
+// item — lines that should not receive paragraph indentation.
 func isSpecialLine(raw string) bool {
+	if isListItem(raw) {
+		return true
+	}
 	trimmed := strings.TrimSpace(raw)
 	return strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---")
+}
+
+// isProseLine reports whether raw is a regular prose paragraph line (not blank,
+// not indented code, and not a special line such as a heading, horizontal rule,
+// or list item).
+func isProseLine(raw string) bool {
+	return strings.TrimSpace(raw) != "" && !IsIndentedCodeLine(raw) && !isSpecialLine(raw)
+}
+
+func formatMultiLineParagraph(lines []string, startRi int, firstParagraph bool, width int) []formattedLine {
+	if len(lines) == 1 {
+		return formatParagraph(lines[0], startRi, firstParagraph, width)
+	}
+
+	shouldIndent := !firstParagraph && width >= 3
+	wrapWidth := width
+	if shouldIndent {
+		wrapWidth = width - 2
+	}
+
+	joined := strings.Join(lines, " ")
+	wrapped := WrapLines([]string{joined}, wrapWidth)
+	offsets := lineOffsets(lines)
+	return mapWrappedProvenance(wrapped, joined, offsets, startRi, shouldIndent)
+}
+
+func lineOffsets(lines []string) []int {
+	n := len(lines)
+	offsets := make([]int, n)
+	pos := 0
+	for i := 0; i < n; i++ {
+		offsets[i] = pos
+		pos += len(lines[i]) + 1
+	}
+	return offsets
+}
+
+func mapWrappedProvenance(wrapped []string, joined string, offsets []int, startRi int, shouldIndent bool) []formattedLine {
+	nWrapped := len(wrapped)
+	nLines := len(offsets)
+	result := make([]formattedLine, nWrapped)
+	searchFrom := 0
+	currentLine := 0
+	lastRaw := startRi
+
+	for i := 0; i < nWrapped; i++ {
+		text := wrapped[i]
+		if i == 0 && shouldIndent {
+			text = "  " + text
+		}
+		trimmed := strings.TrimLeft(wrapped[i], " ")
+		idx := strings.Index(joined[searchFrom:], trimmed)
+		matchPos := searchFrom + max(0, idx)
+		searchFrom = matchPos + len(trimmed)
+		for currentLine+1 < nLines && offsets[currentLine+1] <= matchPos {
+			currentLine++
+		}
+		lastRaw = startRi + currentLine
+		result[i] = formattedLine{text: text, raw: lastRaw}
+	}
+	return result
 }
 
 // formatParagraph wraps a single non-blank raw line into display lines with

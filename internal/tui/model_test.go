@@ -23,16 +23,16 @@ func simpleDoc() string {
 	var sb strings.Builder
 	sb.WriteString("# Title\n\n")
 	sb.WriteString("## Table of Contents\n\n")
-	sb.WriteString("[Chapter 1](#chapter-1)\n")
+	sb.WriteString("[Chapter 1](#chapter-1)\n\n")
 	sb.WriteString("[Chapter 2](#chapter-2)\n\n")
 	// Pad to push chapters onto later pages
 	for i := 0; i < 30; i++ {
-		sb.WriteString("Filler line.\n")
+		sb.WriteString("Filler line.\n\n")
 	}
 	sb.WriteString("# Chapter 1\n\n")
 	sb.WriteString("Content of chapter 1.\n\n")
 	for i := 0; i < 20; i++ {
-		sb.WriteString("More chapter 1 text.\n")
+		sb.WriteString("More chapter 1 text.\n\n")
 	}
 	sb.WriteString("# Chapter 2\n\n")
 	sb.WriteString("Content of chapter 2.\n")

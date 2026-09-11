@@ -227,11 +227,13 @@ func TestWrapLines_UnicodeContent(t *testing.T) {
 // ==================== Paginate ====================
 
 func TestPaginate_Basic(t *testing.T) {
-	// 50 raw lines, each becomes 1 formatted line + 1 spacer (except first)
-	// = 50 + 49 = 99 formatted lines at height 10 = 10 pages
-	lines := make([]string, 50)
+	// 50 paragraphs separated by blank lines = 50 content + 49 blanks = 99 lines
+	// At height 10 = 10 pages
+	lines := make([]string, 99)
 	for i := range lines {
-		lines[i] = "line"
+		if i%2 == 0 {
+			lines[i] = "line"
+		}
 	}
 	pages := Paginate(lines, 80, 10)
 	if len(pages) != 10 {
@@ -240,11 +242,13 @@ func TestPaginate_Basic(t *testing.T) {
 }
 
 func TestPaginate_PartialLastPage(t *testing.T) {
-	// 15 raw lines = 15 + 14 spacers = 29 formatted lines
+	// 15 paragraphs separated by blank lines = 15 content + 14 blanks = 29 formatted lines
 	// at height 10 = 3 pages (10, 10, 9)
-	lines := make([]string, 15)
+	lines := make([]string, 29)
 	for i := range lines {
-		lines[i] = "line"
+		if i%2 == 0 {
+			lines[i] = "line"
+		}
 	}
 	pages := Paginate(lines, 80, 10)
 	if len(pages) != 3 {
@@ -340,7 +344,7 @@ func TestPageForAnchor_Found(t *testing.T) {
 	// Create a document with a heading after some filler
 	var lines []string
 	for i := 0; i < 30; i++ {
-		lines = append(lines, "filler line")
+		lines = append(lines, "filler line", "")
 	}
 	lines = append(lines, "# Target Heading")
 	for i := 0; i < 10; i++ {
