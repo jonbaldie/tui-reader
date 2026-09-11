@@ -75,6 +75,32 @@ func TestNav_LinkLineIndexPointsAtItsDisplayText(t *testing.T) {
 	}
 }
 
+func TestNav_OverwideLinkCrossingPageBoundaryStaysWithDisplayedLink(t *testing.T) {
+	content := "F0\n\nprefix [abcdefghijk](#target)\n"
+	b := bookFromContent(t, content, 10, 3)
+
+	if len(b.Pages) < 2 {
+		t.Fatalf("expected at least two pages, got %d", len(b.Pages))
+	}
+	if len(b.Pages[0].Links) != 0 {
+		t.Fatalf("page 0 has %d phantom links, want 0: %+v", len(b.Pages[0].Links), b.Pages[0].Links)
+	}
+	if len(b.Pages[1].Links) != 1 {
+		t.Fatalf("page 1 has %d links, want 1: %+v", len(b.Pages[1].Links), b.Pages[1].Links)
+	}
+
+	link := b.Pages[1].Links[0]
+	if link.Target != "target" {
+		t.Fatalf("page 1 link target = %q, want %q", link.Target, "target")
+	}
+	if link.LineOnPage < 0 || link.LineOnPage >= len(b.Pages[1].Lines) {
+		t.Fatalf("page 1 link line = %d, out of range for %d lines", link.LineOnPage, len(b.Pages[1].Lines))
+	}
+	if !strings.Contains(b.Pages[1].Lines[link.LineOnPage], "abc") {
+		t.Errorf("page 1 link line %d = %q, want the displayed link text", link.LineOnPage, b.Pages[1].Lines[link.LineOnPage])
+	}
+}
+
 // Following a link (resolving its target anchor) must land on a page whose
 // lines contain the target heading, so "follow link" reaches the heading.
 func TestNav_FollowingLinkLandsOnHeadingPage(t *testing.T) {
