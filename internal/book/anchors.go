@@ -200,8 +200,8 @@ func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks ma
 }
 
 func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, sourceLinks map[int][]Link) {
-	// Direct raw fallback: ensures links wider than page width (broken across lines)
-	// are still assigned a location.
+	// Direct raw provenance associates link starts with their source line,
+	// including links whose markup was broken across display lines.
 	if links, ok := sourceLinks[line.raw]; ok && len(links) > 0 {
 		entry := locations[line.raw]
 		if entry == nil {
@@ -209,6 +209,7 @@ func recordFormattedLine(locations map[int]*linkLocation, fi int, line formatted
 			locations[line.raw] = entry
 		}
 		entry.record(line.text, fi, links)
+		entry.recordStarts(line.text, fi, line.links)
 	}
 	recordReflowedLinks(locations, fi, line.text, line.raw, sourceLinks)
 }
@@ -254,6 +255,30 @@ func (l *linkLocation) record(line string, formattedIndex int, links []Link) {
 			for k := 0; k < count; k++ {
 				l.links[link] = append(l.links[link], formattedIndex)
 			}
+		}
+	}
+}
+
+func (l *linkLocation) recordStarts(line string, formattedIndex int, starts []Link) {
+	if len(starts) == 0 {
+		return
+	}
+	counts := make(map[Link]int, len(starts))
+	for _, link := range starts {
+		counts[link]++
+	}
+
+	for link, count := range counts {
+		linkMarkup := "[" + link.Label + "](#" + link.Target + ")"
+		missing := count - strings.Count(line, linkMarkup)
+		if missing <= 0 {
+			continue
+		}
+		if l.links == nil {
+			l.links = make(map[Link][]int)
+		}
+		for k := 0; k < missing; k++ {
+			l.links[link] = append(l.links[link], formattedIndex)
 		}
 	}
 }

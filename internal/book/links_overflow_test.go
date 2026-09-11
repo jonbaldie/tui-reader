@@ -65,3 +65,16 @@ func TestLinkOverflow_ShortLinkStaysWhole(t *testing.T) {
 		t.Error("short link markup was not kept whole on a display line")
 	}
 }
+
+func TestLinkOverflow_PrefixedMarkupUsesLinkStartLine(t *testing.T) {
+	raw := []string{"before([abcdefghijk](#target)"}
+	pages := AttachLinks(Paginate(raw, 5, 20), raw, 5, 20)
+
+	if len(pages[0].Links) != 1 {
+		t.Fatalf("attached links = %d, want 1: %+v", len(pages[0].Links), pages[0].Links)
+	}
+	link := pages[0].Links[0]
+	if !strings.Contains(pages[0].Lines[link.LineOnPage], "[") {
+		t.Errorf("link line %d = %q, want the line containing the link start", link.LineOnPage, pages[0].Lines[link.LineOnPage])
+	}
+}
