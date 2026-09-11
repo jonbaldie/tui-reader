@@ -166,16 +166,24 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 			continue
 		}
 
-		var lines []formattedLine
-		lines, prevCode, prevList, ri = formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
-		result = append(result, lines...)
+		block := formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
+		result = append(result, block.lines...)
 		firstParagraph = false
+		prevCode, prevList = block.isCode, block.isList
+		ri = block.lastRi
 	}
 
 	return result
 }
 
-func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) ([]formattedLine, bool, bool, int) {
+type formattedBlock struct {
+	lines  []formattedLine
+	isCode bool
+	isList bool
+	lastRi int
+}
+
+func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) formattedBlock {
 	raw := rawLines[ri]
 	if IsIndentedCodeLine(raw) {
 		var lines []formattedLine
@@ -183,7 +191,7 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 			lines = append(lines, formattedLine{text: "", raw: -1})
 		}
 		lines = append(lines, formatCodeBlock(raw, ri, width)...)
-		return lines, true, false, ri
+		return formattedBlock{lines: lines, isCode: true, lastRi: ri}
 	}
 
 	if isListItem(raw) {
@@ -192,7 +200,7 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 			lines = append(lines, formattedLine{text: "", raw: -1})
 		}
 		lines = append(lines, formatParagraph(raw, ri, true, width)...)
-		return lines, false, true, ri
+		return formattedBlock{lines: lines, isList: true, lastRi: ri}
 	}
 
 	if isSpecialLine(raw) {
@@ -201,7 +209,7 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 			lines = append(lines, formattedLine{text: "", raw: -1})
 		}
 		lines = append(lines, formatParagraph(raw, ri, true, width)...)
-		return lines, false, false, ri
+		return formattedBlock{lines: lines, lastRi: ri}
 	}
 
 	end := findProseBlockEnd(rawLines, ri)
@@ -210,7 +218,7 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 		lines = append(lines, formattedLine{text: "", raw: -1})
 	}
 	lines = append(lines, formatMultiLineParagraph(rawLines[ri:end], ri, firstParagraph, width)...)
-	return lines, false, false, end - 1
+	return formattedBlock{lines: lines, lastRi: end - 1}
 }
 
 func findProseBlockEnd(rawLines []string, start int) int {
