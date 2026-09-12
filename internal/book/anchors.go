@@ -194,12 +194,12 @@ func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks ma
 		if line.raw < 0 || line.raw >= n {
 			continue
 		}
-		recordFormattedLine(locations, formattedIndex, line, sourceLinks)
+		recordFormattedLine(locations, formattedIndex, line, sourceLinks, rawLines)
 	}
 	return locations
 }
 
-func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, sourceLinks map[int][]Link) {
+func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, sourceLinks map[int][]Link, rawLines []string) {
 	// Direct raw provenance associates link starts with their source line,
 	// including links whose markup was broken across display lines.
 	if links, ok := sourceLinks[line.raw]; ok && len(links) > 0 {
@@ -211,15 +211,25 @@ func recordFormattedLine(locations map[int]*linkLocation, fi int, line formatted
 		entry.record(line.text, fi, links)
 		entry.recordStarts(line.text, fi, line.links)
 	}
-	recordReflowedLinks(locations, fi, line.text, line.raw, sourceLinks)
+	recordReflowedLinks(locations, fi, line.text, line.raw, sourceLinks, rawLines)
 }
 
-func recordReflowedLinks(locations map[int]*linkLocation, fi int, text string, lineRaw int, sourceLinks map[int][]Link) {
-	for rawIndex, links := range sourceLinks {
+func recordReflowedLinks(locations map[int]*linkLocation, fi int, text string, lineRaw int, sourceLinks map[int][]Link, rawLines []string) {
+	if lineRaw < 0 || lineRaw >= len(rawLines) || !isProseLine(rawLines[lineRaw]) {
+		return
+	}
+	start := lineRaw
+	for start > 0 && isProseLine(rawLines[start-1]) {
+		start--
+	}
+	end := findProseBlockEnd(rawLines, start)
+	for rawIndex := start; rawIndex < end; rawIndex++ {
 		if rawIndex == lineRaw {
 			continue
 		}
-		recordMatchingLinks(locations, fi, text, rawIndex, links)
+		if links := sourceLinks[rawIndex]; len(links) > 0 {
+			recordMatchingLinks(locations, fi, text, rawIndex, links)
+		}
 	}
 }
 

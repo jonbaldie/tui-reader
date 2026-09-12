@@ -232,3 +232,39 @@ func TestAttachLinks_RepeatedIdenticalLinksAcrossLines(t *testing.T) {
 		t.Errorf("expected links on different lines, got both on line %d", pages[0].Links[0].LineOnPage)
 	}
 }
+
+func TestAttachLinks_RepeatedIdenticalLinksAcrossParagraphs(t *testing.T) {
+	raw := []string{"[A](#t)", "", "[A](#t)"}
+	pages := AttachLinks(Paginate(raw, 80, 20), raw, 80, 20)
+
+	if len(pages[0].Links) != 2 {
+		t.Fatalf("expected 2 attached links, got %d: %+v", len(pages[0].Links), pages[0].Links)
+	}
+	if pages[0].Links[0].LineOnPage == pages[0].Links[1].LineOnPage {
+		t.Errorf("expected links on different lines, got both on line %d", pages[0].Links[0].LineOnPage)
+	}
+	for i, link := range pages[0].Links {
+		if link.LineOnPage < 0 || link.LineOnPage >= len(pages[0].Lines) {
+			t.Fatalf("link %d LineOnPage = %d, out of range", i, link.LineOnPage)
+		}
+		if !strings.Contains(pages[0].Lines[link.LineOnPage], "[A](#t)") {
+			t.Errorf("link %d line %d = %q, want the displayed markup", i, link.LineOnPage, pages[0].Lines[link.LineOnPage])
+		}
+	}
+}
+
+func TestAttachLinks_ReflowedParagraphLinkOnLaterSourceLine(t *testing.T) {
+	raw := []string{"See the next part", "[A](#t) for details."}
+	pages := AttachLinks(Paginate(raw, 40, 20), raw, 40, 20)
+
+	if len(pages[0].Links) != 1 {
+		t.Fatalf("expected 1 attached link, got %d: %+v", len(pages[0].Links), pages[0].Links)
+	}
+	link := pages[0].Links[0]
+	if link.Target != "t" {
+		t.Errorf("target = %q, want t", link.Target)
+	}
+	if !strings.Contains(pages[0].Lines[link.LineOnPage], "[A](#t)") {
+		t.Errorf("line %d = %q, want the reflowed link markup", link.LineOnPage, pages[0].Lines[link.LineOnPage])
+	}
+}
