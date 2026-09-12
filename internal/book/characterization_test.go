@@ -282,3 +282,63 @@ func TestNav_DegenerateInputsAreWellFormed(t *testing.T) {
 		})
 	}
 }
+
+// Repeated identical internal links across paragraphs must each stay on the
+// page that displays them. The first occurrence must not collect phantom
+// duplicates, and later occurrences must remain selectable.
+func TestNav_RepeatedIdenticalLinksStayOnTheirDisplayPages(t *testing.T) {
+	content := `# Chapter 1
+
+First chapter content.
+
+[Back to Contents](#contents)
+
+# Chapter 2
+
+Second chapter content.
+
+[Back to Contents](#contents)
+
+# Contents
+
+Table of contents.
+`
+	b := bookFromContent(t, content, 56, 8)
+
+	const markup = "[Back to Contents](#contents)"
+	displayed := 0
+	for pi, p := range b.Pages {
+		shows := 0
+		showLine := -1
+		for li, line := range p.Lines {
+			if strings.Contains(line, markup) {
+				shows++
+				showLine = li
+			}
+		}
+		displayed += shows
+		if shows == 0 {
+			if len(p.Links) != 0 {
+				t.Errorf("page %d displays no %q but has %d links: %+v", pi, markup, len(p.Links), p.Links)
+			}
+			continue
+		}
+		if shows != 1 {
+			t.Errorf("page %d displays %q %d times, want 1; lines=%v", pi, markup, shows, p.Lines)
+		}
+		if len(p.Links) != 1 {
+			t.Errorf("page %d displays %q but has %d links, want 1: %+v", pi, markup, len(p.Links), p.Links)
+			continue
+		}
+		link := p.Links[0]
+		if link.Label != "Back to Contents" || link.Target != "contents" {
+			t.Errorf("page %d link = %+v, want Label=Back to Contents Target=contents", pi, link)
+		}
+		if link.LineOnPage != showLine {
+			t.Errorf("page %d link LineOnPage = %d, want displayed line %d", pi, link.LineOnPage, showLine)
+		}
+	}
+	if displayed != 2 {
+		t.Fatalf("document displays %q on %d pages, want 2", markup, displayed)
+	}
+}
