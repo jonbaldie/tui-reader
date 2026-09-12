@@ -66,10 +66,10 @@ func ExtractLinks(line string) []Link {
 	if matches == nil {
 		return nil
 	}
-	spans := codeSpans(line)
+	spans := InlineCodeSpans(line)
 	var links []Link
 	for _, m := range matches {
-		if overlapsCodeSpan(m[0], m[1], spans) {
+		if IsInlineCodeRange(spans, m[0], m[1]) {
 			continue
 		}
 		links = append(links, Link{
@@ -78,6 +78,18 @@ func ExtractLinks(line string) []Link {
 		})
 	}
 	return links
+}
+
+// InlineCodeSpans returns the [start, end) byte ranges of inline code spans.
+func InlineCodeSpans(line string) [][2]int {
+	return codeSpans(line)
+}
+
+// IsInlineCodeRange reports whether the range [start, end) overlaps an inline
+// code span outside the range. It lets callers distinguish literal Markdown
+// from active markup using the same rules as ExtractLinks.
+func IsInlineCodeRange(spans [][2]int, start, end int) bool {
+	return overlapsCodeSpan(start, end, spans)
 }
 
 // codeSpans returns the [start, end) byte ranges of inline code spans: a run

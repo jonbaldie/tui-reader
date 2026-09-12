@@ -385,6 +385,7 @@ func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedIndex, lin
 	var sb strings.Builder
 	sb.Grow(len(line) + len(matches)*32)
 	lastIdx := 0
+	codeSpans := book.InlineCodeSpans(line)
 
 	for _, loc := range matches {
 		matchStart, matchEnd := loc[0], loc[1]
@@ -396,6 +397,11 @@ func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedIndex, lin
 
 		label := line[labelStart:labelEnd]
 		target := line[targetStart:targetEnd]
+
+		if book.IsInlineCodeRange(codeSpans, matchStart, matchEnd) {
+			sb.WriteString(line[matchStart:matchEnd])
+			continue
+		}
 
 		if _, ok := links[linkKey{label: label, target: target}]; ok {
 			sb.WriteByte('[')
