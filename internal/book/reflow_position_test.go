@@ -88,3 +88,57 @@ func TestRawLineForPage_HeadingAnchors(t *testing.T) {
 		t.Errorf("expected a clamped page for raw 60, got %d", got)
 	}
 }
+
+// TestRawLineForPage_MultipleHeadingsAnchorsFirstHeading covers the case where
+// a page contains multiple headings: Page 0 anchors to the first content line
+// (so initial startup does not skip Page 1), and subsequent pages anchor to the
+// first heading on that page (issue #91).
+func TestRawLineForPage_MultipleHeadingsAnchorsFirstHeading(t *testing.T) {
+	lines := []string{
+		"# Title",
+		"",
+		"## TOC",
+		"",
+		"# Chapter 1",
+		"",
+		"Content of chapter 1.",
+		"",
+		"# Chapter 2",
+		"",
+		"Content of chapter 2.",
+	}
+	b := &Book{RawLines: lines}
+	b.Reflow(60, 20)
+
+	// Page 0 has Title (0), TOC (2), Chapter 1 (4), Chapter 2 (8).
+	// Anchors must point to first content (raw 0), not last heading (raw 8).
+	if got := b.RawLineForPage(0); got != 0 {
+		t.Errorf("expected page 0 to anchor at raw 0, got %d", got)
+	}
+
+	// Reflow to smaller height: Page 0 must remain Page 0.
+	b.Reflow(72, 8)
+	if got := b.PageForRawLine(0); got != 0 {
+		t.Errorf("expected raw 0 on page 0 after reflow, got %d", got)
+	}
+
+	// Subsequent page with multiple headings: must anchor to its first heading.
+	subsequentDoc := []string{
+		"# P0",
+		"",
+		"Content P0",
+		"",
+		"# P1 Section A",
+		"",
+		"# P1 Section B",
+	}
+	b2 := &Book{RawLines: subsequentDoc}
+	b2.Reflow(60, 4)
+	// Page 0 has raw 0 (P0) and raw 2 (Content P0) (4 formatted lines).
+	// Page 1 has both raw 4 (Section A) and raw 6 (Section B).
+	// Page 1 must anchor to Section A (raw 4), not Section B (raw 6).
+	p1Anchor := b2.RawLineForPage(1)
+	if p1Anchor != 4 {
+		t.Errorf("expected page 1 to anchor at first heading (raw 4), got %d", p1Anchor)
+	}
+}
