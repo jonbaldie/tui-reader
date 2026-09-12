@@ -76,6 +76,20 @@ func (m Model) recalcLayout() Model {
 	m.contentHeight = newHeight
 
 	if m.book != nil {
+		// On the very first resize (currentPage==0, no history) the caller
+		// wants to open at the beginning of the document. Anchoring via
+		// RawLineForPage(0) is wrong here: the default 60×20 layout may
+		// place the last heading of a multi-heading opening into "page 0",
+		// and PageForRawLine() then resolves that heading to page 2 or
+		// later in the real terminal layout (issue #91).
+		// Instead, reflow and stay on page 0 unconditionally at startup.
+		if m.currentPage == 0 && len(m.history) == 0 {
+			m.book.Reflow(m.contentWidth, m.contentHeight)
+			m.currentPage = 0
+			m.selectedLink = -1
+			return m
+		}
+
 		// Preserve position by source location, not page index: page
 		// indices are not stable across a reflow, so capture where the
 		// reader is before reflowing and resolve afterwards (#61).
@@ -95,6 +109,7 @@ func (m Model) recalcLayout() Model {
 	}
 	return m
 }
+
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
@@ -449,7 +464,7 @@ func renderFooter(b *book.Book, currentPage, contentWidth int) string {
 		Width(contentWidth)
 
 	divider := dividerStyle.Render(strings.Repeat("─", contentWidth))
-	info := infoStyle.Render(pageInfo)
+	info := infoStyle.Render(truncate(pageInfo, contentWidth))
 	help := helpStyle.Render(truncate(helpText, contentWidth))
 
 	return lipgloss.JoinVertical(lipgloss.Center, divider, info, help)
