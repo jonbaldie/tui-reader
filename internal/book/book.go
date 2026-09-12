@@ -463,10 +463,12 @@ func rawLinePages(formatted []formattedLine, height int) map[int]int {
 }
 
 // pageRawLines maps each page index to a representative raw source line: the
-// last heading displayed on the page — the section the reader was in — else
+// first heading displayed on the page — the section the reader was in — else
 // its first content line, falling back to the nearest preceding content
-// line, then to 0. It is the reverse query of rawLinePages and stays in sync
-// with it: both divide formatted indices by the same height.
+// line, then to 0. Page 0 always anchors to its first content line so the
+// reader never skips the start of the document (#91). It is the reverse query
+// of rawLinePages and stays in sync with it: both divide formatted indices by
+// the same height.
 func pageRawLines(formatted []formattedLine, height int) []int {
 	if len(formatted) == 0 {
 		// Empty content paginates to a single empty page.
@@ -474,35 +476,46 @@ func pageRawLines(formatted []formattedLine, height int) []int {
 	}
 	n := len(formatted)
 	anchors := make([]int, (n+height-1)/height)
-	last := 0 // nearest preceding content line's raw
-	for start := 0; start < n; start += height {
+	var last int
+	end0 := min(height, n)
+	anchors[0], last = firstPageAnchor(formatted[:end0])
+	for start := height; start < n; start += height {
 		end := min(start+height, n)
-		heading, content := -1, -1
-		for fi := start; fi < end; fi++ {
-			fl := formatted[fi]
-			if fl.text == "" {
-				continue
-			}
-			last = fl.raw
-			if content < 0 {
-				content = fl.raw
-			}
-			if isHeadingLine(fl.text) {
-				heading = fl.raw
-			}
-		}
-		switch {
-		case heading >= 0:
-			anchors[start/height] = heading
-		case content >= 0:
-			anchors[start/height] = content
-		default:
-			// Page of blank separators only: resume from the nearest
-			// preceding content line.
-			anchors[start/height] = last
-		}
+		anchors[start/height], last = pageAnchor(formatted[start:end], last)
 	}
 	return anchors
+}
+
+func firstPageAnchor(lines []formattedLine) (int, int) {
+	for _, fl := range lines {
+		if fl.text != "" {
+			return fl.raw, fl.raw
+		}
+	}
+	return 0, 0
+}
+
+func pageAnchor(pageLines []formattedLine, last int) (int, int) {
+	heading, content := -1, -1
+	for _, fl := range pageLines {
+		if fl.text == "" {
+			continue
+		}
+		last = fl.raw
+		if content < 0 {
+			content = fl.raw
+		}
+		if heading < 0 && isHeadingLine(fl.text) {
+			heading = fl.raw
+		}
+	}
+	if heading >= 0 {
+		return heading, last
+	}
+	if content >= 0 {
+		return content, last
+	}
+	return last, last
 }
 
 // isHeadingLine reports whether a display line is a markdown heading.
@@ -785,8 +798,9 @@ func (b *Book) PageForAnchor(anchor string) int {
 }
 
 // RawLineForPage returns the raw source line the page is anchored to: the
-// last heading displayed on the page, else its first content line, falling
-// back to the nearest preceding content line, then to 0. Call it before
+// first content line for page 0, otherwise the first heading displayed on
+// the page, else its first content line, falling back to the nearest
+// preceding content line, then to 0. Call it before
 // Reflow; PageForRawLine is
 // the matching query after, so a page index survives a re-pagination by
 // round-tripping through its source location.
