@@ -455,7 +455,7 @@ func renderFooter(b *book.Book, currentPage, contentWidth int) string {
 		Width(contentWidth)
 
 	divider := dividerStyle.Render(strings.Repeat("─", contentWidth))
-	info := infoStyle.Render(pageInfo)
+	info := infoStyle.Render(truncate(pageInfo, contentWidth))
 	help := helpStyle.Render(truncate(helpText, contentWidth))
 
 	return lipgloss.JoinVertical(lipgloss.Center, divider, info, help)
