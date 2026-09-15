@@ -294,16 +294,33 @@ func formatMultiLineParagraph(lines []string, startRi int, firstParagraph bool, 
 		return formatParagraph(lines[0], startRi, firstParagraph, width)
 	}
 
-	shouldIndent := !firstParagraph && width >= 3
-	wrapWidth := width
-	if shouldIndent {
-		wrapWidth = width - 2
-	}
-
 	joined := strings.Join(lines, " ")
-	wrapped := wrapLineWithLinks(joined, wrapWidth)
+	wrapped, shouldIndent := wrapParagraphWithIndent(joined, width, !firstParagraph)
 	offsets := lineOffsets(lines)
 	return mapWrappedProvenance(wrapped, joined, offsets, startRi, shouldIndent)
+}
+
+const paragraphIndent = "  "
+
+// wrapParagraphWithIndent reserves the paragraph indent while wrapping, but
+// drops it and rewraps at the full width if the first content line contains a
+// wide rune that cannot fit alongside the indent.
+func wrapParagraphWithIndent(text string, width int, indent bool) ([]wrappedLine, bool) {
+	if !indent {
+		return wrapLineWithLinks(text, width), false
+	}
+
+	indentWidth := stringWidth(paragraphIndent)
+	if width <= indentWidth {
+		return wrapLineWithLinks(text, width), false
+	}
+
+	wrapped := wrapLineWithLinks(text, width-indentWidth)
+	if len(wrapped) > 0 && stringWidth(wrapped[0].text)+indentWidth <= width {
+		return wrapped, true
+	}
+
+	return wrapLineWithLinks(text, width), false
 }
 
 func lineOffsets(lines []string) []int {
@@ -328,7 +345,7 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 	for i := 0; i < nWrapped; i++ {
 		text := wrapped[i].text
 		if i == 0 && shouldIndent {
-			text = "  " + text
+			text = paragraphIndent + text
 		}
 		trimmed := strings.TrimLeft(wrapped[i].text, " ")
 		idx := strings.Index(joined[searchFrom:], trimmed)
@@ -355,16 +372,9 @@ func formatParagraph(raw string, ri int, firstParagraph bool, width int) []forma
 	}
 
 	isSpecial := isSpecialLine(raw)
-	shouldIndent := !firstParagraph && !isSpecial && width >= 3
-
-	wrapWidth := width
-	if shouldIndent {
-		wrapWidth = width - 2
-	}
-
-	wrapped := wrapLineWithLinks(raw, wrapWidth)
+	wrapped, shouldIndent := wrapParagraphWithIndent(raw, width, !firstParagraph && !isSpecial)
 	if shouldIndent && len(wrapped) > 0 {
-		wrapped[0].text = "  " + wrapped[0].text
+		wrapped[0].text = paragraphIndent + wrapped[0].text
 	}
 
 	return formatWrappedLines(wrapped, ri, "")
