@@ -371,7 +371,7 @@ type linkKey struct {
 	target string
 }
 
-var internalLinkMarkup = regexp.MustCompile(`\[([^\]]+)\]\(#([^)]+)\)`)
+var internalLinkMarkup = regexp.MustCompile(`\[([^\[\]]+)\]\(#([^)]+)\)`)
 
 // styleLinkMarkup scans Markdown link markup once from left to right. It keeps
 // link syntax intact and styles only labels that are attached to this page
