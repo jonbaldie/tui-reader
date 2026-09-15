@@ -332,7 +332,11 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 		}
 		trimmed := strings.TrimLeft(wrapped[i].text, " ")
 		idx := strings.Index(joined[searchFrom:], trimmed)
-		matchPos := searchFrom + max(0, idx)
+		if idx < 0 {
+			result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
+			continue
+		}
+		matchPos := searchFrom + idx
 		searchFrom = matchPos + len(trimmed)
 		for currentLine+1 < nLines && offsets[currentLine+1] <= matchPos {
 			currentLine++
