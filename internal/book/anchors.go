@@ -11,7 +11,7 @@ var (
 	headingRegex = regexp.MustCompile(`^(#{1,6})\s+(.+)$`)
 
 	// Markdown links: [text](#anchor)
-	linkRegex = regexp.MustCompile(`\[([^\]]+)\]\(#([^)]+)\)`)
+	linkRegex = regexp.MustCompile(`\[([^\[\]]+)\]\(#([^)]+)\)`)
 )
 
 // ExtractAnchors scans raw lines for headings and returns a map of
