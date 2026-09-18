@@ -59,23 +59,43 @@ func isAnchorChar(r rune) bool {
 	return (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')
 }
 
-// ExtractLinks finds markdown-style internal links in a line of text.
-// Link markup inside an inline code span is literal text, not a link.
-func ExtractLinks(line string) []Link {
-	matches := linkRegex.FindAllStringSubmatchIndex(line, -1)
+type linkMatch struct {
+	link  Link
+	start int
+}
+
+func extractLinkMatches(text string) []linkMatch {
+	matches := linkRegex.FindAllStringSubmatchIndex(text, -1)
 	if matches == nil {
 		return nil
 	}
-	spans := InlineCodeSpans(line)
-	var links []Link
+	spans := InlineCodeSpans(text)
+	var links []linkMatch
 	for _, m := range matches {
 		if IsInlineCodeRange(spans, m[0], m[1]) {
 			continue
 		}
-		links = append(links, Link{
-			Label:  line[m[2]:m[3]],
-			Target: line[m[4]:m[5]],
+		links = append(links, linkMatch{
+			link: Link{
+				Label:  text[m[2]:m[3]],
+				Target: text[m[4]:m[5]],
+			},
+			start: m[0],
 		})
+	}
+	return links
+}
+
+// ExtractLinks finds markdown-style internal links in a line of text.
+// Link markup inside an inline code span is literal text, not a link.
+func ExtractLinks(line string) []Link {
+	matches := extractLinkMatches(line)
+	if len(matches) == 0 {
+		return nil
+	}
+	links := make([]Link, len(matches))
+	for i, m := range matches {
+		links[i] = m.link
 	}
 	return links
 }
@@ -171,16 +191,46 @@ type sourceLinkSet struct {
 func collectSourceLinks(rawLines []string) sourceLinkSet {
 	sourceLinks := make(map[int][]Link)
 	sourceOrder := make([]int, 0)
-	for rawIndex, rawLine := range rawLines {
-		if IsIndentedCodeLine(rawLine) {
+	n := len(rawLines)
+	for ri := 0; ri < n; ri++ {
+		raw := rawLines[ri]
+		if !isProseLine(raw) {
+			if !IsIndentedCodeLine(raw) {
+				if links := ExtractLinks(raw); len(links) > 0 {
+					sourceLinks[ri] = links
+					sourceOrder = append(sourceOrder, ri)
+				}
+			}
 			continue
 		}
-		if links := ExtractLinks(rawLine); len(links) > 0 {
-			sourceLinks[rawIndex] = links
-			sourceOrder = append(sourceOrder, rawIndex)
-		}
+
+		end := findProseBlockEnd(rawLines, ri)
+		lines := rawLines[ri:end]
+		collectProseBlockLinks(sourceLinks, &sourceOrder, lines, ri)
+		ri = end - 1
 	}
 	return sourceLinkSet{links: sourceLinks, order: sourceOrder}
+}
+
+func collectProseBlockLinks(sourceLinks map[int][]Link, sourceOrder *[]int, lines []string, startRi int) {
+	joined := strings.Join(lines, " ")
+	matches := extractLinkMatches(joined)
+	if len(matches) == 0 {
+		return
+	}
+	offsets := lineOffsets(lines)
+	currentLine := 0
+	nLines := len(lines)
+	for _, m := range matches {
+		for currentLine+1 < nLines && offsets[currentLine+1] <= m.start {
+			currentLine++
+		}
+		rawIndex := startRi + currentLine
+		if _, ok := sourceLinks[rawIndex]; !ok {
+			*sourceOrder = append(*sourceOrder, rawIndex)
+		}
+		sourceLinks[rawIndex] = append(sourceLinks[rawIndex], m.link)
+	}
 }
 
 func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int, source sourceLinkSet) []Page {
