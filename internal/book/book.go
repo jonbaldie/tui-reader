@@ -380,12 +380,33 @@ func formatParagraph(raw string, ri int, firstParagraph bool, width int) []forma
 	return formatWrappedLines(wrapped, ri, "")
 }
 
+const codeBlockIndent = "    "
+
 func formatCodeBlock(raw string, ri int, width int) []formattedLine {
-	if width < 5 {
+	indentWidth := stringWidth(codeBlockIndent)
+	if width <= indentWidth {
 		return wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")
 	}
-	code := strings.TrimPrefix(raw, "    ")
-	return wrapFormattedLines(WrapLines([]string{code}, width-4), ri, "    ")
+
+	code := strings.TrimPrefix(raw, codeBlockIndent)
+	wrapped := WrapLines([]string{code}, width-indentWidth)
+	if fitsWithIndent(wrapped, indentWidth, width) {
+		return wrapFormattedLines(wrapped, ri, codeBlockIndent)
+	}
+
+	return wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")
+}
+
+// fitsWithIndent reports whether every wrapped line stays within width once
+// the indent is prepended. Wide runes that can't be split may leave a
+// wrapped line wider than the space reserved for it.
+func fitsWithIndent(wrapped []string, indentWidth, width int) bool {
+	for _, w := range wrapped {
+		if stringWidth(w)+indentWidth > width {
+			return false
+		}
+	}
+	return true
 }
 
 func wrapFormattedLines(wrapped []string, ri int, prefix string) []formattedLine {
