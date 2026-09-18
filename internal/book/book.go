@@ -385,7 +385,13 @@ func formatCodeBlock(raw string, ri int, width int) []formattedLine {
 		return wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")
 	}
 	code := strings.TrimPrefix(raw, "    ")
-	return wrapFormattedLines(WrapLines([]string{code}, width-4), ri, "    ")
+	wrapped := WrapLines([]string{code}, width-4)
+	for _, w := range wrapped {
+		if stringWidth(w)+4 > width {
+			return wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")
+		}
+	}
+	return wrapFormattedLines(wrapped, ri, "    ")
 }
 
 func wrapFormattedLines(wrapped []string, ri int, prefix string) []formattedLine {
