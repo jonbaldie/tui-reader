@@ -168,19 +168,88 @@ type sourceLinkSet struct {
 }
 
 // collectSourceLinks scans raw lines for links, returning a sourceLinkSet.
+// Prose paragraphs are scanned a block at a time so that a link whose markup
+// spans a soft-wrapped line break (e.g. "[link" on one source line and
+// "label](#target)" on the next) is still captured, matching the way
+// formatMultiLineParagraph joins those lines before wrapping them.
 func collectSourceLinks(rawLines []string) sourceLinkSet {
 	sourceLinks := make(map[int][]Link)
 	sourceOrder := make([]int, 0)
-	for rawIndex, rawLine := range rawLines {
+	n := len(rawLines)
+	for rawIndex := 0; rawIndex < n; {
+		rawLine := rawLines[rawIndex]
 		if IsIndentedCodeLine(rawLine) {
+			rawIndex++
 			continue
 		}
-		if links := ExtractLinks(rawLine); len(links) > 0 {
-			sourceLinks[rawIndex] = links
-			sourceOrder = append(sourceOrder, rawIndex)
+		if !isProseLine(rawLine) {
+			if links := ExtractLinks(rawLine); len(links) > 0 {
+				sourceLinks[rawIndex] = links
+				sourceOrder = append(sourceOrder, rawIndex)
+			}
+			rawIndex++
+			continue
 		}
+		end := findProseBlockEnd(rawLines, rawIndex)
+		sourceOrder = append(sourceOrder, collectProseBlockLinks(rawLines[rawIndex:end], rawIndex, sourceLinks)...)
+		rawIndex = end
 	}
 	return sourceLinkSet{links: sourceLinks, order: sourceOrder}
+}
+
+// collectProseBlockLinks records the links found on each line of a block of
+// consecutive prose lines, then scans the block joined into one string (the
+// same joining formatMultiLineParagraph performs) for any additional links
+// whose markup was split across the line break. A split link is attributed to
+// the raw line on which its markup begins.
+func collectProseBlockLinks(lines []string, startRi int, sourceLinks map[int][]Link) []int {
+	order := make([]int, 0, len(lines))
+	for i, line := range lines {
+		if links := ExtractLinks(line); len(links) > 0 {
+			sourceLinks[startRi+i] = links
+			order = append(order, startRi+i)
+		}
+	}
+	if len(lines) < 2 {
+		return order
+	}
+
+	remaining := make(map[Link]int)
+	for i := range lines {
+		for _, link := range sourceLinks[startRi+i] {
+			remaining[link]++
+		}
+	}
+
+	joined := strings.Join(lines, " ")
+	offsets := lineOffsets(lines)
+	spans := codeSpans(joined)
+	for _, m := range linkRegex.FindAllStringSubmatchIndex(joined, -1) {
+		if overlapsCodeSpan(m[0], m[1], spans) {
+			continue
+		}
+		link := Link{Label: joined[m[2]:m[3]], Target: joined[m[4]:m[5]]}
+		if remaining[link] > 0 {
+			remaining[link]--
+			continue
+		}
+		rawIndex := startRi + rawLineForOffset(offsets, m[0])
+		if _, exists := sourceLinks[rawIndex]; !exists {
+			order = append(order, rawIndex)
+		}
+		sourceLinks[rawIndex] = append(sourceLinks[rawIndex], link)
+	}
+	return order
+}
+
+// rawLineForOffset returns the index of the line whose byte offset (from
+// lineOffsets) covers pos.
+func rawLineForOffset(offsets []int, pos int) int {
+	line := 0
+	for line+1 < len(offsets) && offsets[line+1] <= pos {
+		line++
+	}
+	return line
 }
 
 func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int, source sourceLinkSet) []Page {
