@@ -53,10 +53,10 @@ func NormalizeAnchor(text string) string {
 	return b.String()
 }
 
-// isAnchorChar reports whether r is a lowercase letter or digit suitable for
-// an anchor fragment.
+// isAnchorChar reports whether r is a letter or digit, in any script, suitable
+// for an anchor fragment.
 func isAnchorChar(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')
+	return unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
 type linkMatch struct {

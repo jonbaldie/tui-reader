@@ -1,8 +1,8 @@
 # Anchor normalization performance
 
 `NormalizeAnchor` now filters, lowercases, converts runs of spaces and hyphens,
-and trims boundary separators in one pass. It retains only ASCII letters and
-digits, matching the prior output for punctuation and Unicode input.
+and trims boundary separators in one pass. It retains letters and digits in any
+script, so CJK and accented headings keep their text.
 
 The adversarial benchmark combines a long hyphen run with unaffected text:
 

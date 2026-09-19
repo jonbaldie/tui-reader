@@ -21,6 +21,8 @@ func TestNormalizeAnchor(t *testing.T) {
 		{"", ""},
 		{"123 Numbers", "123-numbers"},
 		{"a", "a"},
+		{"第一章", "第一章"},
+		{"Été", "été"},
 	}
 	for _, tt := range tests {
 		got := NormalizeAnchor(tt.input)

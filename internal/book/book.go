@@ -809,9 +809,10 @@ func (b *Book) Reflow(width, height int) {
 }
 
 // PageForAnchor returns the page index containing the given anchor.
+// The anchor is normalized like heading text, so "#Usage" finds "## Usage".
 // Returns -1 if the anchor is not found.
 func (b *Book) PageForAnchor(anchor string) int {
-	lineIdx, ok := b.Anchors[anchor]
+	lineIdx, ok := b.Anchors[NormalizeAnchor(anchor)]
 	if !ok {
 		return -1
 	}

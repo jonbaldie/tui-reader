@@ -17,7 +17,7 @@ func TestNormalizeAnchorParity(t *testing.T) {
 		{"punctuation", "hello, world! (again)", "hello-world-again"},
 		{"boundaries", "---heading---", "heading"},
 		{"digits", "Part 42 - Section 7", "part-42-section-7"},
-		{"unicode removed", "Café — 東京", "caf"},
+		{"unicode kept", "Café — 東京", "café-東京"},
 	}
 
 	for _, tt := range tests {
