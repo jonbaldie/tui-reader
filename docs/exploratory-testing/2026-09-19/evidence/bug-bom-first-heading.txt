@@ -1,0 +1,83 @@
+# fixture: min-bom.md  terminal: 60x14  binary: /tmp/tr-et0919 (origin/main 41668ab)
+$ cat -v fixture
+﻿# Start
+
+Para 0.
+
+Para 1.
+
+Para 2.
+
+Para 3.
+
+Para 4.
+
+Para 5.
+
+Para 6.
+
+Para 7.
+
+[Top](#start)
+----- [c] after:  -----
+
+                          Min Bom
+  ────────────────────────────────────────────────────────
+  ﻿# Start
+
+    Para 0.
+
+    Para 1.
+
+    Para 2.
+  ────────────────────────────────────────────────────────
+                        Page 1 of 3
+    ←/→ page • tab link • enter follow • b back • q quit
+
+----- [c] after: End -----
+
+                          Min Bom
+  ────────────────────────────────────────────────────────
+    Para 6.
+
+    Para 7.
+
+    [Top](#start)
+
+
+  ────────────────────────────────────────────────────────
+                        Page 3 of 3
+    ←/→ page • tab link • enter follow • b back • q quit
+
+----- [c] after: Tab -----
+
+                          Min Bom
+  ────────────────────────────────────────────────────────
+    Para 6.
+
+    Para 7.
+
+    [Top](#start)
+
+
+  ────────────────────────────────────────────────────────
+                        Page 3 of 3
+    ←/→ page • tab link • enter follow • b back • q quit
+
+----- [c] after: Enter -----
+
+                          Min Bom
+  ────────────────────────────────────────────────────────
+    Para 6.
+
+    Para 7.
+
+    [Top](#start)
+
+
+  ────────────────────────────────────────────────────────
+                        Page 3 of 3
+    ←/→ page • tab link • enter follow • b back • q quit
+
+$ head -c 12 min-bom.md | xxd
+00000000: efbb bf23 2053 7461 7274 0a0a            ...# Start..

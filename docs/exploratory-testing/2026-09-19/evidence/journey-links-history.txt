@@ -1,0 +1,17 @@
+# handbook.md at 80x24; keys -> page | first content line
+start: Page 1 of 9 | top line:  # Handbook
+Tab×3 Enter (Chapter 3): Page 4 of 9 | top line: 
+Tab Enter (Contents): Page 1 of 9 | top line:  # Handbook
+Tab×5 Enter (Chapter 5): Page 8 of 9 | top line: 
+b: Page 1 of 9 | top line:  # Handbook
+b: Page 4 of 9 | top line: 
+b: Page 1 of 9 | top line:  # Handbook
+b (empty history): Page 1 of 9 | top line:  # Handbook
+Backspace (empty): Page 1 of 9 | top line:  # Handbook
+l/Space/PgDn/h/PgUp/G/g: Page 2 of 9 | top line:  wraps. Words of steady prose fill this line so it wraps. Words of ; Page 3 of 9 | top line:  steady prose fill this line so it wraps. ; Page 4 of 9 | top line:  ; Page 3 of 9 | top line:  steady prose fill this line so it wraps. ; Page 2 of 9 | top line:  wraps. Words of steady prose fill this line so it wraps. Words of ; Page 9 of 9 | top line:  Chapter 5 paragraph 3. Words of steady prose fill this line so it ; Page 1 of 9 | top line:  # Handbook
+== resize: Tab×4 Enter (Chapter 4) then 60x16
+Page 6 of 9 | top line:  wraps. Words of steady prose fill this line so it wraps. Words of
+  ## Chapter 4
+                       Page 13 of 21
+b after resize: Page 1 of 21 | top line:  # Handbook
+EXIT=0
