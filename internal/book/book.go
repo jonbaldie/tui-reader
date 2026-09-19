@@ -147,6 +147,46 @@ func IsIndentedCodeLine(raw string) bool {
 	return strings.HasPrefix(raw, "    ")
 }
 
+// codeFence reports whether raw is a Markdown code fence line: up to three
+// spaces, then a run of at least three backticks or tildes. It returns the run
+// and the text after it.
+func codeFence(raw string) (fence, rest string, ok bool) {
+	s := strings.TrimLeft(raw, " ")
+	if len(raw)-len(s) > 3 || !strings.HasPrefix(s, "```") && !strings.HasPrefix(s, "~~~") {
+		return "", "", false
+	}
+	n := len(s) - len(strings.TrimLeft(s, s[:1]))
+	if s[0] == '`' && strings.Contains(s[n:], "`") {
+		return "", "", false
+	}
+	return s[:n], s[n:], true
+}
+
+func isFenceLine(raw string) bool {
+	_, _, ok := codeFence(raw)
+	return ok
+}
+
+// fencedBlockEnd returns the index just past the fenced code block opened at
+// start: after its closing fence, or len(rawLines) if it is never closed.
+func fencedBlockEnd(rawLines []string, start int) int {
+	n := len(rawLines)
+	for i := start + 1; i < n; i++ {
+		if closesFence(rawLines[start], rawLines[i]) {
+			return i + 1
+		}
+	}
+	return n
+}
+
+// closesFence reports whether raw closes the fenced code block opened by
+// opener: a fence of the same character, at least as long, with nothing after.
+func closesFence(opener, raw string) bool {
+	open, _, _ := codeFence(opener)
+	fence, rest, ok := codeFence(raw)
+	return ok && fence[0] == open[0] && len(fence) >= len(open) && strings.TrimSpace(rest) == ""
+}
+
 // formatParagraphsWithProvenance is the single owner of the paragraph
 // formatting rules. In one pass it produces each display line together with the
 // raw source line it came from, so callers never re-derive the formatting
@@ -173,7 +213,7 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 			continue
 		}
 
-		block := formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
+		block := formatBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
 		result = append(result, block.lines...)
 		firstParagraph = false
 		prevCode, prevList = block.isCode, block.isList
@@ -188,6 +228,19 @@ type formattedBlock struct {
 	isCode bool
 	isList bool
 	lastRi int
+}
+
+func formatBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) formattedBlock {
+	if !isFenceLine(rawLines[ri]) {
+		return formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
+	}
+	var lines []formattedLine
+	if needsBlockSeparator(firstParagraph, false, result) {
+		lines = append(lines, formattedLine{text: "", raw: -1})
+	}
+	end := fencedBlockEnd(rawLines, ri)
+	lines = append(lines, formatFencedBlock(rawLines[ri:end], ri, width)...)
+	return formattedBlock{lines: lines, lastRi: end - 1}
 }
 
 func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) formattedBlock {
@@ -283,10 +336,10 @@ func isSpecialLine(raw string) bool {
 }
 
 // isProseLine reports whether raw is a regular prose paragraph line (not blank,
-// not indented code, and not a special line such as a heading, horizontal rule,
-// or list item).
+// not indented code, not a code fence, and not a special line such as a
+// heading, horizontal rule, or list item).
 func isProseLine(raw string) bool {
-	return strings.TrimSpace(raw) != "" && !IsIndentedCodeLine(raw) && !isSpecialLine(raw)
+	return strings.TrimSpace(raw) != "" && !IsIndentedCodeLine(raw) && !isFenceLine(raw) && !isSpecialLine(raw)
 }
 
 func formatMultiLineParagraph(lines []string, startRi int, firstParagraph bool, width int) []formattedLine {
@@ -395,6 +448,26 @@ func formatCodeBlock(raw string, ri int, width int) []formattedLine {
 	}
 
 	return wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")
+}
+
+// formatFencedBlock keeps a fenced code block's fence lines verbatim and
+// formats each line between them like an indented code line, so code is never
+// reflowed or read as Markdown.
+func formatFencedBlock(block []string, startRi int, width int) []formattedLine {
+	var lines []formattedLine
+	last := len(block) - 1
+	for i, raw := range block {
+		ri := startRi + i
+		switch {
+		case i == 0 || (i == last && closesFence(block[0], raw)):
+			lines = append(lines, wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")...)
+		case strings.TrimSpace(raw) == "":
+			lines = append(lines, formattedLine{text: "", raw: ri})
+		default:
+			lines = append(lines, formatCodeBlock(codeBlockIndent+raw, ri, width)...)
+		}
+	}
+	return lines
 }
 
 // fitsWithIndent reports whether every wrapped line stays within width once
