@@ -2,6 +2,7 @@
 package book
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -54,6 +55,8 @@ func Load(path string) (title string, lines []string, err error) {
 	if !utf8.Valid(data) {
 		return "", nil, fmt.Errorf("file is not valid UTF-8")
 	}
+
+	data = bytes.TrimPrefix(data, []byte("\xef\xbb\xbf"))
 
 	// Derive title from filename
 	title = deriveTitle(path)
