@@ -18,7 +18,13 @@ var (
 // normalized anchor names to their line indices.
 func ExtractAnchors(lines []string) map[string]int {
 	anchors := make(map[string]int)
-	for i, line := range lines {
+	n := len(lines)
+	for i := 0; i < n; i++ {
+		line := lines[i]
+		if isFenceLine(line) {
+			i = fencedBlockEnd(lines, i) - 1
+			continue
+		}
 		if IsIndentedCodeLine(line) {
 			continue
 		}
@@ -194,6 +200,10 @@ func collectSourceLinks(rawLines []string) sourceLinkSet {
 	n := len(rawLines)
 	for ri := 0; ri < n; ri++ {
 		raw := rawLines[ri]
+		if isFenceLine(raw) {
+			ri = fencedBlockEnd(rawLines, ri) - 1
+			continue
+		}
 		if !isProseLine(raw) {
 			if !IsIndentedCodeLine(raw) {
 				if links := ExtractLinks(raw); len(links) > 0 {
