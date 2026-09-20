@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -43,6 +44,7 @@ type Book struct {
 	sourceLinks  sourceLinkSet
 	rawLinePages map[int]int
 	pageRawLines []int
+	plainText    bool
 }
 
 // Load reads a file from disk and returns its raw content lines.
@@ -468,6 +470,35 @@ func formatWrappedLines(wrapped []wrappedLine, ri int, prefix string) []formatte
 	return lines
 }
 
+// formatPlainTextWithProvenance wraps each source line independently. Consecutive
+// lines are not joined, and paragraph indentation is not applied.
+func formatPlainTextWithProvenance(rawLines []string, width int) []formattedLine {
+	if width < 1 {
+		width = 80
+	}
+	var result []formattedLine
+	for ri, raw := range rawLines {
+		result = append(result, wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")...)
+	}
+	return result
+}
+
+func formatDocument(rawLines []string, width int, plainText bool) []formattedLine {
+	if plainText {
+		return formatPlainTextWithProvenance(rawLines, width)
+	}
+	return formatParagraphsWithProvenance(rawLines, width)
+}
+
+func isMarkdownPath(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".md", ".markdown":
+		return true
+	default:
+		return false
+	}
+}
+
 // FormatParagraphs takes raw lines and produces display-ready lines with
 // paragraph indentation and spacing. Each non-empty raw line is treated as
 // a paragraph. Non-first paragraphs get a 2-space indent on their first
@@ -487,7 +518,10 @@ func Paginate(rawLines []string, width, height int) []Page {
 }
 
 func buildBookLayout(rawLines []string, width, height int) bookLayout {
-	formatted := formatParagraphsWithProvenance(rawLines, width)
+	return layoutFromFormatted(formatParagraphsWithProvenance(rawLines, width), height)
+}
+
+func layoutFromFormatted(formatted []formattedLine, height int) bookLayout {
 	height = normalizePageHeight(height)
 	return bookLayout{
 		formatted:    formatted,
@@ -822,7 +856,8 @@ func NewBook(path string, width, height int) (*Book, error) {
 
 	anchors := ExtractAnchors(lines)
 	sourceLinks := collectSourceLinks(lines)
-	layout := buildBookLayout(lines, width, height)
+	plainText := !isMarkdownPath(path)
+	layout := layoutFromFormatted(formatDocument(lines, width, plainText), height)
 	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height, sourceLinks)
 
 	return &Book{
@@ -835,6 +870,7 @@ func NewBook(path string, width, height int) (*Book, error) {
 		sourceLinks:  sourceLinks,
 		rawLinePages: layout.rawLinePages,
 		pageRawLines: layout.pageRawLines,
+		plainText:    plainText,
 	}, nil
 }
 
@@ -845,7 +881,7 @@ func (b *Book) Reflow(width, height int) {
 	if b.sourceLinks.links == nil {
 		b.sourceLinks = collectSourceLinks(b.RawLines)
 	}
-	layout := buildBookLayout(b.RawLines, width, height)
+	layout := layoutFromFormatted(formatDocument(b.RawLines, width, b.plainText), height)
 	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height, b.sourceLinks)
 	b.rawLinePages = layout.rawLinePages
 	b.pageRawLines = layout.pageRawLines
@@ -865,7 +901,7 @@ func (b *Book) PageForAnchor(anchor string) int {
 		// normalizes a non-positive height to the default (20), so a Book built
 		// (or mutated) with PageHeight <= 0 is still mapped to its true pages.
 		height := normalizePageHeight(b.PageHeight)
-		formatted := formatParagraphsWithProvenance(b.RawLines, b.PageWidth)
+		formatted := formatDocument(b.RawLines, b.PageWidth, b.plainText)
 		b.rawLinePages = rawLinePages(formatted, height)
 	}
 
