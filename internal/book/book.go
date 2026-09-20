@@ -2,6 +2,7 @@
 package book
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -58,7 +59,9 @@ func Load(path string) (title string, lines []string, err error) {
 	// Derive title from filename
 	title = deriveTitle(path)
 
-	lines = splitLines(data)
+	// A leading UTF-8 byte-order mark is not content: left in place it would
+	// make the first line start with an invisible rune, hiding a heading.
+	lines = splitLines(bytes.TrimPrefix(data, []byte("\xef\xbb\xbf")))
 	return title, lines, nil
 }
 
