@@ -147,6 +147,26 @@ func IsIndentedCodeLine(raw string) bool {
 	return strings.HasPrefix(raw, "    ")
 }
 
+// isFenceDelimiter reports whether raw is a Markdown fenced-code delimiter:
+// a line consisting of ``` or ``` followed by an info string with no backticks.
+func isFenceDelimiter(raw string) bool {
+	trimmed := strings.TrimSpace(raw)
+	if !strings.HasPrefix(trimmed, "```") {
+		return false
+	}
+	return !strings.Contains(trimmed[3:], "`")
+}
+
+func findFenceBlockEnd(rawLines []string, start int) int {
+	n := len(rawLines)
+	for end := start + 1; end < n; end++ {
+		if isFenceDelimiter(rawLines[end]) {
+			return end + 1
+		}
+	}
+	return n
+}
+
 // formatParagraphsWithProvenance is the single owner of the paragraph
 // formatting rules. In one pass it produces each display line together with the
 // raw source line it came from, so callers never re-derive the formatting
@@ -192,13 +212,8 @@ type formattedBlock struct {
 
 func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) formattedBlock {
 	raw := rawLines[ri]
-	if IsIndentedCodeLine(raw) {
-		var lines []formattedLine
-		if needsBlockSeparator(firstParagraph, prevCode, result) {
-			lines = append(lines, formattedLine{text: "", raw: -1})
-		}
-		lines = append(lines, formatCodeBlock(raw, ri, width)...)
-		return formattedBlock{lines: lines, isCode: true, lastRi: ri}
+	if end := codeBlockEnd(rawLines, ri); end > ri {
+		return formatCodeRange(rawLines, ri, end, firstParagraph, prevCode, width, result)
 	}
 
 	if isListItem(raw) {
@@ -226,6 +241,31 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 	}
 	lines = append(lines, formatMultiLineParagraph(rawLines[ri:end], ri, firstParagraph, width)...)
 	return formattedBlock{lines: lines, lastRi: end - 1}
+}
+
+func codeBlockEnd(rawLines []string, ri int) int {
+	if IsIndentedCodeLine(rawLines[ri]) {
+		return ri + 1
+	}
+	if isFenceDelimiter(rawLines[ri]) {
+		return findFenceBlockEnd(rawLines, ri)
+	}
+	return ri
+}
+
+func formatCodeRange(rawLines []string, start, end int, firstParagraph, prevCode bool, width int, result []formattedLine) formattedBlock {
+	var lines []formattedLine
+	if needsBlockSeparator(firstParagraph, prevCode, result) {
+		lines = append(lines, formattedLine{text: "", raw: -1})
+	}
+	for i := start; i < end; i++ {
+		if strings.TrimSpace(rawLines[i]) == "" {
+			lines = append(lines, formattedLine{text: "", raw: i})
+			continue
+		}
+		lines = append(lines, formatCodeBlock(rawLines[i], i, width)...)
+	}
+	return formattedBlock{lines: lines, isCode: true, lastRi: end - 1}
 }
 
 func findProseBlockEnd(rawLines []string, start int) int {
@@ -286,7 +326,7 @@ func isSpecialLine(raw string) bool {
 // not indented code, and not a special line such as a heading, horizontal rule,
 // or list item).
 func isProseLine(raw string) bool {
-	return strings.TrimSpace(raw) != "" && !IsIndentedCodeLine(raw) && !isSpecialLine(raw)
+	return strings.TrimSpace(raw) != "" && !IsIndentedCodeLine(raw) && !isFenceDelimiter(raw) && !isSpecialLine(raw)
 }
 
 func formatMultiLineParagraph(lines []string, startRi int, firstParagraph bool, width int) []formattedLine {
