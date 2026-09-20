@@ -212,29 +212,8 @@ type formattedBlock struct {
 
 func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) formattedBlock {
 	raw := rawLines[ri]
-	if IsIndentedCodeLine(raw) {
-		var lines []formattedLine
-		if needsBlockSeparator(firstParagraph, prevCode, result) {
-			lines = append(lines, formattedLine{text: "", raw: -1})
-		}
-		lines = append(lines, formatCodeBlock(raw, ri, width)...)
-		return formattedBlock{lines: lines, isCode: true, lastRi: ri}
-	}
-
-	if isFenceDelimiter(raw) {
-		end := findFenceBlockEnd(rawLines, ri)
-		var lines []formattedLine
-		if needsBlockSeparator(firstParagraph, prevCode, result) {
-			lines = append(lines, formattedLine{text: "", raw: -1})
-		}
-		for i := ri; i < end; i++ {
-			if strings.TrimSpace(rawLines[i]) == "" {
-				lines = append(lines, formattedLine{text: "", raw: i})
-				continue
-			}
-			lines = append(lines, formatCodeBlock(rawLines[i], i, width)...)
-		}
-		return formattedBlock{lines: lines, isCode: true, lastRi: end - 1}
+	if end := codeBlockEnd(rawLines, ri); end > ri {
+		return formatCodeRange(rawLines, ri, end, firstParagraph, prevCode, width, result)
 	}
 
 	if isListItem(raw) {
@@ -262,6 +241,31 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 	}
 	lines = append(lines, formatMultiLineParagraph(rawLines[ri:end], ri, firstParagraph, width)...)
 	return formattedBlock{lines: lines, lastRi: end - 1}
+}
+
+func codeBlockEnd(rawLines []string, ri int) int {
+	if IsIndentedCodeLine(rawLines[ri]) {
+		return ri + 1
+	}
+	if isFenceDelimiter(rawLines[ri]) {
+		return findFenceBlockEnd(rawLines, ri)
+	}
+	return ri
+}
+
+func formatCodeRange(rawLines []string, start, end int, firstParagraph, prevCode bool, width int, result []formattedLine) formattedBlock {
+	var lines []formattedLine
+	if needsBlockSeparator(firstParagraph, prevCode, result) {
+		lines = append(lines, formattedLine{text: "", raw: -1})
+	}
+	for i := start; i < end; i++ {
+		if strings.TrimSpace(rawLines[i]) == "" {
+			lines = append(lines, formattedLine{text: "", raw: i})
+			continue
+		}
+		lines = append(lines, formatCodeBlock(rawLines[i], i, width)...)
+	}
+	return formattedBlock{lines: lines, isCode: true, lastRi: end - 1}
 }
 
 func findProseBlockEnd(rawLines []string, start int) int {
