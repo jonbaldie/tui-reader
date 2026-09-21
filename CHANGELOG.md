@@ -2,6 +2,31 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.7 (2026-09-21)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.6...v0.1.7
+
+### Bug Fixes
+
+- **Reflow consecutive lines in prose as single paragraphs (#84, fixes #77).** Consecutive nonblank Markdown source lines are now reflowed and soft-wrapped as one paragraph instead of being paginated line by line.
+- **Adapt layout to compact dimensions and long titles (#86).** Regressions for width/height clipping in compact terminals and wrapping of long titles.
+- **Ignore link markup inside inline code spans (#85, fixes #78).** Links written inside inline code were extracted as selectable page links; inline-code spans no longer contribute links.
+- **Ignore inline code when styling links (#90).** Inline code spans matching page links were styled as active links and stole Tab selection.
+- **Track link index by page link position (#87, fixes #82).** Link selection is tracked by page-local position so over-wide links stay selectable and navigable.
+- **Keep over-wide links on their display page (#88, fixes #83).** Links wider than the page no longer jump to a later page when selected or followed.
+- **Keep repeated internal links on their display pages (#95, fixes #89).** Repeated internal links with the same target now resolve to the page they appear on instead of the first occurrence.
+- **Anchor page 0 to first content and pages to first heading (#97, fixes #91).** The initial `WindowSizeMsg` reflow anchored to the last heading on the default page, skipping page 1 on startup.
+- **Truncate footer page info in compact terminals (#98, fixes #92).** The footer status line no longer overflows or clips in narrow terminals.
+- **Keep provenance mapping in range when wrap misses (#102, fixes #99).** Wrapped provenance mapping clamps to the page so rendering cannot panic on a missed wrap point.
+- **Keep boundary links on their display line (#103, fixes #100).** A stray bracket at a reflowed source-line boundary no longer swallows the real link.
+- **Avoid indented overflow for wide runes (#104, fixes #101).** Paragraphs containing wide runes rewrap at the full page width rather than overflowing the two-column indent.
+- **Avoid indented overflow for wide runes in code blocks (#107, fixes #105).** Indented code blocks with wide runes fall back to full-width wrapping so display lines never exceed the page width.
+- **Preserve links spanning physical lines in soft-wrapped paragraphs (#110, fixes #106).** Links split across source-line boundaries in prose paragraphs are attached and navigable again.
+- **Keep non-ASCII letters in anchors and normalize link fragments (#116, fixes #112).** Anchors keep letters in any script, and link fragments are normalized before lookup, so `#第一章` and `#été` resolve.
+- **Skip fenced code when extracting headings and reflowing (#120, fixes #111).** Headings and links inside fenced code blocks are no longer treated as navigable Markdown, and fence contents are not joined as prose.
+- **Strip UTF-8 BOM so first heading is recognised (#119, fixes #113).** A leading UTF-8 byte-order mark no longer hides the first heading and its anchor.
+- **Keep plain-text source lines from merging into paragraphs (#124, fixes #114).** Non-Markdown files render one source line per display line instead of collapsing into wrapped paragraphs.
+
 ## v0.1.6 (2026-09-11)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.5...v0.1.6
