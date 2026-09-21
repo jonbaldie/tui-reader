@@ -247,9 +247,7 @@ func collectProseBlockLinks(sourceLinks map[int][]Link, sourceOrder *[]int, line
 }
 
 func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int, source sourceLinkSet) []Page {
-	if height < 1 {
-		height = 20
-	}
+	height = normalizePageHeight(height)
 
 	if source.links == nil {
 		source = collectSourceLinks(rawLines)

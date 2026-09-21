@@ -47,7 +47,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 
 	if parsed.dumpMode {
-		b, err := book.NewBook(parsed.path, 62, 20)
+		b, err := book.NewBook(parsed.path, book.DefaultPageWidth, book.DefaultPageHeight)
 		if err != nil {
 			fmt.Fprintf(stderr, "Error: %v\n", err)
 			return 1
@@ -106,7 +106,7 @@ func renderDump(b *book.Book, maxPages int) string {
 			fmt.Fprintf(&sb, "│  %s\n", line)
 		}
 		// Pad to page height
-		for j := len(b.Pages[i].Lines); j < 20; j++ {
+		for j := len(b.Pages[i].Lines); j < b.PageHeight; j++ {
 			fmt.Fprintln(&sb, "│")
 		}
 		fmt.Fprintln(&sb, "│")

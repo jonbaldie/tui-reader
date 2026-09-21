@@ -238,6 +238,29 @@ func TestRenderDump_PadsToTwentyLines(t *testing.T) {
 	}
 }
 
+func TestRenderDump_PadsToBookPageHeight(t *testing.T) {
+	path := writeTempFile(t, "short.md", "only one line\n")
+	b, err := book.NewBook(path, 62, 20)
+	if err != nil {
+		t.Fatalf("NewBook: %v", err)
+	}
+	b.Reflow(62, 3)
+
+	out := renderDump(b, 0)
+	bareGutters := 0
+	for _, ln := range strings.Split(out, "\n") {
+		if ln == "│" {
+			bareGutters++
+		}
+	}
+
+	contentLines := len(b.Pages[0].Lines)
+	want := 1 + (b.PageHeight - contentLines) + 1
+	if bareGutters != want {
+		t.Errorf("bare gutter lines = %d, want %d (pad to book height %d, content=%d)", bareGutters, want, b.PageHeight, contentLines)
+	}
+}
+
 func TestRenderDump_BlankLineBetweenPagesOnly(t *testing.T) {
 	b := dumpBook(t)
 	out := renderDump(b, 3)
@@ -317,6 +340,25 @@ func TestRun_DumpValidFile(t *testing.T) {
 	}
 	if errBuf.Len() != 0 {
 		t.Errorf("expected no stderr, got %q", errBuf.String())
+	}
+}
+
+func TestRun_DumpUsesBookDefaultPageGeometry(t *testing.T) {
+	content := strings.Repeat("x", book.DefaultPageWidth+1) + "\n"
+	path := writeTempFile(t, "default-geometry.txt", content)
+	expectedBook, err := book.NewBook(path, book.DefaultPageWidth, book.DefaultPageHeight)
+	if err != nil {
+		t.Fatalf("NewBook: %v", err)
+	}
+	want := renderDump(expectedBook, 0)
+
+	var out, errBuf bytes.Buffer
+	code := run([]string{"--dump", path}, &out, &errBuf)
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0; stderr=%q", code, errBuf.String())
+	}
+	if got := out.String(); got != want {
+		t.Errorf("dump output does not use book defaults\ngot:\n%s\nwant:\n%s", got, want)
 	}
 }
 

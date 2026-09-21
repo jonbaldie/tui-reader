@@ -30,13 +30,13 @@ type Model struct {
 // NewModel creates a new TUI model for the given file.
 func NewModel(path string) Model {
 	// We'll start with default dimensions; they'll be updated on WindowSizeMsg
-	b, err := book.NewBook(path, 60, 20)
+	b, err := book.NewBook(path, book.DefaultPageWidth, book.DefaultPageHeight)
 	return Model{
 		book:          b,
 		currentPage:   0,
 		selectedLink:  -1,
-		contentWidth:  60,
-		contentHeight: 20,
+		contentWidth:  book.DefaultPageWidth,
+		contentHeight: book.DefaultPageHeight,
 		err:           err,
 	}
 }

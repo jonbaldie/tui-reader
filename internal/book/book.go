@@ -13,6 +13,14 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
+const (
+	// DefaultPageWidth is the initial number of columns used to lay out a book.
+	DefaultPageWidth = 60
+	// DefaultPageHeight is the initial number of lines used to lay out a book.
+	DefaultPageHeight = 20
+	fallbackPageWidth = 80
+)
+
 // Anchor represents a named location in the document that can be linked to.
 type Anchor struct {
 	Name string // normalized anchor name (e.g. "chapter-1")
@@ -178,9 +186,7 @@ func findFenceBlockEnd(rawLines []string, start int) int {
 // algorithm to recover provenance. FormatParagraphs is a thin projection over
 // it.
 func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLine {
-	if width < 1 {
-		width = 80
-	}
+	width = normalizePageWidth(width)
 
 	var result []formattedLine
 	firstParagraph := true
@@ -473,9 +479,7 @@ func formatWrappedLines(wrapped []wrappedLine, ri int, prefix string) []formatte
 // formatPlainTextWithProvenance wraps each source line independently. Consecutive
 // lines are not joined, and paragraph indentation is not applied.
 func formatPlainTextWithProvenance(rawLines []string, width int) []formattedLine {
-	if width < 1 {
-		width = 80
-	}
+	width = normalizePageWidth(width)
 	var result []formattedLine
 	for ri, raw := range rawLines {
 		result = append(result, wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")...)
@@ -534,9 +538,16 @@ func layoutFromFormatted(formatted []formattedLine, height int) bookLayout {
 
 func normalizePageHeight(height int) int {
 	if height < 1 {
-		return 20
+		return DefaultPageHeight
 	}
 	return height
+}
+
+func normalizePageWidth(width int) int {
+	if width < 1 {
+		return fallbackPageWidth
+	}
+	return width
 }
 
 func paginateFormatted(formatted []formattedLine, height int) []Page {
@@ -857,6 +868,7 @@ func NewBook(path string, width, height int) (*Book, error) {
 	anchors := ExtractAnchors(lines)
 	sourceLinks := collectSourceLinks(lines)
 	plainText := !isMarkdownPath(path)
+	width = normalizePageWidth(width)
 	layout := layoutFromFormatted(formatDocument(lines, width, plainText), height)
 	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height, sourceLinks)
 
@@ -866,7 +878,7 @@ func NewBook(path string, width, height int) (*Book, error) {
 		Pages:        pages,
 		Anchors:      anchors,
 		PageWidth:    width,
-		PageHeight:   height,
+		PageHeight:   layout.height,
 		sourceLinks:  sourceLinks,
 		rawLinePages: layout.rawLinePages,
 		pageRawLines: layout.pageRawLines,
@@ -876,12 +888,13 @@ func NewBook(path string, width, height int) (*Book, error) {
 
 // Reflow re-paginates the book for new dimensions.
 func (b *Book) Reflow(width, height int) {
-	b.PageWidth = width
-	b.PageHeight = height
 	if b.sourceLinks.links == nil {
 		b.sourceLinks = collectSourceLinks(b.RawLines)
 	}
+	width = normalizePageWidth(width)
 	layout := layoutFromFormatted(formatDocument(b.RawLines, width, b.plainText), height)
+	b.PageWidth = width
+	b.PageHeight = layout.height
 	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height, b.sourceLinks)
 	b.rawLinePages = layout.rawLinePages
 	b.pageRawLines = layout.pageRawLines
@@ -898,7 +911,7 @@ func (b *Book) PageForAnchor(anchor string) int {
 
 	if b.rawLinePages == nil {
 		// formatParagraphsWithProvenance normalizes width, and normalizePageHeight
-		// normalizes a non-positive height to the default (20), so a Book built
+		// normalizes a non-positive height to DefaultPageHeight, so a Book built
 		// (or mutated) with PageHeight <= 0 is still mapped to its true pages.
 		height := normalizePageHeight(b.PageHeight)
 		formatted := formatDocument(b.RawLines, b.PageWidth, b.plainText)
