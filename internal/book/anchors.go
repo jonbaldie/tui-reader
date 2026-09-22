@@ -20,11 +20,14 @@ func ExtractAnchors(lines []string) map[string]int {
 	anchors := make(map[string]int)
 	inFence := false
 	for i, line := range lines {
+		if IsIndentedCodeLine(line) {
+			continue
+		}
 		if isFenceDelimiter(line) {
 			inFence = !inFence
 			continue
 		}
-		if inFence || IsIndentedCodeLine(line) {
+		if inFence {
 			continue
 		}
 		trimmed := strings.TrimSpace(line)
@@ -200,6 +203,9 @@ func collectSourceLinks(rawLines []string) sourceLinkSet {
 	inFence := false
 	for ri := 0; ri < n; ri++ {
 		raw := rawLines[ri]
+		if IsIndentedCodeLine(raw) {
+			continue
+		}
 		if isFenceDelimiter(raw) {
 			inFence = !inFence
 			continue
@@ -208,11 +214,9 @@ func collectSourceLinks(rawLines []string) sourceLinkSet {
 			continue
 		}
 		if !isProseLine(raw) {
-			if !IsIndentedCodeLine(raw) {
-				if links := ExtractLinks(raw); len(links) > 0 {
-					sourceLinks[ri] = links
-					sourceOrder = append(sourceOrder, ri)
-				}
+			if links := ExtractLinks(raw); len(links) > 0 {
+				sourceLinks[ri] = links
+				sourceOrder = append(sourceOrder, ri)
 			}
 			continue
 		}
