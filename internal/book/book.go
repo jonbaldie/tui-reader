@@ -678,8 +678,7 @@ func wrapLineWithLinks(line string, width int) []wrappedLine {
 		return []wrappedLine{{text: line}}
 	}
 
-	tokens := wrapTokens(line)
-	if len(tokens) == 0 {
+	if strings.TrimSpace(line) == "" {
 		return []wrappedLine{{text: ""}}
 	}
 
@@ -696,13 +695,13 @@ func wrapLineWithLinks(line string, width int) []wrappedLine {
 		}
 	}
 
-	for _, token := range tokens {
+	eachWrapToken(line, func(token wrapToken) {
 		wordLength := stringWidth(token.text)
 		if shouldFlush(currentWidth, len(current) > 0, token.spaceBefore, wordLength, width) {
 			flush()
 		}
 		linkStarts = appendWrapToken(token, &current, &currentWidth, width, &lines, linkStarts)
-	}
+	})
 	flush()
 
 	result := make([]wrappedLine, len(lines))
@@ -808,8 +807,8 @@ type wrapToken struct {
 	link        bool
 }
 
-func wrapTokens(line string) []wrapToken {
-	var tokens []wrapToken
+// eachWrapToken consumes words as they are scanned, without retaining a token slice.
+func eachWrapToken(line string, consume func(wrapToken)) {
 	spaceBefore := false
 	n := len(line)
 	for i := 0; i < n; {
@@ -832,7 +831,7 @@ func wrapTokens(line string) []wrapToken {
 			}
 			if line[i] == '[' {
 				if match := linkRegex.FindStringIndex(line[i:]); match != nil && match[0] == 0 {
-					tokens = append(tokens, wrapToken{text: line[start : i+match[1]], spaceBefore: spaceBefore, link: true})
+					consume(wrapToken{text: line[start : i+match[1]], spaceBefore: spaceBefore, link: true})
 					i += match[1]
 					link = true
 					break
@@ -844,10 +843,9 @@ func wrapTokens(line string) []wrapToken {
 			spaceBefore = false
 			continue
 		}
-		tokens = append(tokens, wrapToken{text: line[start:i], spaceBefore: spaceBefore})
+		consume(wrapToken{text: line[start:i], spaceBefore: spaceBefore})
 		spaceBefore = false
 	}
-	return tokens
 }
 
 func stringWidth(s string) int {

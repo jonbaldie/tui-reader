@@ -1,0 +1,3 @@
+ok  	github.com/jonbaldie/tui-reader	1.423s
+ok  	github.com/jonbaldie/tui-reader/internal/book	3.187s
+ok  	github.com/jonbaldie/tui-reader/internal/tui	10.283s

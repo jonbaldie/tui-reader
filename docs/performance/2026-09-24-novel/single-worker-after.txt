@@ -1,0 +1,40 @@
+Pair 1
+goos: darwin
+goarch: arm64
+pkg: github.com/jonbaldie/tui-reader/internal/tui
+cpu: Apple M3
+BenchmarkNovelJourney/OpenToFirstView         	      60	  54659983 ns/op	  57465875 p75-ns/op	16774783 B/op	   67133 allocs/op
+BenchmarkNovelJourney/ResizeToView            	      60	  27562861 ns/op	  29528875 p75-ns/op	 7521101 B/op	   32094 allocs/op
+PASS
+Pair 2
+goos: darwin
+goarch: arm64
+pkg: github.com/jonbaldie/tui-reader/internal/tui
+cpu: Apple M3
+BenchmarkNovelJourney/OpenToFirstView         	      60	  51145432 ns/op	  54123875 p75-ns/op	16774882 B/op	   67133 allocs/op
+BenchmarkNovelJourney/ResizeToView            	      60	  23065210 ns/op	  25439875 p75-ns/op	 7522286 B/op	   32094 allocs/op
+PASS
+Pair 3
+goos: darwin
+goarch: arm64
+pkg: github.com/jonbaldie/tui-reader/internal/tui
+cpu: Apple M3
+BenchmarkNovelJourney/OpenToFirstView         	      60	  49864688 ns/op	  53656000 p75-ns/op	16774775 B/op	   67133 allocs/op
+BenchmarkNovelJourney/ResizeToView            	      60	  24832419 ns/op	  28324500 p75-ns/op	 7519924 B/op	   32094 allocs/op
+PASS
+Pair 4
+goos: darwin
+goarch: arm64
+pkg: github.com/jonbaldie/tui-reader/internal/tui
+cpu: Apple M3
+BenchmarkNovelJourney/OpenToFirstView         	      60	  44204601 ns/op	  46172709 p75-ns/op	16774887 B/op	   67133 allocs/op
+BenchmarkNovelJourney/ResizeToView            	      60	  21551831 ns/op	  22711541 p75-ns/op	 7522277 B/op	   32094 allocs/op
+PASS
+Pair 5
+goos: darwin
+goarch: arm64
+pkg: github.com/jonbaldie/tui-reader/internal/tui
+cpu: Apple M3
+BenchmarkNovelJourney/OpenToFirstView         	      60	  46843061 ns/op	  48853291 p75-ns/op	16774791 B/op	   67133 allocs/op
+BenchmarkNovelJourney/ResizeToView            	      60	  20041201 ns/op	  20892083 p75-ns/op	 7519941 B/op	   32094 allocs/op
+PASS

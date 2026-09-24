@@ -1,0 +1,5 @@
+=== RUN   TestWrapParagraphAllocationBudget
+    wrap_allocations_test.go:16: allocations per paragraph: 9
+--- PASS: TestWrapParagraphAllocationBudget (0.00s)
+PASS
+ok  	github.com/jonbaldie/tui-reader/internal/book	(cached)

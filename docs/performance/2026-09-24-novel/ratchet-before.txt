@@ -1,0 +1,7 @@
+=== RUN   TestWrapParagraphAllocationBudget
+    wrap_allocations_test.go:16: allocations per paragraph: 16
+    wrap_allocations_test.go:18: wrapping allocated 16 times; ceiling is 12
+--- FAIL: TestWrapParagraphAllocationBudget (0.00s)
+FAIL
+FAIL	github.com/jonbaldie/tui-reader/internal/book	0.285s
+FAIL

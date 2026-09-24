@@ -1,0 +1,7 @@
+=== RUN   TestNovelJourneyOutput
+    novel_benchmark_test.go:75: width=80 pages=658 sha256=aac9b5e3b7e43633f8b5a9d8351784451e722db3a471c14ee9df3bed07a8981d
+    novel_benchmark_test.go:75: width=70 pages=658 sha256=aa9d03bc4562f7de132074ca30d4fb20ca3dfe3c8adca0de97ba5ecdefd4e39e
+    novel_benchmark_test.go:75: width=80 pages=658 sha256=aac9b5e3b7e43633f8b5a9d8351784451e722db3a471c14ee9df3bed07a8981d
+--- PASS: TestNovelJourneyOutput (0.58s)
+PASS
+ok  	github.com/jonbaldie/tui-reader/internal/tui	0.951s
