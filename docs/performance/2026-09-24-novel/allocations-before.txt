@@ -1,0 +1,17 @@
+File: tui.test
+Type: alloc_space
+Time: 2026-09-24 11:42:01 BST
+Showing nodes accounting for 1103.81MB, 97.05% of 1137.39MB total
+Dropped 54 nodes (cum <= 5.69MB)
+Showing top 10 nodes out of 30
+      flat  flat%   sum%        cum   cum%
+  631.25MB 55.50% 55.50%   638.98MB 56.18%  github.com/jonbaldie/tui-reader/internal/book.wrapTokens
+  175.37MB 15.42% 70.92%  1039.89MB 91.43%  github.com/jonbaldie/tui-reader/internal/book.formatParagraphsWithProvenance
+   88.52MB  7.78% 78.70%   776.50MB 68.27%  github.com/jonbaldie/tui-reader/internal/book.wrapLineWithLinks
+   46.50MB  4.09% 82.79%    46.50MB  4.09%  github.com/jonbaldie/tui-reader/internal/book.wrapLineWithLinks.func1 (inline)
+   41.01MB  3.61% 86.39%    41.01MB  3.61%  github.com/jonbaldie/tui-reader/internal/book.formatWrappedLines (inline)
+   37.01MB  3.25% 89.65%   864.52MB 76.01%  github.com/jonbaldie/tui-reader/internal/book.formatNextBlock
+   26.08MB  2.29% 91.94%    26.08MB  2.29%  github.com/jonbaldie/tui-reader/internal/book.splitLines
+   22.08MB  1.94% 93.88%    22.08MB  1.94%  os.readFileContents
+   19.22MB  1.69% 95.57%    19.22MB  1.69%  github.com/jonbaldie/tui-reader/internal/book.paginateFormatted
+   16.78MB  1.48% 97.05%    16.78MB  1.48%  github.com/jonbaldie/tui-reader/internal/book.rawLinePages

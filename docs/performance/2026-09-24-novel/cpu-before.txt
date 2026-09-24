@@ -1,0 +1,22 @@
+File: tui.test
+Type: cpu
+Time: 2026-09-24 11:41:59 BST
+Duration: 1.92s, Total samples = 1640ms (85.24%)
+Showing nodes accounting for 1300ms, 79.27% of 1640ms total
+Showing top 15 nodes out of 178
+      flat  flat%   sum%        cum   cum%
+     300ms 18.29% 18.29%      300ms 18.29%  runtime.madvise
+     200ms 12.20% 30.49%      200ms 12.20%  runtime.kevent
+     110ms  6.71% 37.20%      110ms  6.71%  runtime.pthread_kill
+      90ms  5.49% 42.68%      150ms  9.15%  runtime.slicerunetostring
+      80ms  4.88% 47.56%      270ms 16.46%  github.com/jonbaldie/tui-reader/internal/book.wrapTokens
+      80ms  4.88% 52.44%       80ms  4.88%  github.com/mattn/go-runewidth.(*Condition).RuneWidth
+      70ms  4.27% 56.71%      180ms 10.98%  github.com/mattn/go-runewidth.(*Condition).StringWidth
+      60ms  3.66% 60.37%       60ms  3.66%  github.com/clipperhouse/uax29/v2/graphemes.(*Iterator[go.shape.string]).Next
+      60ms  3.66% 64.02%       70ms  4.27%  unicode.IsSpace
+      50ms  3.05% 67.07%       50ms  3.05%  runtime.usleep
+      40ms  2.44% 69.51%       80ms  4.88%  github.com/jonbaldie/tui-reader/internal/book.appendWordRunes
+      40ms  2.44% 71.95%       40ms  2.44%  internal/runtime/atomic.(*UnsafePointer).Load (inline)
+      40ms  2.44% 74.39%       40ms  2.44%  runtime.encoderune
+      40ms  2.44% 76.83%       40ms  2.44%  runtime.memclrNoHeapPointers
+      40ms  2.44% 79.27%       40ms  2.44%  runtime.pthread_cond_wait
