@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.8 (2026-09-24)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.7...v0.1.8
+
+### Bug Fixes
+
+- **Own default page geometry (#126).** `Book` now owns normalized page dimensions, including the 60-column by 20-line default, and dump mode pads pages using the effective page height.
+- **Align fence scanners with indented code (#130, fixes #129).** Anchor and link scanners now treat four-space-indented fence-looking lines as indented code before changing fence state, matching the formatter and keeping real headings and links navigable.
+
 ## v0.1.7 (2026-09-21)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.6...v0.1.7
