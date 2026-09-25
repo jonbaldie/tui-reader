@@ -4,6 +4,7 @@ package book
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,22 +58,31 @@ type Book struct {
 
 // Load reads a file from disk and returns its raw content lines.
 func Load(path string) (title string, lines []string, err error) {
-	data, err := os.ReadFile(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return "", nil, fmt.Errorf("cannot open file: %w", err)
 	}
+	defer f.Close()
 
-	if !utf8.Valid(data) {
-		return "", nil, fmt.Errorf("file is not valid UTF-8")
+	lines, err = readLines(f)
+	if err != nil {
+		return "", nil, err
 	}
+	return deriveTitle(path), lines, nil
+}
 
-	// Derive title from filename
-	title = deriveTitle(path)
+func readLines(r io.Reader) ([]string, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read document: %w", err)
+	}
+	if !utf8.Valid(data) {
+		return nil, fmt.Errorf("file is not valid UTF-8")
+	}
 
 	// A leading UTF-8 byte-order mark is not content: left in place it would
 	// make the first line start with an invisible rune, hiding a heading.
-	lines = splitLines(bytes.TrimPrefix(data, []byte("\xef\xbb\xbf")))
-	return title, lines, nil
+	return splitLines(bytes.TrimPrefix(data, []byte("\xef\xbb\xbf"))), nil
 }
 
 // splitLines splits data into lines, normalizing CRLF (\r\n), CR (\r),
@@ -861,14 +871,23 @@ func runeLen(s string) int {
 
 // NewBook creates a fully paginated book from a file path.
 func NewBook(path string, width, height int) (*Book, error) {
-	title, lines, err := Load(path)
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open file: %w", err)
+	}
+	defer f.Close()
+
+	return Read(f, deriveTitle(path), width, height, !isMarkdownPath(path))
+}
+
+// Read creates a fully paginated book from a reader.
+func Read(r io.Reader, title string, width, height int, plainText bool) (*Book, error) {
+	lines, err := readLines(r)
 	if err != nil {
 		return nil, err
 	}
-
 	anchors := ExtractAnchors(lines)
 	sourceLinks := collectSourceLinks(lines)
-	plainText := !isMarkdownPath(path)
 	width = normalizePageWidth(width)
 	layout := layoutFromFormatted(formatDocument(lines, width, plainText), height)
 	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height, sourceLinks)
