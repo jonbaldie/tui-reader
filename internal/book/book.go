@@ -173,6 +173,9 @@ func isFenceDelimiter(raw string) bool {
 func findFenceBlockEnd(rawLines []string, start int) int {
 	n := len(rawLines)
 	for end := start + 1; end < n; end++ {
+		if IsIndentedCodeLine(rawLines[end]) {
+			continue
+		}
 		if isFenceDelimiter(rawLines[end]) {
 			return end + 1
 		}
