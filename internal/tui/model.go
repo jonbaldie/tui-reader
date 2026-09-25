@@ -31,13 +31,19 @@ type Model struct {
 func NewModel(path string) Model {
 	// We'll start with default dimensions; they'll be updated on WindowSizeMsg
 	b, err := book.NewBook(path, book.DefaultPageWidth, book.DefaultPageHeight)
+	m := NewModelFromBook(b)
+	m.err = err
+	return m
+}
+
+// NewModelFromBook creates a new TUI model for an already loaded book.
+func NewModelFromBook(b *book.Book) Model {
 	return Model{
 		book:          b,
 		currentPage:   0,
 		selectedLink:  -1,
 		contentWidth:  book.DefaultPageWidth,
 		contentHeight: book.DefaultPageHeight,
-		err:           err,
 	}
 }
 
