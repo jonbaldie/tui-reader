@@ -34,3 +34,8 @@ your reading history, one step at a time.
 
 Links to anchors that do not exist in the document are
 silently ignored when you press Enter.
+
+## Exploratory feedback
+
+See the [2026-09-26 live exploratory-testing report](exploratory-testing/2026-09-26-tui-reader/REPORT.md)
+for recent reading, link-navigation, error-screen, and resize observations.

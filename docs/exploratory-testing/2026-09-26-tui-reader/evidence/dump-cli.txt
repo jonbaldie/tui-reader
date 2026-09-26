@@ -1,0 +1,30 @@
+===== --dump=1 plain-reading.txt; exit 0 =====
+┌─── Plain Reading ── Page 1 of 7 ───┐
+│
+│  Page marker 001: the river path crosses the meadow.
+│  Page marker 002: the river path crosses the meadow.
+│  Page marker 003: the river path crosses the meadow.
+│  Page marker 004: the river path crosses the meadow.
+│  Page marker 005: the river path crosses the meadow.
+│  Page marker 006: the river path crosses the meadow.
+│  Page marker 007: the river path crosses the meadow.
+│  Page marker 008: the river path crosses the meadow.
+│  Page marker 009: the river path crosses the meadow.
+│  Page marker 010: the river path crosses the meadow.
+│  Page marker 011: the river path crosses the meadow.
+│  Page marker 012: the river path crosses the meadow.
+│  Page marker 013: the river path crosses the meadow.
+│  Page marker 014: the river path crosses the meadow.
+│  Page marker 015: the river path crosses the meadow.
+│  Page marker 016: the river path crosses the meadow.
+│  Page marker 017: the river path crosses the meadow.
+│  Page marker 018: the river path crosses the meadow.
+│  Page marker 019: the river path crosses the meadow.
+│  Page marker 020: the river path crosses the meadow.
+│
+└────────────────────────────────┘
+
+===== --dump=invalid plain-reading.txt; exit 1 =====
+stdout: empty
+stderr:
+Usage: tui-reader [--dump[=N]] <file>

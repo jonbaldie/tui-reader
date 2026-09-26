@@ -1,0 +1,76 @@
+===== NO_COLOR unset: no selection =====
+
+                                   [1m[38;5;229mLink Tour[0m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+    [1m[38;5;117m# Link Index[0m
+
+    [38;5;252m  The following links are part of a short reading tour.[39m
+
+    [38;5;252m- [[4m[38;5;75mChapter Alpha[0m](#chapter-alpha)
+    [38;5;252m- [[4m[38;5;75mChapter Beta[0m](#chapter-beta)
+    [38;5;252m- [[4m[38;5;75mMissing Chapter[0m](#chapter-missing)
+
+    [1m[38;5;117m# Reading Before Alpha[0m
+
+    [38;5;252m  Before Alpha paragraph 01: a reader follows the shaded path past the[39m
+    [38;5;252mold orchard.[39m
+
+    [38;5;252m  Before Alpha paragraph 02: a reader follows the shaded path past the[39m
+    [38;5;252mold orchard.[39m
+
+    [38;5;252m  Before Alpha paragraph 03: a reader follows the shaded path past the[39m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+                                  [38;5;245mPage 1 of 7[39m
+              [38;5;241m←/→ page • tab link • enter follow • b back • q quit[39m
+
+===== NO_COLOR unset: Tab selects Alpha =====
+
+                                   [1m[38;5;229mLink Tour[0m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+    [1m[38;5;117m# Link Index[0m
+
+    [38;5;252m  The following links are part of a short reading tour.[39m
+
+    [38;5;252m- [[1;4m[30m[48;5;117mChapter[0;4m[30m[48;5;117m [1mAlpha[0m](#chapter-alpha)
+    [38;5;252m- [[4m[38;5;75mChapter Beta[0m](#chapter-beta)
+    [38;5;252m- [[4m[38;5;75mMissing Chapter[0m](#chapter-missing)
+
+    [1m[38;5;117m# Reading Before Alpha[0m
+
+    [38;5;252m  Before Alpha paragraph 01: a reader follows the shaded path past the[39m
+    [38;5;252mold orchard.[39m
+
+    [38;5;252m  Before Alpha paragraph 02: a reader follows the shaded path past the[39m
+    [38;5;252mold orchard.[39m
+
+    [38;5;252m  Before Alpha paragraph 03: a reader follows the shaded path past the[39m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+                                  [38;5;245mPage 1 of 7[39m
+              [38;5;241m←/→ page • tab link • enter follow • b back • q quit[39m
+
+===== NO_COLOR unset: next Tab selects Beta =====
+
+                                   [1m[38;5;229mLink Tour[0m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+    [1m[38;5;117m# Link Index[0m
+
+    [38;5;252m  The following links are part of a short reading tour.[39m
+
+    [38;5;252m- [[4m[38;5;75mChapter Alpha[0m](#chapter-alpha)
+    [38;5;252m- [[1;4m[30m[48;5;117mChapter[0;4m[30m[48;5;117m [1mBeta[0m](#chapter-beta)
+    [38;5;252m- [[4m[38;5;75mMissing Chapter[0m](#chapter-missing)
+
+    [1m[38;5;117m# Reading Before Alpha[0m
+
+    [38;5;252m  Before Alpha paragraph 01: a reader follows the shaded path past the[39m
+    [38;5;252mold orchard.[39m
+
+    [38;5;252m  Before Alpha paragraph 02: a reader follows the shaded path past the[39m
+    [38;5;252mold orchard.[39m
+
+    [38;5;252m  Before Alpha paragraph 03: a reader follows the shaded path past the[39m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+                                  [38;5;245mPage 1 of 7[39m
+              [38;5;241m←/→ page • tab link • enter follow • b back • q quit[39m
+
+Diagnostic session exit status after q: 0. Baseline host environment retains NO_COLOR=1.

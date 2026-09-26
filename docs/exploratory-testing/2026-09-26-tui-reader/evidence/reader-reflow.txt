@@ -1,0 +1,206 @@
+===== 80x24: start =====
+
+                                 Resize Reading
+    ────────────────────────────────────────────────────────────────────────
+    Position marker 001
+    Position marker 002
+    Position marker 003
+    Position marker 004
+    Position marker 005
+    Position marker 006
+    Position marker 007
+    Position marker 008
+    Position marker 009
+    Position marker 010
+    Position marker 011
+    Position marker 012
+    Position marker 013
+    Position marker 014
+    Position marker 015
+    Position marker 016
+    Position marker 017
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== 80x24: Right twice =====
+
+                                 Resize Reading
+    ────────────────────────────────────────────────────────────────────────
+    Position marker 035
+    Position marker 036
+    Position marker 037
+    Position marker 038
+    Position marker 039
+    Position marker 040
+    Position marker 041
+    Position marker 042
+    Position marker 043
+    Position marker 044
+    Position marker 045
+    Position marker 046
+    Position marker 047
+    Position marker 048
+    Position marker 049
+    Position marker 050
+    Position marker 051
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== 48x14: after narrowing =====
+
+                 Resize Reading
+  ────────────────────────────────────────────
+  Position marker 029
+  Position marker 030
+  Position marker 031
+  Position marker 032
+  Position marker 033
+  Position marker 034
+  Position marker 035
+  ────────────────────────────────────────────
+                  Page 5 of 18
+  ←/→ page • tab link • enter follow • b ba...
+
+===== 80x24: after restoring =====
+
+                                 Resize Reading
+    ────────────────────────────────────────────────────────────────────────
+    Position marker 018
+    Position marker 019
+    Position marker 020
+    Position marker 021
+    Position marker 022
+    Position marker 023
+    Position marker 024
+    Position marker 025
+    Position marker 026
+    Position marker 027
+    Position marker 028
+    Position marker 029
+    Position marker 030
+    Position marker 031
+    Position marker 032
+    Position marker 033
+    Position marker 034
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== 80x24: End =====
+
+                                 Resize Reading
+    ────────────────────────────────────────────────────────────────────────
+    Position marker 120
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 8 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== 80x24: Home =====
+
+                                 Resize Reading
+    ────────────────────────────────────────────────────────────────────────
+    Position marker 001
+    Position marker 002
+    Position marker 003
+    Position marker 004
+    Position marker 005
+    Position marker 006
+    Position marker 007
+    Position marker 008
+    Position marker 009
+    Position marker 010
+    Position marker 011
+    Position marker 012
+    Position marker 013
+    Position marker 014
+    Position marker 015
+    Position marker 016
+    Position marker 017
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Repeat, fresh process: before resize =====
+
+                                 Resize Reading
+    ────────────────────────────────────────────────────────────────────────
+    Position marker 035
+    Position marker 036
+    Position marker 037
+    Position marker 038
+    Position marker 039
+    Position marker 040
+    Position marker 041
+    Position marker 042
+    Position marker 043
+    Position marker 044
+    Position marker 045
+    Position marker 046
+    Position marker 047
+    Position marker 048
+    Position marker 049
+    Position marker 050
+    Position marker 051
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Repeat: 48x14 =====
+
+                 Resize Reading
+  ────────────────────────────────────────────
+  Position marker 029
+  Position marker 030
+  Position marker 031
+  Position marker 032
+  Position marker 033
+  Position marker 034
+  Position marker 035
+  ────────────────────────────────────────────
+                  Page 5 of 18
+  ←/→ page • tab link • enter follow • b ba...
+
+===== Repeat: restored 80x24 =====
+
+                                 Resize Reading
+    ────────────────────────────────────────────────────────────────────────
+    Position marker 018
+    Position marker 019
+    Position marker 020
+    Position marker 021
+    Position marker 022
+    Position marker 023
+    Position marker 024
+    Position marker 025
+    Position marker 026
+    Position marker 027
+    Position marker 028
+    Position marker 029
+    Position marker 030
+    Position marker 031
+    Position marker 032
+    Position marker 033
+    Position marker 034
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+Both runs exited 0 after q. On the first narrow screen marker 035 remains visible; after restoring, the wide screen starts at marker 018.

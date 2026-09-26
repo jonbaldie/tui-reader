@@ -1,0 +1,201 @@
+===== 80x24 initial screen =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Index
+
+      The following links are part of a short reading tour.
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+
+    # Reading Before Alpha
+
+      Before Alpha paragraph 01: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 02: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 03: a reader follows the shaded path past the
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Tab: select Alpha =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Index
+
+      The following links are part of a short reading tour.
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+
+    # Reading Before Alpha
+
+      Before Alpha paragraph 01: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 02: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 03: a reader follows the shaded path past the
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Tab: select Beta =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Index
+
+      The following links are part of a short reading tour.
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+
+    # Reading Before Alpha
+
+      Before Alpha paragraph 01: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 02: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 03: a reader follows the shaded path past the
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Shift+Tab: return to Alpha =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Index
+
+      The following links are part of a short reading tour.
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+
+    # Reading Before Alpha
+
+      Before Alpha paragraph 01: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 02: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 03: a reader follows the shaded path past the
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Enter: Alpha destination =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+      Before Alpha paragraph 09: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 10: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 11: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 12: a reader follows the shaded path past the
+    old orchard.
+
+    # Chapter Alpha
+
+      Destination marker: ALPHA. Alpha has a few lines of prose for reading
+    after the jump.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== b: return to link index =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Index
+
+      The following links are part of a short reading tour.
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+
+    # Reading Before Alpha
+
+      Before Alpha paragraph 01: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 02: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 03: a reader follows the shaded path past the
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Tab, Tab, Enter: Beta destination =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+
+      Between chapters paragraph 12: the path descends toward the quiet
+    river.
+
+      Between chapters paragraph 13: the path descends toward the quiet
+    river.
+
+      Between chapters paragraph 14: the path descends toward the quiet
+    river.
+
+      Between chapters paragraph 15: the path descends toward the quiet
+    river.
+
+    # Chapter Beta
+
+      Destination marker: BETA. Beta has a few lines of prose for reading
+    after the jump.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 6 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== b, Tab x3, Enter: missing anchor stays on source page =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Index
+
+      The following links are part of a short reading tour.
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+
+    # Reading Before Alpha
+
+      Before Alpha paragraph 01: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 02: a reader follows the shaded path past the
+    old orchard.
+
+      Before Alpha paragraph 03: a reader follows the shaded path past the
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+Final action: q. Exit status: 0.

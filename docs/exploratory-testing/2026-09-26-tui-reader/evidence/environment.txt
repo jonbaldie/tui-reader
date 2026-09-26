@@ -1,0 +1,10 @@
+Repository: github.com/jonbaldie/tui-reader
+Base revision: 974602698c0dabf4acd1095a386ff5d70df3ff56 (origin/main)
+Date: 2026-09-26
+Host: macOS, darwin/arm64
+Go: go1.26.3 darwin/arm64
+Terminal driver: tmux PTY, TERM=screen-256color, initial size 80x24
+App configuration: none; HOME=/tmp/tui-reader-exploratory-20260926-home
+Data: isolated fixtures preserved under fixtures/
+Product changes: none
+Host color preference: NO_COLOR=1 (inherited); baseline ANSI styling capture therefore contains no style sequences. A separate diagnostic run unset NO_COLOR while keeping the same PTY and verified selected-link style output; baseline observations were retained.
