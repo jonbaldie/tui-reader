@@ -1,0 +1,16 @@
+/tmp/tui-reader-exploratory-20260926-bin: go1.26.3
+	path	github.com/jonbaldie/tui-reader
+	mod	github.com/jonbaldie/tui-reader	v0.1.9-0.20260924110349-4a0663e6dd43+dirty
+	dep	github.com/aymanbagabas/go-osc52/v2	v2.0.1	h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
+	dep	github.com/charmbracelet/bubbles	v1.0.0	h1:12J8/ak/uCZEMQ6KU7pcfwceyjLlWsDLAxB5fXonfvc=
+	dep	github.com/charmbracelet/bubbletea	v1.3.10	h1:otUDHWMMzQSB0Pkc87rm691KZ3SWa4KUlvF9nRvCICw=
+	dep	github.com/charmbracelet/colorprofile	v0.4.1	h1:a1lO03qTrSIRaK8c3JRxJDZOvhvIeSco3ej+ngLk1kk=
+	dep	github.com/charmbracelet/lipgloss	v1.1.0	h1:vYXsiLHVkK7fp74RkV7b2kq9+zDLoEU4MZoFqR/noCY=
+	dep	github.com/charmbracelet/x/ansi	v0.11.6	h1:GhV21SiDz/45W9AnV2R61xZMRri5NlLnl6CVF7ihZW8=
+	dep	github.com/charmbracelet/x/cellbuf	v0.0.15	h1:ur3pZy0o6z/R7EylET877CBxaiE1Sp1GMxoFPAIztPI=
+	dep	github.com/charmbracelet/x/term	v0.2.2	h1:xVRT/S2ZcKdhhOuSP4t5cLi5o+JxklsoEObBSgfgZRk=
+	dep	github.com/clipperhouse/displaywidth	v0.9.0	h1:Qb4KOhYwRiN3viMv1v/3cTBlz3AcAZX3+y9OLhMtAtA=
+
+The module version carries +dirty because the exploratory evidence files were
+untracked in the worktree when the binary was built. The source revision was
+974602698c0dabf4acd1095a386ff5d70df3ff56; no Go source was modified.

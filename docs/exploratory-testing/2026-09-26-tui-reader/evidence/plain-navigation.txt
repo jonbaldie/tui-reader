@@ -1,0 +1,126 @@
+===== 80x24 initial screen =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Page marker 001: the river path crosses the meadow.
+    Page marker 002: the river path crosses the meadow.
+    Page marker 003: the river path crosses the meadow.
+    Page marker 004: the river path crosses the meadow.
+    Page marker 005: the river path crosses the meadow.
+    Page marker 006: the river path crosses the meadow.
+    Page marker 007: the river path crosses the meadow.
+    Page marker 008: the river path crosses the meadow.
+    Page marker 009: the river path crosses the meadow.
+    Page marker 010: the river path crosses the meadow.
+    Page marker 011: the river path crosses the meadow.
+    Page marker 012: the river path crosses the meadow.
+    Page marker 013: the river path crosses the meadow.
+    Page marker 014: the river path crosses the meadow.
+    Page marker 015: the river path crosses the meadow.
+    Page marker 016: the river path crosses the meadow.
+    Page marker 017: the river path crosses the meadow.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Space =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Page marker 018: the river path crosses the meadow.
+    Page marker 019: the river path crosses the meadow.
+    Page marker 020: the river path crosses the meadow.
+    Page marker 021: the river path crosses the meadow.
+    Page marker 022: the river path crosses the meadow.
+    Page marker 023: the river path crosses the meadow.
+    Page marker 024: the river path crosses the meadow.
+    Page marker 025: the river path crosses the meadow.
+    Page marker 026: the river path crosses the meadow.
+    Page marker 027: the river path crosses the meadow.
+    Page marker 028: the river path crosses the meadow.
+    Page marker 029: the river path crosses the meadow.
+    Page marker 030: the river path crosses the meadow.
+    Page marker 031: the river path crosses the meadow.
+    Page marker 032: the river path crosses the meadow.
+    Page marker 033: the river path crosses the meadow.
+    Page marker 034: the river path crosses the meadow.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Right =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Page marker 035: the river path crosses the meadow.
+    Page marker 036: the river path crosses the meadow.
+    Page marker 037: the river path crosses the meadow.
+    Page marker 038: the river path crosses the meadow.
+    Page marker 039: the river path crosses the meadow.
+    Page marker 040: the river path crosses the meadow.
+    Page marker 041: the river path crosses the meadow.
+    Page marker 042: the river path crosses the meadow.
+    Page marker 043: the river path crosses the meadow.
+    Page marker 044: the river path crosses the meadow.
+    Page marker 045: the river path crosses the meadow.
+    Page marker 046: the river path crosses the meadow.
+    Page marker 047: the river path crosses the meadow.
+    Page marker 048: the river path crosses the meadow.
+    Page marker 049: the river path crosses the meadow.
+    Page marker 050: the river path crosses the meadow.
+    Page marker 051: the river path crosses the meadow.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== Home =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Page marker 001: the river path crosses the meadow.
+    Page marker 002: the river path crosses the meadow.
+    Page marker 003: the river path crosses the meadow.
+    Page marker 004: the river path crosses the meadow.
+    Page marker 005: the river path crosses the meadow.
+    Page marker 006: the river path crosses the meadow.
+    Page marker 007: the river path crosses the meadow.
+    Page marker 008: the river path crosses the meadow.
+    Page marker 009: the river path crosses the meadow.
+    Page marker 010: the river path crosses the meadow.
+    Page marker 011: the river path crosses the meadow.
+    Page marker 012: the river path crosses the meadow.
+    Page marker 013: the river path crosses the meadow.
+    Page marker 014: the river path crosses the meadow.
+    Page marker 015: the river path crosses the meadow.
+    Page marker 016: the river path crosses the meadow.
+    Page marker 017: the river path crosses the meadow.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+===== End =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Page marker 120: the river path crosses the meadow.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 8 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+Keys sent: Space, Right, Home, End, q. Exit status after q: 0.

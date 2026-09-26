@@ -1,0 +1,41 @@
+===== 80x24: missing file =====
+
+
+
+
+
+
+
+
+
+
+  Error: cannot open file: open /Users/jonathanbaldie/Code-
+  2/github.com/jonbaldie/tui-reader/.worktrees/exploratory-testing-2026-09-
+  26/docs/exploratory-testing/2026-09-26-tui-reader/evidence/fixtures/no-such-
+  book.md: no such file or directory
+
+===== 80x24: invalid UTF-8 =====
+
+
+
+
+
+
+
+
+
+
+
+  Error: file is not valid UTF-8
+
+===== 40x12: missing file =====
+
+
+
+
+  Error: cannot open file: open
+  /tmp/tui-reader-exploratory-
+  20260926-home/missing.md: no such
+  file or directory
+
+Each screen came from a fresh process; q returned status 0 in all cases. The 40x12 error wraps through “no such file or directory.”
