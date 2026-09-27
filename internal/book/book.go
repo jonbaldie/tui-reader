@@ -887,7 +887,7 @@ func Read(r io.Reader, title string, width, height int, plainText bool) (*Book, 
 		return nil, err
 	}
 	anchors := ExtractAnchors(lines)
-	sourceLinks := collectSourceLinks(lines)
+	sourceLinks := sourceLinksFor(lines, plainText)
 	width = normalizePageWidth(width)
 	layout := layoutFromFormatted(formatDocument(lines, width, plainText), height)
 	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height, sourceLinks)
@@ -908,8 +908,8 @@ func Read(r io.Reader, title string, width, height int, plainText bool) (*Book, 
 
 // Reflow re-paginates the book for new dimensions.
 func (b *Book) Reflow(width, height int) {
-	if b.sourceLinks.links == nil {
-		b.sourceLinks = collectSourceLinks(b.RawLines)
+	if b.plainText || b.sourceLinks.links == nil {
+		b.sourceLinks = sourceLinksFor(b.RawLines, b.plainText)
 	}
 	width = normalizePageWidth(width)
 	layout := layoutFromFormatted(formatDocument(b.RawLines, width, b.plainText), height)

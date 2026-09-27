@@ -229,6 +229,13 @@ func collectSourceLinks(rawLines []string) sourceLinkSet {
 	return sourceLinkSet{links: sourceLinks, order: sourceOrder}
 }
 
+func sourceLinksFor(rawLines []string, plainText bool) sourceLinkSet {
+	if plainText {
+		return sourceLinkSet{links: map[int][]Link{}}
+	}
+	return collectSourceLinks(rawLines)
+}
+
 func collectProseBlockLinks(sourceLinks map[int][]Link, sourceOrder *[]int, lines []string, startRi int) {
 	joined := strings.Join(lines, " ")
 	matches := extractLinkMatches(joined)
