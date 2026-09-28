@@ -152,6 +152,11 @@ type formattedLine struct {
 	links []Link
 }
 
+type formattedDocument struct {
+	lines   []formattedLine
+	anchors map[string]int
+}
+
 type wrappedLine struct {
 	text  string
 	links []Link
@@ -160,6 +165,7 @@ type wrappedLine struct {
 type bookLayout struct {
 	formatted    []formattedLine
 	pages        []Page
+	anchors      map[string]int
 	rawLinePages map[int]int
 	pageRawLines []int
 	height       int
@@ -199,9 +205,17 @@ func findFenceBlockEnd(rawLines []string, start int) int {
 // algorithm to recover provenance. FormatParagraphs is a thin projection over
 // it.
 func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLine {
+	return formatMarkdownDocument(rawLines, width, false).lines
+}
+
+func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) formattedDocument {
 	width = normalizePageWidth(width)
 
 	var result []formattedLine
+	var anchors map[string]int
+	if captureAnchors {
+		anchors = make(map[string]int)
+	}
 	firstParagraph := true
 	prevCode := false
 	prevList := false
@@ -217,6 +231,12 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 			continue
 		}
 
+		if anchors != nil && !IsIndentedCodeLine(raw) {
+			if m := headingRegex.FindStringSubmatch(strings.TrimSpace(raw)); m != nil {
+				anchors[NormalizeAnchor(m[2])] = ri
+			}
+		}
+
 		block := formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
 		result = append(result, block.lines...)
 		firstParagraph = false
@@ -224,7 +244,7 @@ func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLin
 		ri = block.lastRi
 	}
 
-	return result
+	return formattedDocument{lines: result, anchors: anchors}
 }
 
 type formattedBlock struct {
@@ -500,11 +520,14 @@ func formatPlainTextWithProvenance(rawLines []string, width int) []formattedLine
 	return result
 }
 
-func formatDocument(rawLines []string, width int, plainText bool) []formattedLine {
+func formatDocument(rawLines []string, width int, plainText bool) formattedDocument {
 	if plainText {
-		return formatPlainTextWithProvenance(rawLines, width)
+		return formattedDocument{
+			lines:   formatPlainTextWithProvenance(rawLines, width),
+			anchors: make(map[string]int),
+		}
 	}
-	return formatParagraphsWithProvenance(rawLines, width)
+	return formatMarkdownDocument(rawLines, width, true)
 }
 
 func isMarkdownPath(path string) bool {
@@ -547,6 +570,12 @@ func layoutFromFormatted(formatted []formattedLine, height int) bookLayout {
 		pageRawLines: pageRawLines(formatted, height),
 		height:       height,
 	}
+}
+
+func layoutFromDocument(document formattedDocument, height int) bookLayout {
+	layout := layoutFromFormatted(document.lines, height)
+	layout.anchors = document.anchors
+	return layout
 }
 
 func normalizePageHeight(height int) int {
@@ -886,17 +915,16 @@ func Read(r io.Reader, title string, width, height int, plainText bool) (*Book, 
 	if err != nil {
 		return nil, err
 	}
-	anchors := ExtractAnchors(lines)
 	sourceLinks := sourceLinksFor(lines, plainText)
 	width = normalizePageWidth(width)
-	layout := layoutFromFormatted(formatDocument(lines, width, plainText), height)
+	layout := layoutFromDocument(formatDocument(lines, width, plainText), height)
 	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height, sourceLinks)
 
 	return &Book{
 		Title:        title,
 		RawLines:     lines,
 		Pages:        pages,
-		Anchors:      anchors,
+		Anchors:      layout.anchors,
 		PageWidth:    width,
 		PageHeight:   layout.height,
 		sourceLinks:  sourceLinks,
@@ -912,10 +940,11 @@ func (b *Book) Reflow(width, height int) {
 		b.sourceLinks = sourceLinksFor(b.RawLines, b.plainText)
 	}
 	width = normalizePageWidth(width)
-	layout := layoutFromFormatted(formatDocument(b.RawLines, width, b.plainText), height)
+	layout := layoutFromDocument(formatDocument(b.RawLines, width, b.plainText), height)
 	b.PageWidth = width
 	b.PageHeight = layout.height
 	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height, b.sourceLinks)
+	b.Anchors = layout.anchors
 	b.rawLinePages = layout.rawLinePages
 	b.pageRawLines = layout.pageRawLines
 }
@@ -934,8 +963,8 @@ func (b *Book) PageForAnchor(anchor string) int {
 		// normalizes a non-positive height to DefaultPageHeight, so a Book built
 		// (or mutated) with PageHeight <= 0 is still mapped to its true pages.
 		height := normalizePageHeight(b.PageHeight)
-		formatted := formatDocument(b.RawLines, b.PageWidth, b.plainText)
-		b.rawLinePages = rawLinePages(formatted, height)
+		document := formatDocument(b.RawLines, b.PageWidth, b.plainText)
+		b.rawLinePages = rawLinePages(document.lines, height)
 	}
 
 	if page, ok := b.rawLinePages[lineIdx]; ok {

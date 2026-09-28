@@ -14,29 +14,9 @@ var (
 	linkRegex = regexp.MustCompile(`\[([^\[\]]+)\]\(#([^)]+)\)`)
 )
 
-// ExtractAnchors scans raw lines for headings and returns a map of
-// normalized anchor names to their line indices.
+// ExtractAnchors returns the heading anchors produced by Markdown layout.
 func ExtractAnchors(lines []string) map[string]int {
-	anchors := make(map[string]int)
-	inFence := false
-	for i, line := range lines {
-		if IsIndentedCodeLine(line) {
-			continue
-		}
-		if isFenceDelimiter(line) {
-			inFence = !inFence
-			continue
-		}
-		if inFence {
-			continue
-		}
-		trimmed := strings.TrimSpace(line)
-		if m := headingRegex.FindStringSubmatch(trimmed); m != nil {
-			anchor := NormalizeAnchor(m[2])
-			anchors[anchor] = i
-		}
-	}
-	return anchors
+	return formatDocument(lines, fallbackPageWidth, false).anchors
 }
 
 // NormalizeAnchor converts heading text to a URL-fragment style anchor.
