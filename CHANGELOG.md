@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.9 (2026-09-28)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.8...v0.1.9
+
+### Features
+
+- **Construct books from `io.Reader` (#137, fixes #133).** `book.Read` builds a paginated book from a reader, and `tui.NewModelFromBook` constructs a model from an in-memory book. `NewBook` now opens the path and delegates to `Read`.
+
+### Performance
+
+- **Stream wrapping tokens (#134).** Paragraph wrapping consumes tokens as they are scanned instead of building a temporary token slice, reducing allocations without changing wrapped output.
+
+### Bug Fixes
+
+- **Skip indented code inside fenced blocks (#136, fixes #135).** Indented backtick lines no longer prematurely end a fenced block, keeping formatting and navigation synchronized.
+- **Keep Markdown links inert in plain-text files (#140, fixes #139).** Plain-text books no longer expose Markdown-looking links for selection or navigation.
+
 ## v0.1.8 (2026-09-24)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.7...v0.1.8
