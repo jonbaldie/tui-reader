@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.10 (2026-10-01)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.9...v0.1.10
+
+### Bug Fixes
+
+- **Derive anchors from Markdown layout (#142, fixes #132).** Heading anchors now come from the document formatter, keeping navigation consistent with code-block handling and preventing plain-text `.txt` and `.log` files from exposing headings as anchors.
+
 ## v0.1.9 (2026-09-28)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.8...v0.1.9
