@@ -9,7 +9,7 @@ func TestIssue106_SoftWrappedParagraphSpanningLinkAttached(t *testing.T) {
 		"[link",
 		"label](#target)",
 	}
-	pages := AttachLinks(Paginate(raw, 80, 20), raw, 80, 20)
+	pages := readMarkdown(t, raw, 80, 20).Pages
 	if len(pages) != 1 {
 		t.Fatalf("expected 1 page, got %d", len(pages))
 	}
@@ -33,7 +33,7 @@ func TestIssue106_OriginalIssueReproduction(t *testing.T) {
 		"# Target",
 		"Target content.",
 	}
-	pages := AttachLinks(Paginate(raw, 80, 20), raw, 80, 20)
+	pages := readMarkdown(t, raw, 80, 20).Pages
 	if len(pages) < 1 {
 		t.Fatalf("expected at least 1 page, got %d", len(pages))
 	}
@@ -55,7 +55,7 @@ func TestIssue106_MultipleLinksSpanningLinesInSameParagraph(t *testing.T) {
 		"and [second",
 		"link](#second-target) end text.",
 	}
-	pages := AttachLinks(Paginate(raw, 80, 20), raw, 80, 20)
+	pages := readMarkdown(t, raw, 80, 20).Pages
 	if len(pages) != 1 {
 		t.Fatalf("expected 1 page, got %d", len(pages))
 	}

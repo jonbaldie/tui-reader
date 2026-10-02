@@ -32,9 +32,9 @@ func TestNormalizeAnchor(t *testing.T) {
 	}
 }
 
-// ==================== ExtractAnchors ====================
+// ==================== Heading anchors ====================
 
-func TestExtractAnchors_MarkdownHeadings(t *testing.T) {
+func TestReadAnchors_MarkdownHeadings(t *testing.T) {
 	lines := []string{
 		"# Chapter 1",
 		"Some text",
@@ -43,7 +43,7 @@ func TestExtractAnchors_MarkdownHeadings(t *testing.T) {
 		"### Subsection",
 		"Even more",
 	}
-	anchors := ExtractAnchors(lines)
+	anchors := readMarkdown(t, lines, 80, DefaultPageHeight).Anchors
 
 	expected := map[string]int{
 		"chapter-1":  0,
@@ -62,24 +62,24 @@ func TestExtractAnchors_MarkdownHeadings(t *testing.T) {
 	}
 }
 
-func TestExtractAnchors_NoHeadings(t *testing.T) {
+func TestReadAnchors_NoHeadings(t *testing.T) {
 	lines := []string{"plain text", "more text", "no headings here"}
-	anchors := ExtractAnchors(lines)
+	anchors := readMarkdown(t, lines, 80, DefaultPageHeight).Anchors
 	if len(anchors) != 0 {
 		t.Errorf("expected 0 anchors, got %d", len(anchors))
 	}
 }
 
-func TestExtractAnchors_HashInMiddle(t *testing.T) {
+func TestReadAnchors_HashInMiddle(t *testing.T) {
 	// "#" must be at the start of the line
 	lines := []string{"text with # in middle", "also not ## a heading"}
-	anchors := ExtractAnchors(lines)
+	anchors := readMarkdown(t, lines, 80, DefaultPageHeight).Anchors
 	if len(anchors) != 0 {
 		t.Errorf("expected 0 anchors for mid-line hashes, got %d", len(anchors))
 	}
 }
 
-func TestExtractAnchors_HeadingLevels(t *testing.T) {
+func TestReadAnchors_HeadingLevels(t *testing.T) {
 	lines := []string{
 		"# H1",
 		"## H2",
@@ -89,7 +89,7 @@ func TestExtractAnchors_HeadingLevels(t *testing.T) {
 		"###### H6",
 		"####### Not a heading",
 	}
-	anchors := ExtractAnchors(lines)
+	anchors := readMarkdown(t, lines, 80, DefaultPageHeight).Anchors
 	if len(anchors) != 6 {
 		t.Errorf("expected 6 anchors (h1-h6), got %d", len(anchors))
 	}
@@ -144,9 +144,9 @@ func TestExtractLinks_NestedBrackets(t *testing.T) {
 	}
 }
 
-// ==================== AttachLinks ====================
+// ==================== Link attachment ====================
 
-func TestAttachLinks_LinksOnCorrectPage(t *testing.T) {
+func TestReadLinks_LinksOnCorrectPage(t *testing.T) {
 	rawLines := []string{
 		"# Introduction",
 		"",
@@ -155,8 +155,7 @@ func TestAttachLinks_LinksOnCorrectPage(t *testing.T) {
 		"# Chapter 1",
 		"Content here.",
 	}
-	pages := Paginate(rawLines, 80, 3) // 3 lines per page -> 2 pages
-	pages = AttachLinks(pages, rawLines, 80, 3)
+	pages := readMarkdown(t, rawLines, 80, 3).Pages
 
 	// The link should be on page index 0 (line 2 is "See [Chapter 1]...")
 	if len(pages) < 1 {
@@ -170,10 +169,9 @@ func TestAttachLinks_LinksOnCorrectPage(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_NoLinks(t *testing.T) {
+func TestReadLinks_NoLinks(t *testing.T) {
 	rawLines := []string{"plain text", "no links"}
-	pages := Paginate(rawLines, 80, 10)
-	pages = AttachLinks(pages, rawLines, 80, 10)
+	pages := readMarkdown(t, rawLines, 80, 10).Pages
 	if len(pages[0].Links) != 0 {
 		t.Errorf("expected 0 links, got %d", len(pages[0].Links))
 	}

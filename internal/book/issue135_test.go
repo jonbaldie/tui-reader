@@ -35,8 +35,8 @@ func TestIssue135_IndentedFenceInsideFencedCodeBlock(t *testing.T) {
 	}, "\n")
 
 	rawLines := strings.Split(content, "\n")
-	formatted := FormatParagraphs(rawLines, 80)
-	anchors := ExtractAnchors(rawLines)
+	formatted := formatMarkdown(t, rawLines, 80)
+	anchors := readMarkdown(t, rawLines, 80, DefaultPageHeight).Anchors
 
 	path := writeTempFile(t, "repro.md", content)
 	b, err := NewBook(path, 80, 20)
