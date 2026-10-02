@@ -252,7 +252,7 @@ func TestNav_OutcomesStableAcrossReflow(t *testing.T) {
 // Note: this characterizes today's behavior, where a link-free page carries a
 // nil Links slice (a nil slice still has len 0 and ranges safely). We therefore
 // assert len(Links) == 0 rather than Links != nil; normalizing Links to a
-// non-nil empty slice belongs to the slice that rebuilds AttachLinks.
+// non-nil empty slice belongs to the link-pagination rework (#121).
 func TestNav_DegenerateInputsAreWellFormed(t *testing.T) {
 	cases := map[string]string{
 		"empty":          "",

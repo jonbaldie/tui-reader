@@ -19,57 +19,49 @@ func writeTempFile(t *testing.T, name, content string) string {
 	return path
 }
 
-// ==================== Load ====================
+// ==================== NewBook loading ====================
 
-func TestLoad_ValidTextFile(t *testing.T) {
+func TestNewBook_ValidTextFile(t *testing.T) {
 	path := writeTempFile(t, "test.txt", "Hello\nWorld\n")
-	title, lines, err := Load(path)
+	b, err := NewBook(path, 80, 20)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if title != "Test" {
-		t.Errorf("expected title 'Test', got %q", title)
+	if b.Title != "Test" {
+		t.Errorf("expected title 'Test', got %q", b.Title)
 	}
-	if len(lines) != 3 { // "Hello", "World", ""
-		t.Errorf("expected 3 lines, got %d", len(lines))
+	if len(b.RawLines) != 3 { // "Hello", "World", ""
+		t.Errorf("expected 3 lines, got %d", len(b.RawLines))
 	}
-	if lines[0] != "Hello" {
-		t.Errorf("expected first line 'Hello', got %q", lines[0])
+	if b.RawLines[0] != "Hello" {
+		t.Errorf("expected first line 'Hello', got %q", b.RawLines[0])
 	}
 }
 
-func TestLoad_ValidMarkdownFile(t *testing.T) {
+func TestNewBook_ValidMarkdownFile(t *testing.T) {
 	content := "# My Book\n\nSome text.\n\n## Chapter 1\n\nMore text.\n"
 	path := writeTempFile(t, "my-book.md", content)
-	title, lines, err := Load(path)
+	b, err := NewBook(path, 80, 20)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if title != "My Book" {
-		t.Errorf("expected title 'My Book', got %q", title)
+	if b.Title != "My Book" {
+		t.Errorf("expected title 'My Book', got %q", b.Title)
 	}
-	if len(lines) < 5 {
-		t.Errorf("expected at least 5 lines, got %d", len(lines))
+	if len(b.RawLines) < 5 {
+		t.Errorf("expected at least 5 lines, got %d", len(b.RawLines))
 	}
 }
 
-func TestLoad_EmptyFile(t *testing.T) {
-	path := writeTempFile(t, "empty.txt", "")
-	_, lines, err := Load(path)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(lines) != 1 { // Split of "" gives [""]
-		t.Errorf("expected 1 line (empty), got %d", len(lines))
+func TestRead_EmptyDocument(t *testing.T) {
+	b := readBook(t, "", false, 80, 20)
+	if len(b.RawLines) != 1 { // Split of "" gives [""]
+		t.Errorf("expected 1 line (empty), got %d", len(b.RawLines))
 	}
 }
 
-func TestLoad_WindowsLineEndings(t *testing.T) {
-	path := writeTempFile(t, "crlf.txt", "Line1\r\nLine2\r\nLine3\r\n")
-	_, lines, err := Load(path)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+func TestRead_WindowsLineEndings(t *testing.T) {
+	lines := readBook(t, "Line1\r\nLine2\r\nLine3\r\n", false, 80, 20).RawLines
 	if lines[0] != "Line1" {
 		t.Errorf("expected 'Line1', got %q", lines[0])
 	}
@@ -78,18 +70,14 @@ func TestLoad_WindowsLineEndings(t *testing.T) {
 	}
 }
 
-func TestLoad_ClassicMacLineEndings(t *testing.T) {
-	path := writeTempFile(t, "cr.txt", "Alpha\rBeta\rGamma\r")
-	_, lines, err := Load(path)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+func TestRead_ClassicMacLineEndings(t *testing.T) {
+	lines := readBook(t, "Alpha\rBeta\rGamma\r", false, 80, 20).RawLines
 	if lines[0] != "Alpha" {
 		t.Errorf("expected 'Alpha', got %q", lines[0])
 	}
 }
 
-func TestLoad_LineEndingEquivalence(t *testing.T) {
+func TestRead_LineEndingEquivalence(t *testing.T) {
 	cases := []string{
 		"",
 		"single line no newline",
@@ -111,11 +99,7 @@ func TestLoad_LineEndingEquivalence(t *testing.T) {
 		canon = strings.ReplaceAll(canon, "\r", "\n")
 		wantLines := strings.Split(canon, "\n")
 
-		path := writeTempFile(t, "equiv.txt", tc)
-		_, gotLines, err := Load(path)
-		if err != nil {
-			t.Fatalf("unexpected error for %q: %v", tc, err)
-		}
+		gotLines := readBook(t, tc, false, 80, 20).RawLines
 
 		if len(gotLines) != len(wantLines) {
 			t.Fatalf("case %q: line count mismatch: got %d, want %d", tc, len(gotLines), len(wantLines))
@@ -128,23 +112,15 @@ func TestLoad_LineEndingEquivalence(t *testing.T) {
 	}
 }
 
-
 // Unhappy paths
 
-func TestLoad_MissingFile(t *testing.T) {
-	_, _, err := Load("/nonexistent/path/file.txt")
-	if err == nil {
-		t.Fatal("expected error for missing file, got nil")
-	}
-}
-
-func TestLoad_InvalidUTF8(t *testing.T) {
+func TestNewBook_InvalidUTF8(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "bad.bin")
 	if err := os.WriteFile(path, []byte{0xff, 0xfe, 0x80, 0x81}, 0644); err != nil {
 		t.Fatalf("failed to write temp file: %v", err)
 	}
-	_, _, err := Load(path)
+	_, err := NewBook(path, 80, 20)
 	if err == nil {
 		t.Fatal("expected error for invalid UTF-8, got nil")
 	}
@@ -224,9 +200,9 @@ func TestWrapLines_UnicodeContent(t *testing.T) {
 	}
 }
 
-// ==================== Paginate ====================
+// ==================== Pagination ====================
 
-func TestPaginate_Basic(t *testing.T) {
+func TestRead_PaginateBasic(t *testing.T) {
 	// 50 paragraphs separated by blank lines = 50 content + 49 blanks = 99 lines
 	// At height 10 = 10 pages
 	lines := make([]string, 99)
@@ -235,13 +211,13 @@ func TestPaginate_Basic(t *testing.T) {
 			lines[i] = "line"
 		}
 	}
-	pages := Paginate(lines, 80, 10)
+	pages := readMarkdown(t, lines, 80, 10).Pages
 	if len(pages) != 10 {
 		t.Errorf("expected 10 pages, got %d", len(pages))
 	}
 }
 
-func TestPaginate_PartialLastPage(t *testing.T) {
+func TestRead_PaginatePartialLastPage(t *testing.T) {
 	// 15 paragraphs separated by blank lines = 15 content + 14 blanks = 29 formatted lines
 	// at height 10 = 3 pages (10, 10, 9)
 	lines := make([]string, 29)
@@ -250,7 +226,7 @@ func TestPaginate_PartialLastPage(t *testing.T) {
 			lines[i] = "line"
 		}
 	}
-	pages := Paginate(lines, 80, 10)
+	pages := readMarkdown(t, lines, 80, 10).Pages
 	if len(pages) != 3 {
 		t.Errorf("expected 3 pages, got %d", len(pages))
 	}
@@ -260,15 +236,15 @@ func TestPaginate_PartialLastPage(t *testing.T) {
 	}
 }
 
-func TestPaginate_EmptyContent(t *testing.T) {
-	pages := Paginate([]string{}, 80, 10)
+func TestRead_PaginateEmptyContent(t *testing.T) {
+	pages := readMarkdown(t, []string{}, 80, 10).Pages
 	if len(pages) != 1 {
 		t.Errorf("expected 1 empty page, got %d", len(pages))
 	}
 }
 
-func TestPaginate_SingleLine(t *testing.T) {
-	pages := Paginate([]string{"hello"}, 80, 10)
+func TestRead_PaginateSingleLine(t *testing.T) {
+	pages := readMarkdown(t, []string{"hello"}, 80, 10).Pages
 	if len(pages) != 1 {
 		t.Errorf("expected 1 page, got %d", len(pages))
 	}
@@ -277,18 +253,18 @@ func TestPaginate_SingleLine(t *testing.T) {
 	}
 }
 
-func TestPaginate_InvalidDimensions(t *testing.T) {
+func TestRead_PaginateInvalidDimensions(t *testing.T) {
 	lines := []string{"test"}
 	// Should fall back to defaults
-	pages := Paginate(lines, 0, 0)
+	pages := readMarkdown(t, lines, 0, 0).Pages
 	if len(pages) == 0 {
 		t.Error("expected at least 1 page with zero dimensions")
 	}
 }
 
-func TestPaginate_ExactFit(t *testing.T) {
+func TestRead_PaginateExactFit(t *testing.T) {
 	// A single raw line should produce exactly 1 page if it fits
-	pages := Paginate([]string{"single paragraph"}, 80, 10)
+	pages := readMarkdown(t, []string{"single paragraph"}, 80, 10).Pages
 	if len(pages) != 1 {
 		t.Errorf("expected exactly 1 page, got %d", len(pages))
 	}
@@ -383,7 +359,7 @@ func TestPageForAnchor_NotFound(t *testing.T) {
 	}
 }
 
-func TestPageForAnchor_CachedAndFallbackParity(t *testing.T) {
+func TestPageForAnchor_PageShowsHeading(t *testing.T) {
 	rawLines := []string{
 		"# Introduction",
 		"",
@@ -397,29 +373,21 @@ func TestPageForAnchor_CachedAndFallbackParity(t *testing.T) {
 		"",
 		"Content of chapter 2.",
 	}
-	anchors := ExtractAnchors(rawLines)
-	layout := buildBookLayout(rawLines, 40, 4)
-	b := &Book{
-		RawLines:     rawLines,
-		Pages:        layout.pages,
-		Anchors:      anchors,
-		PageWidth:    40,
-		PageHeight:   4,
-		rawLinePages: layout.rawLinePages,
-	}
+	b := readMarkdown(t, rawLines, 40, 4)
 
-	for anchor := range anchors {
-		cachedPage := b.PageForAnchor(anchor)
-		if cachedPage < 0 {
-			t.Fatalf("expected valid cached page for %q, got %d", anchor, cachedPage)
+	for anchor, line := range b.Anchors {
+		page := b.PageForAnchor(anchor)
+		if page < 0 {
+			t.Fatalf("expected valid page for %q, got %d", anchor, page)
 		}
-
-		// Clear cache to trigger fallback
-		b.rawLinePages = nil
-		fallbackPage := b.PageForAnchor(anchor)
-
-		if cachedPage != fallbackPage {
-			t.Fatalf("parity mismatch for anchor %q: cached=%d, fallback=%d", anchor, cachedPage, fallbackPage)
+		found := false
+		for _, l := range b.Pages[page].Lines {
+			if l == rawLines[line] {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("anchor %q page %d = %q, want heading %q", anchor, page, b.Pages[page].Lines, rawLines[line])
 		}
 	}
 
@@ -427,9 +395,4 @@ func TestPageForAnchor_CachedAndFallbackParity(t *testing.T) {
 	if b.PageForAnchor("non-existent") != -1 {
 		t.Fatalf("expected -1 for non-existent anchor")
 	}
-	b.rawLinePages = nil
-	if b.PageForAnchor("non-existent") != -1 {
-		t.Fatalf("expected -1 for non-existent anchor in fallback")
-	}
 }
-

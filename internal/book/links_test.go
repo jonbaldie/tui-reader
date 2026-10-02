@@ -14,8 +14,7 @@ func TestAttachLinks_LinkOnSecondPage(t *testing.T) {
 	raw = append(raw, "Visit [Chapter 2](#chapter-2) now.")
 
 	width, height := 80, 5
-	pages := Paginate(raw, width, height)
-	pages = AttachLinks(pages, raw, width, height)
+	pages := readMarkdown(t, raw, width, height).Pages
 
 	if len(pages) < 2 {
 		t.Fatalf("expected >=2 pages, got %d", len(pages))
@@ -50,8 +49,7 @@ func TestAttachLinks_LinkOnSecondPage(t *testing.T) {
 
 func TestAttachLinks_DeduplicatesSameLink(t *testing.T) {
 	raw := []string{"See [Chapter 1](#chapter-1) here."}
-	pages := Paginate(raw, 80, 20)
-	pages = AttachLinks(pages, raw, 80, 20)
+	pages := readMarkdown(t, raw, 80, 20).Pages
 
 	if len(pages[0].Links) != 1 {
 		t.Fatalf("expected exactly 1 link, got %d: %+v", len(pages[0].Links), pages[0].Links)
@@ -60,7 +58,7 @@ func TestAttachLinks_DeduplicatesSameLink(t *testing.T) {
 
 func TestAttachLinks_WrappedLinkKeepsLabelOnOneLine(t *testing.T) {
 	raw := []string{"# Target", "", "[Open Section 1](#section-1)"}
-	pages := AttachLinks(Paginate(raw, 20, 20), raw, 20, 20)
+	pages := readMarkdown(t, raw, 20, 20).Pages
 
 	var links []Link
 	for _, page := range pages {
@@ -147,7 +145,7 @@ func TestAttachLinks_PrefixedLinkAttachesToLabelLine(t *testing.T) {
 		"",
 		"Here is some text before ([Target Heading](#target-heading)) and text after.",
 	}
-	pages := AttachLinks(Paginate(raw, 40, 20), raw, 40, 20)
+	pages := readMarkdown(t, raw, 40, 20).Pages
 
 	count := 0
 	for _, page := range pages {
@@ -175,8 +173,7 @@ func TestAttachLinks_PrefixedLinkAttachesToLabelLine(t *testing.T) {
 
 func TestAttachLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
 	raw := []string{strings.Repeat("padding ", 10) + "[Chapter 1](#chapter-1) " + strings.Repeat("more ", 10)}
-	pages := Paginate(raw, 20, 20)
-	pages = AttachLinks(pages, raw, 20, 20)
+	pages := readMarkdown(t, raw, 20, 20).Pages
 
 	var links []Link
 	for _, page := range pages {
@@ -192,8 +189,7 @@ func TestAttachLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
 
 func TestAttachLinks_TwoDistinctLinksSameLine(t *testing.T) {
 	raw := []string{"[One](#one) and [Two](#two)."}
-	pages := Paginate(raw, 80, 20)
-	pages = AttachLinks(pages, raw, 80, 20)
+	pages := readMarkdown(t, raw, 80, 20).Pages
 
 	if len(pages[0].Links) != 2 {
 		t.Fatalf("expected 2 distinct links, got %d", len(pages[0].Links))
@@ -210,8 +206,7 @@ func TestAttachLinks_TwoDistinctLinksSameLine(t *testing.T) {
 
 func TestAttachLinks_NoLinksLeavesEmpty(t *testing.T) {
 	raw := []string{"Just some text.", "More text."}
-	pages := Paginate(raw, 80, 20)
-	pages = AttachLinks(pages, raw, 80, 20)
+	pages := readMarkdown(t, raw, 80, 20).Pages
 
 	for pi, p := range pages {
 		if len(p.Links) != 0 {
@@ -222,8 +217,7 @@ func TestAttachLinks_NoLinksLeavesEmpty(t *testing.T) {
 
 func TestAttachLinks_RepeatedIdenticalLinksAcrossLines(t *testing.T) {
 	raw := []string{"[Target](#target) and " + strings.Repeat("filler words ", 10) + " and [Target](#target)"}
-	pages := Paginate(raw, 40, 20)
-	pages = AttachLinks(pages, raw, 40, 20)
+	pages := readMarkdown(t, raw, 40, 20).Pages
 
 	if len(pages[0].Links) != 2 {
 		t.Fatalf("expected 2 attached links, got %d: %+v", len(pages[0].Links), pages[0].Links)
@@ -235,7 +229,7 @@ func TestAttachLinks_RepeatedIdenticalLinksAcrossLines(t *testing.T) {
 
 func TestAttachLinks_RepeatedIdenticalLinksAcrossParagraphs(t *testing.T) {
 	raw := []string{"[A](#t)", "", "[A](#t)"}
-	pages := AttachLinks(Paginate(raw, 80, 20), raw, 80, 20)
+	pages := readMarkdown(t, raw, 80, 20).Pages
 
 	if len(pages[0].Links) != 2 {
 		t.Fatalf("expected 2 attached links, got %d: %+v", len(pages[0].Links), pages[0].Links)
@@ -255,7 +249,7 @@ func TestAttachLinks_RepeatedIdenticalLinksAcrossParagraphs(t *testing.T) {
 
 func TestAttachLinks_ReflowedParagraphLinkOnLaterSourceLine(t *testing.T) {
 	raw := []string{"See the next part", "[A](#t) for details."}
-	pages := AttachLinks(Paginate(raw, 40, 20), raw, 40, 20)
+	pages := readMarkdown(t, raw, 40, 20).Pages
 
 	if len(pages[0].Links) != 1 {
 		t.Fatalf("expected 1 attached link, got %d: %+v", len(pages[0].Links), pages[0].Links)

@@ -26,7 +26,7 @@ func minFenceLines() []string {
 }
 
 func TestIssue111_FencedCodeDoesNotHijackAnchors(t *testing.T) {
-	anchors := ExtractAnchors(minFenceLines())
+	anchors := readMarkdown(t, minFenceLines(), 80, DefaultPageHeight).Anchors
 	got, ok := anchors["usage"]
 	if !ok {
 		t.Fatal("missing usage anchor")
@@ -37,7 +37,7 @@ func TestIssue111_FencedCodeDoesNotHijackAnchors(t *testing.T) {
 }
 
 func TestIssue111_FencedCodeLinesAreNotMerged(t *testing.T) {
-	formatted := FormatParagraphs(minFenceLines(), 60)
+	formatted := formatMarkdown(t, minFenceLines(), 60)
 	for i, line := range formatted {
 		if strings.Contains(line, "tool --help") && strings.Contains(line, "```") {
 			t.Fatalf("line %d joins code with fence: %q", i, line)
@@ -112,7 +112,7 @@ func TestIssue111_MultipleFencesDoNotAffectProse(t *testing.T) {
 		"```",
 		"After fences.",
 	}
-	anchors := ExtractAnchors(lines)
+	anchors := readMarkdown(t, lines, 80, DefaultPageHeight).Anchors
 	if _, ok := anchors["fake-one"]; ok {
 		t.Fatalf("fake-one should not be an anchor: %#v", anchors)
 	}
@@ -123,7 +123,7 @@ func TestIssue111_MultipleFencesDoNotAffectProse(t *testing.T) {
 		t.Fatalf("anchors[real] = %d (ok=%v), want 4; %#v", got, ok, anchors)
 	}
 
-	formatted := FormatParagraphs(lines, 60)
+	formatted := formatMarkdown(t, lines, 60)
 	if !formattedContains(formatted, "After fences.") {
 		t.Fatalf("prose after fences missing: %q", formatted)
 	}
@@ -138,7 +138,7 @@ func TestIssue111_MultipleFencesDoNotAffectProse(t *testing.T) {
 }
 
 func TestIssue111_FencedHashCommentIsNotAHeadingLine(t *testing.T) {
-	formatted := formatParagraphsWithProvenance(minFenceLines(), 60)
+	formatted := formatMarkdownLines(minFenceLines(), 60)
 	var comment formattedLine
 	found := false
 	for _, fl := range formatted {

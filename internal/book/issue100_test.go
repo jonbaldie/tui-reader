@@ -7,7 +7,7 @@ import (
 
 func TestIssue100_LinkAttachmentStartsWhereMarkupStarts(t *testing.T) {
 	raw := []string{"000[", "[0](#00)"}
-	pages := AttachLinks(Paginate(raw, 10, 3), raw, 10, 3)
+	pages := readMarkdown(t, raw, 10, 3).Pages
 
 	if len(pages) != 1 {
 		t.Fatalf("pages = %d, want 1: %+v", len(pages), pages)

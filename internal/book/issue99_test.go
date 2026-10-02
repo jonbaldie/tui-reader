@@ -14,12 +14,12 @@ func issue99Doc() []string {
 func TestIssue99_PaginateNarrowMultiLineDoesNotPanic(t *testing.T) {
 	defer func() {
 		if rec := recover(); rec != nil {
-			t.Fatalf("Paginate panicked: %v", rec)
+			t.Fatalf("Read panicked: %v", rec)
 		}
 	}()
-	pages := Paginate(issue99Doc(), 5, 5)
+	pages := readMarkdown(t, issue99Doc(), 5, 5).Pages
 	if len(pages) == 0 {
-		t.Fatal("Paginate returned no pages")
+		t.Fatal("Read returned no pages")
 	}
 }
 
@@ -59,7 +59,7 @@ func TestIssue99_WhitespaceAndHardBreakProvenance(t *testing.T) {
 					t.Fatalf("panicked: %v", rec)
 				}
 			}()
-			_ = Paginate(tc.raw, tc.width, 5)
+			_ = readMarkdown(t, tc.raw, tc.width, 5).Pages
 			checkFormatterInvariants(t, tc.raw, tc.width)
 		})
 	}
