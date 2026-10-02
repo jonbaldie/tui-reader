@@ -352,8 +352,9 @@ func recordReflowedLinks(locations map[int]*linkLocation, fi int, text string, l
 	for _, markup := range markupCandidates(text) {
 		key := reflowKey{block: block, markup: markup}
 		pending := reflowed.lines[key]
+		nPending := len(pending)
 		consumed := 0
-		for consumed < len(pending) && pending[consumed] <= lastRaw {
+		for consumed < nPending && pending[consumed] <= lastRaw {
 			rawIndex := pending[consumed]
 			consumed++
 			if rawIndex <= lineRaw {
