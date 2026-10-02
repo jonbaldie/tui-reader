@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestAttachLinks_LinkOnSecondPage(t *testing.T) {
+func TestReadLinks_LinkOnSecondPage(t *testing.T) {
 	var raw []string
 	for i := 0; i < 8; i++ {
 		raw = append(raw, "Filler paragraph line.")
@@ -47,7 +47,7 @@ func TestAttachLinks_LinkOnSecondPage(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_DeduplicatesSameLink(t *testing.T) {
+func TestReadLinks_DeduplicatesSameLink(t *testing.T) {
 	raw := []string{"See [Chapter 1](#chapter-1) here."}
 	pages := readMarkdown(t, raw, 80, 20).Pages
 
@@ -56,7 +56,7 @@ func TestAttachLinks_DeduplicatesSameLink(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_WrappedLinkKeepsLabelOnOneLine(t *testing.T) {
+func TestReadLinks_WrappedLinkKeepsLabelOnOneLine(t *testing.T) {
 	raw := []string{"# Target", "", "[Open Section 1](#section-1)"}
 	pages := readMarkdown(t, raw, 20, 20).Pages
 
@@ -139,7 +139,7 @@ func TestWrapLines_KeepsLinkMarkupIntactWithPrefixPunctuation(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_PrefixedLinkAttachesToLabelLine(t *testing.T) {
+func TestReadLinks_PrefixedLinkAttachesToLabelLine(t *testing.T) {
 	raw := []string{
 		"# Target Heading",
 		"",
@@ -171,7 +171,7 @@ func TestAttachLinks_PrefixedLinkAttachesToLabelLine(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
+func TestReadLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
 	raw := []string{strings.Repeat("padding ", 10) + "[Chapter 1](#chapter-1) " + strings.Repeat("more ", 10)}
 	pages := readMarkdown(t, raw, 20, 20).Pages
 
@@ -187,7 +187,7 @@ func TestAttachLinks_WrappedSourceLinkAttachedOnce(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_TwoDistinctLinksSameLine(t *testing.T) {
+func TestReadLinks_TwoDistinctLinksSameLine(t *testing.T) {
 	raw := []string{"[One](#one) and [Two](#two)."}
 	pages := readMarkdown(t, raw, 80, 20).Pages
 
@@ -204,7 +204,7 @@ func TestAttachLinks_TwoDistinctLinksSameLine(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_NoLinksLeavesEmpty(t *testing.T) {
+func TestReadLinks_NoLinksLeavesEmpty(t *testing.T) {
 	raw := []string{"Just some text.", "More text."}
 	pages := readMarkdown(t, raw, 80, 20).Pages
 
@@ -215,7 +215,7 @@ func TestAttachLinks_NoLinksLeavesEmpty(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_RepeatedIdenticalLinksAcrossLines(t *testing.T) {
+func TestReadLinks_RepeatedIdenticalLinksAcrossLines(t *testing.T) {
 	raw := []string{"[Target](#target) and " + strings.Repeat("filler words ", 10) + " and [Target](#target)"}
 	pages := readMarkdown(t, raw, 40, 20).Pages
 
@@ -227,7 +227,7 @@ func TestAttachLinks_RepeatedIdenticalLinksAcrossLines(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_RepeatedIdenticalLinksAcrossParagraphs(t *testing.T) {
+func TestReadLinks_RepeatedIdenticalLinksAcrossParagraphs(t *testing.T) {
 	raw := []string{"[A](#t)", "", "[A](#t)"}
 	pages := readMarkdown(t, raw, 80, 20).Pages
 
@@ -247,7 +247,7 @@ func TestAttachLinks_RepeatedIdenticalLinksAcrossParagraphs(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_ReflowedParagraphLinkOnLaterSourceLine(t *testing.T) {
+func TestReadLinks_ReflowedParagraphLinkOnLaterSourceLine(t *testing.T) {
 	raw := []string{"See the next part", "[A](#t) for details."}
 	pages := readMarkdown(t, raw, 40, 20).Pages
 

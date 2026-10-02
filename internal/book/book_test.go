@@ -54,14 +54,14 @@ func TestNewBook_ValidMarkdownFile(t *testing.T) {
 }
 
 func TestRead_EmptyDocument(t *testing.T) {
-	b := readBook(t, "", false, 80, 20)
+	b := readBook(t, "", true, 80, 20)
 	if len(b.RawLines) != 1 { // Split of "" gives [""]
 		t.Errorf("expected 1 line (empty), got %d", len(b.RawLines))
 	}
 }
 
 func TestRead_WindowsLineEndings(t *testing.T) {
-	lines := readBook(t, "Line1\r\nLine2\r\nLine3\r\n", false, 80, 20).RawLines
+	lines := readBook(t, "Line1\r\nLine2\r\nLine3\r\n", true, 80, 20).RawLines
 	if lines[0] != "Line1" {
 		t.Errorf("expected 'Line1', got %q", lines[0])
 	}
@@ -71,7 +71,7 @@ func TestRead_WindowsLineEndings(t *testing.T) {
 }
 
 func TestRead_ClassicMacLineEndings(t *testing.T) {
-	lines := readBook(t, "Alpha\rBeta\rGamma\r", false, 80, 20).RawLines
+	lines := readBook(t, "Alpha\rBeta\rGamma\r", true, 80, 20).RawLines
 	if lines[0] != "Alpha" {
 		t.Errorf("expected 'Alpha', got %q", lines[0])
 	}
@@ -99,7 +99,7 @@ func TestRead_LineEndingEquivalence(t *testing.T) {
 		canon = strings.ReplaceAll(canon, "\r", "\n")
 		wantLines := strings.Split(canon, "\n")
 
-		gotLines := readBook(t, tc, false, 80, 20).RawLines
+		gotLines := readBook(t, tc, true, 80, 20).RawLines
 
 		if len(gotLines) != len(wantLines) {
 			t.Fatalf("case %q: line count mismatch: got %d, want %d", tc, len(gotLines), len(wantLines))

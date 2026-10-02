@@ -228,8 +228,6 @@ func collectProseBlockLinks(sourceLinks map[int][]Link, sourceOrder *[]int, line
 }
 
 func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int, source sourceLinkSet) []Page {
-	height = normalizePageHeight(height)
-
 	locations := buildLocations(formatted, rawLines, source.links)
 	assignLinksToPages(pages, source.order, source.links, locations, height)
 	return pages

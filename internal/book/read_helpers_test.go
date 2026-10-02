@@ -6,10 +6,10 @@ import (
 )
 
 // readBook builds a Book through Read, the in-memory construction path that
-// production uses. md selects Markdown layout; otherwise doc is plain text.
-func readBook(t testing.TB, doc string, md bool, w, h int) *Book {
+// production uses. plainText selects plain-text layout instead of Markdown.
+func readBook(t testing.TB, doc string, plainText bool, w, h int) *Book {
 	t.Helper()
-	b, err := Read(strings.NewReader(doc), "", w, h, !md)
+	b, err := Read(strings.NewReader(doc), "", w, h, plainText)
 	if err != nil {
 		t.Fatalf("Read: %v", err)
 	}
@@ -19,7 +19,7 @@ func readBook(t testing.TB, doc string, md bool, w, h int) *Book {
 // readMarkdown reads raw lines as one Markdown document.
 func readMarkdown(t testing.TB, raw []string, w, h int) *Book {
 	t.Helper()
-	return readBook(t, strings.Join(raw, "\n"), true, w, h)
+	return readBook(t, strings.Join(raw, "\n"), false, w, h)
 }
 
 // displayLines returns the book's display lines across all pages, in order.

@@ -11,7 +11,7 @@ func issue99Doc() []string {
 	return []string{"00000000 00000000000 ", "0 000 000000"}
 }
 
-func TestIssue99_PaginateNarrowMultiLineDoesNotPanic(t *testing.T) {
+func TestIssue99_ReadNarrowMultiLineDoesNotPanic(t *testing.T) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			t.Fatalf("Read panicked: %v", rec)

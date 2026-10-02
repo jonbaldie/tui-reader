@@ -15,7 +15,7 @@ func BenchmarkCallerVisibleOperations(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 			for range b.N {
-				_ = readBook(b, document, true, 60, 20)
+				_ = readBook(b, document, false, 60, 20)
 			}
 		})
 

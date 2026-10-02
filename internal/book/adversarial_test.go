@@ -210,7 +210,7 @@ func TestAdversarial_WrapWidth0(t *testing.T) {
 
 // ==================== BUG HUNT: Read with height=1 ====================
 
-func TestAdversarial_PaginateHeight1(t *testing.T) {
+func TestAdversarial_ReadHeight1(t *testing.T) {
 	// 3 paragraphs separated by blanks -> "a", "", "  b", "", "  c" = 5 formatted lines
 	// At height 1: 5 pages, each with 1 line
 	lines := []string{"a", "", "b", "", "c"}
