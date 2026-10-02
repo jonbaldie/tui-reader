@@ -41,7 +41,7 @@ func TestAdversarial_LargeFile(t *testing.T) {
 		lines[i] = fmt.Sprintf("Line number %d of the document.", i)
 	}
 	// Lays out through the pagination helper rather than Read: Read's link
-	// attachment is quadratic in the length of one prose paragraph.
+	// attachment is quadratic in the length of one prose paragraph (#146).
 	pages := layoutFromDocument(formatDocument(lines, 80, false), 25).pages
 	// 100k lines of prose reflow into ~45k wrapped lines = ~1800 pages at height 25
 	if len(pages) < 1500 {
