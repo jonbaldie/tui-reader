@@ -34,3 +34,20 @@ func TestIssue148_RepeatedMarkupInParagraphAttachesToOwnLine(t *testing.T) {
 		}
 	}
 }
+
+// The issue's input at other widths and heights: every page's links match,
+// line by line, the link markup it renders.
+func TestIssue148_RepeatedMarkupLandsWhereRenderedAtSizes(t *testing.T) {
+	content := strings.Join([]string{
+		"Opening words",
+		"[a](#title) and [b](#title) then filler filler filler filler filler",
+		"filler filler filler filler filler filler filler filler [a](#title)",
+	}, "\n")
+	for _, size := range [][2]int{{40, 3}, {20, 2}, {30, 3}, {80, 5}} {
+		b, err := Read(strings.NewReader(content), "repeat", size[0], size[1], false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertLinksLandWhereRendered(t, b, 3)
+	}
+}
