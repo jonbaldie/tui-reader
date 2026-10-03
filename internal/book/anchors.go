@@ -259,12 +259,13 @@ func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks ma
 		if line.raw < 0 || line.raw >= n {
 			continue
 		}
-		recordFormattedLine(locations, formattedIndex, line, sourceLinks, reflowed)
+		lastRaw := reflowed.lastCoveredRaw(formatted, formattedIndex, n)
+		recordFormattedLine(locations, formattedIndex, line, lastRaw, sourceLinks, reflowed)
 	}
 	return locations
 }
 
-func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, sourceLinks map[int][]Link, reflowed reflowIndex) {
+func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, lastRaw int, sourceLinks map[int][]Link, reflowed reflowIndex) {
 	// Direct raw provenance associates link starts with their source line,
 	// including links whose markup was broken across display lines.
 	if links, ok := sourceLinks[line.raw]; ok && len(links) > 0 {
@@ -272,7 +273,7 @@ func recordFormattedLine(locations map[int]*linkLocation, fi int, line formatted
 		entry.record(line.text, fi, links)
 		entry.recordStarts(line.text, fi, line.links)
 	}
-	recordReflowedLinks(locations, fi, line.text, line.raw, sourceLinks, reflowed)
+	recordReflowedLinks(locations, fi, line, lastRaw, sourceLinks, reflowed)
 }
 
 // reflowIndex finds, without rescanning a paragraph, the other source lines of
@@ -282,7 +283,8 @@ type reflowIndex struct {
 	// for lines that are not prose.
 	blockStart []int
 	// lines lists, per prose block and link markup, the raw indices whose
-	// links include that markup.
+	// links include that markup, in ascending order. Display lines consume
+	// them from the front as their provenance advances.
 	lines map[reflowKey][]int
 }
 
@@ -296,7 +298,8 @@ type reflowKey struct {
 func newReflowIndex(rawLines []string, sourceLinks map[int][]Link) reflowIndex {
 	blockStart := proseBlockStarts(rawLines)
 	lines := make(map[reflowKey][]int)
-	for rawIndex, links := range sourceLinks {
+	for rawIndex := range rawLines {
+		links := sourceLinks[rawIndex]
 		if blockStart[rawIndex] < 0 {
 			continue
 		}
@@ -325,14 +328,39 @@ func proseBlockStarts(rawLines []string) []int {
 	return blockStart
 }
 
-// recordReflowedLinks records text against every other source line in the
-// prose block of lineRaw that has a link whose markup text contains.
-func recordReflowedLinks(locations map[int]*linkLocation, fi int, text string, lineRaw int, sourceLinks map[int][]Link, reflowed reflowIndex) {
+// lastCoveredRaw returns the last raw index whose text display line fi can
+// render: the next display line's provenance in the same prose block, or n-1
+// when fi ends its block.
+func (r reflowIndex) lastCoveredRaw(formatted []formattedLine, fi, n int) int {
+	if fi+1 >= len(formatted) {
+		return n - 1
+	}
+	next := formatted[fi+1].raw
+	if next < 0 || next >= n || r.blockStart[next] != r.blockStart[formatted[fi].raw] {
+		return n - 1
+	}
+	return next
+}
+
+// recordReflowedLinks records, against every later source line in the prose
+// block of line up to lastRaw that has a link whose markup the line contains,
+// the part of the line's text from where that source line begins, so markup
+// from an earlier source line is not credited to it. Later display lines start
+// at or after lastRaw, so the matched raw indices are consumed.
+func recordReflowedLinks(locations map[int]*linkLocation, fi int, line formattedLine, lastRaw int, sourceLinks map[int][]Link, reflowed reflowIndex) {
+	text, lineRaw := line.text, line.raw
 	block := reflowed.blockStart[lineRaw]
 	var recorded map[int]struct{}
 	for _, markup := range markupCandidates(text) {
-		for _, rawIndex := range reflowed.lines[reflowKey{block: block, markup: markup}] {
-			if rawIndex == lineRaw {
+		key := reflowKey{block: block, markup: markup}
+		pending := reflowed.lines[key]
+		nPending := len(pending)
+		consumed := 0
+		for consumed < nPending && pending[consumed] <= lastRaw {
+			rawIndex := pending[consumed]
+			consumed++
+			start := rawIndex - lineRaw - 1
+			if start < 0 || start >= len(line.rawStarts) {
 				continue
 			}
 			if _, ok := recorded[rawIndex]; ok {
@@ -342,7 +370,10 @@ func recordReflowedLinks(locations map[int]*linkLocation, fi int, text string, l
 				recorded = make(map[int]struct{})
 			}
 			recorded[rawIndex] = struct{}{}
-			locationFor(locations, rawIndex, fi).record(text, fi, sourceLinks[rawIndex])
+			locationFor(locations, rawIndex, fi).record(text[line.rawStarts[start]:], fi, sourceLinks[rawIndex])
+		}
+		if consumed > 0 {
+			reflowed.lines[key] = pending[consumed:]
 		}
 	}
 }

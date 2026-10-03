@@ -145,11 +145,14 @@ func titleCase(s string) string {
 // 0-based index of the source line it came from, or -1 for a blank line that
 // formatting inserted as a paragraph spacer. Across a document the raw indices
 // are non-decreasing. The links field records link tokens whose markup starts
-// on the display line.
+// on the display line. For a reflowed prose line, rawStarts holds the byte
+// offset in text at which each later source line begins: rawStarts[k] for
+// source line raw+1+k.
 type formattedLine struct {
-	text  string
-	raw   int
-	links []Link
+	text      string
+	raw       int
+	links     []Link
+	rawStarts []int
 }
 
 type formattedDocument struct {
@@ -443,7 +446,12 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 			currentLine++
 		}
 		lastRaw = startRi + currentLine
-		result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
+		var rawStarts []int
+		lead := len(text) - len(trimmed)
+		for next := currentLine + 1; next < nLines && offsets[next] < searchFrom; next++ {
+			rawStarts = append(rawStarts, offsets[next]-matchPos+lead)
+		}
+		result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links, rawStarts: rawStarts}
 	}
 	return result
 }
