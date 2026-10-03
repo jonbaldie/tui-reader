@@ -147,12 +147,9 @@ func titleCase(s string) string {
 // are non-decreasing. The links field records link tokens whose markup starts
 // on the display line.
 type formattedLine struct {
-	text string
-	raw  int
-	// rawEnd is the last raw line a reflowed paragraph line renders text
-	// from; it is zero for lines that render only raw.
-	rawEnd int
-	links  []Link
+	text  string
+	raw   int
+	links []Link
 }
 
 type formattedDocument struct {
@@ -423,11 +420,9 @@ func lineOffsets(lines []string) []int {
 
 func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, startRi int, shouldIndent bool) []formattedLine {
 	nWrapped := len(wrapped)
-	nLines := len(offsets)
 	result := make([]formattedLine, nWrapped)
 	searchFrom := 0
 	currentLine := 0
-	endLine := 0
 	lastRaw := startRi
 
 	for i := 0; i < nWrapped; i++ {
@@ -439,15 +434,14 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 		idx := strings.Index(joined[searchFrom:], trimmed)
 		if idx < 0 {
 			// Without a position, the line may render any later raw line.
-			result[i] = formattedLine{text: text, raw: lastRaw, rawEnd: startRi + nLines - 1, links: wrapped[i].links}
+			result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
 			continue
 		}
 		matchPos := searchFrom + idx
 		searchFrom = matchPos + len(trimmed)
 		currentLine = advanceLine(offsets, currentLine, matchPos)
-		endLine = advanceLine(offsets, max(endLine, currentLine), searchFrom-1)
 		lastRaw = startRi + currentLine
-		result[i] = formattedLine{text: text, raw: lastRaw, rawEnd: startRi + endLine, links: wrapped[i].links}
+		result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
 	}
 	return result
 }

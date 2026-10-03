@@ -14,7 +14,6 @@ growth across sizes rather than impose machine-specific time thresholds.
 | `P` | pages returned |
 | `a` | raw lines when an anchor lookup must build its page map |
 | `L` | links in a document |
-| `R` | reflow matches: pairs of a display line and a later source line it renders text from whose link markup it contains |
 | `C` | command-line arguments |
 | `T` | rendered output bytes |
 
@@ -34,9 +33,9 @@ growth across sizes rather than impose machine-specific time thresholds.
 | terminal resize | inherits `Book.Reflow` | inherits `Book.Reflow` | recalculates layout |
 | `NormalizeAnchor` | `O(t)` | `O(t)` output | one pass over heading bytes/runes |
 | wrapping | `O(x)` per line | `O(x)` output | see wrapping benchmark |
-| link attachment | `O(B + V + L + R)` | `O(N + L + R)` metadata | scans source lines once and each display line's markup once; `R` is within display-line bytes |
-| `NewBook` | `O(B + V + L + R)` | `O(B + V + P + L)` returned | composes load, anchors, layout, and links |
-| `Reflow` | `O(B + V + L + R)` | `O(V + P + L)` replaced layout | reuses raw lines and anchors |
+| link attachment | `O(B + V + L)` | `O(N + L)` metadata | indexes source link occurrences, then pairs wrapped link starts to them in order |
+| `NewBook` | `O(B + V + L)` | `O(B + V + P + L)` returned | composes load, anchors, layout, and links |
+| `Reflow` | `O(B + V + L)` | `O(V + P + L)` replaced layout | reuses raw lines and anchors |
 | `View` | `O(T)` | `O(T)` returned | renders the current screen |
 
 `a` is deliberately distinct from the number of anchor entries: the cached
