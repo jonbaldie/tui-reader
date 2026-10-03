@@ -33,7 +33,7 @@ growth across sizes rather than impose machine-specific time thresholds.
 | terminal resize | inherits `Book.Reflow` | inherits `Book.Reflow` | recalculates layout |
 | `NormalizeAnchor` | `O(t)` | `O(t)` output | one pass over heading bytes/runes |
 | wrapping | `O(x)` per line | `O(x)` output | see wrapping benchmark |
-| link attachment | `O(B + V + L)` | `O(N + L)` metadata | scans source lines once and each display line's markup once; each source link is matched by at most one reflowed display line |
+| link attachment | `O(B + V + L)` | `O(N + L)` metadata | scans source lines once and pairs wrapped link starts to source occurrences in order; each source link is matched once |
 | `NewBook` | `O(B + V + L)` | `O(B + V + P + L)` returned | composes load, anchors, layout, and links |
 | `Reflow` | `O(B + V + L)` | `O(V + P + L)` replaced layout | reuses raw lines and anchors |
 | `View` | `O(T)` | `O(T)` returned | renders the current screen |

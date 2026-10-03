@@ -259,13 +259,12 @@ func buildLocations(formatted []formattedLine, rawLines []string, sourceLinks ma
 		if line.raw < 0 || line.raw >= n {
 			continue
 		}
-		lastRaw := reflowed.lastCoveredRaw(formatted, formattedIndex, n)
-		recordFormattedLine(locations, formattedIndex, line, lastRaw, sourceLinks, reflowed)
+		recordFormattedLine(locations, formattedIndex, line, sourceLinks, reflowed)
 	}
 	return locations
 }
 
-func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, lastRaw int, sourceLinks map[int][]Link, reflowed reflowIndex) {
+func recordFormattedLine(locations map[int]*linkLocation, fi int, line formattedLine, sourceLinks map[int][]Link, reflowed reflowIndex) {
 	// Direct raw provenance associates link starts with their source line,
 	// including links whose markup was broken across display lines.
 	if links, ok := sourceLinks[line.raw]; ok && len(links) > 0 {
@@ -273,18 +272,18 @@ func recordFormattedLine(locations map[int]*linkLocation, fi int, line formatted
 		entry.record(line.text, fi, links)
 		entry.recordStarts(line.text, fi, line.links)
 	}
-	recordReflowedLinks(locations, fi, line.text, line.raw, lastRaw, sourceLinks, reflowed)
+	recordReflowedLinks(locations, fi, line, reflowed)
 }
 
-// reflowIndex finds, without rescanning a paragraph, the other source lines of
-// a prose block whose link markup a reflowed display line contains.
+// reflowIndex maps link starts in a prose block to their source lines in
+// order, without rescanning the paragraph.
 type reflowIndex struct {
 	// blockStart holds the first raw index of each line's prose block, or -1
 	// for lines that are not prose.
 	blockStart []int
 	// lines lists, per prose block and link markup, the raw indices whose
 	// links include that markup, in ascending order. Display lines consume
-	// them from the front as their provenance advances.
+	// them from the front as wrapped link starts appear.
 	lines map[reflowKey][]int
 }
 
@@ -328,73 +327,31 @@ func proseBlockStarts(rawLines []string) []int {
 	return blockStart
 }
 
-// lastCoveredRaw returns the last raw index whose text display line fi can
-// render: the next display line's provenance in the same prose block, or n-1
-// when fi ends its block.
-func (r reflowIndex) lastCoveredRaw(formatted []formattedLine, fi, n int) int {
-	if fi+1 >= len(formatted) {
-		return n - 1
-	}
-	next := formatted[fi+1].raw
-	if next < 0 || next >= n || r.blockStart[next] != r.blockStart[formatted[fi].raw] {
-		return n - 1
-	}
-	return next
-}
-
-// recordReflowedLinks records text against every other source line in the
-// prose block of lineRaw, up to lastRaw, that has a link whose markup text
-// contains. Later display lines start at or after lastRaw, so the matched
-// raw indices are consumed.
-func recordReflowedLinks(locations map[int]*linkLocation, fi int, text string, lineRaw, lastRaw int, sourceLinks map[int][]Link, reflowed reflowIndex) {
-	block := reflowed.blockStart[lineRaw]
-	var recorded map[int]struct{}
-	for _, markup := range markupCandidates(text) {
-		key := reflowKey{block: block, markup: markup}
+// recordReflowedLinks attributes each wrapped link start to the next source
+// occurrence of the same markup in the prose block. Wrapping preserves order,
+// so a display line cannot claim another source line's occurrence merely
+// because its text contains identical markup.
+func recordReflowedLinks(locations map[int]*linkLocation, fi int, line formattedLine, reflowed reflowIndex) {
+	block := reflowed.blockStart[line.raw]
+	for _, link := range line.links {
+		key := reflowKey{block: block, markup: linkMarkup(link)}
 		pending := reflowed.lines[key]
-		nPending := len(pending)
-		consumed := 0
-		for consumed < nPending && pending[consumed] <= lastRaw {
-			rawIndex := pending[consumed]
-			consumed++
-			if rawIndex <= lineRaw {
-				continue
-			}
-			if _, ok := recorded[rawIndex]; ok {
-				continue
-			}
-			if recorded == nil {
-				recorded = make(map[int]struct{})
-			}
-			recorded[rawIndex] = struct{}{}
-			locationFor(locations, rawIndex, fi).record(text, fi, sourceLinks[rawIndex])
-		}
-		if consumed > 0 {
-			reflowed.lines[key] = pending[consumed:]
-		}
-	}
-}
-
-// markupCandidates returns, for each '[' in text, the substring up to the
-// first ")" after the next "](#". Link labels hold no brackets and targets no
-// closing parenthesis, so every link markup text contains is a candidate.
-func markupCandidates(text string) []string {
-	var candidates []string
-	for i, r := range text {
-		if r != '[' {
+		if len(pending) == 0 {
 			continue
 		}
-		mid := strings.Index(text[i:], "](#")
-		if mid < 0 {
-			break
+
+		rawIndex := pending[0]
+		reflowed.lines[key] = pending[1:]
+		if rawIndex <= line.raw {
+			continue
 		}
-		end := strings.IndexByte(text[i+mid:], ')')
-		if end < 0 {
-			break
+
+		entry := locationFor(locations, rawIndex, fi)
+		if entry.links == nil {
+			entry.links = make(map[Link][]int)
 		}
-		candidates = append(candidates, text[i:i+mid+end+1])
+		entry.links[link] = append(entry.links[link], fi)
 	}
-	return candidates
 }
 
 func locationFor(locations map[int]*linkLocation, rawIndex, fi int) *linkLocation {
