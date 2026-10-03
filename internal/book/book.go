@@ -147,9 +147,12 @@ func titleCase(s string) string {
 // are non-decreasing. The links field records link tokens whose markup starts
 // on the display line.
 type formattedLine struct {
-	text  string
-	raw   int
-	links []Link
+	text string
+	raw  int
+	// rawEnd is the last raw line a reflowed paragraph line renders text
+	// from; it is zero for lines that render only raw.
+	rawEnd int
+	links  []Link
 }
 
 type formattedDocument struct {
@@ -424,6 +427,7 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 	result := make([]formattedLine, nWrapped)
 	searchFrom := 0
 	currentLine := 0
+	endLine := 0
 	lastRaw := startRi
 
 	for i := 0; i < nWrapped; i++ {
@@ -434,18 +438,28 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 		trimmed := strings.TrimLeft(wrapped[i].text, " ")
 		idx := strings.Index(joined[searchFrom:], trimmed)
 		if idx < 0 {
-			result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
+			// Without a position, the line may render any later raw line.
+			result[i] = formattedLine{text: text, raw: lastRaw, rawEnd: startRi + nLines - 1, links: wrapped[i].links}
 			continue
 		}
 		matchPos := searchFrom + idx
 		searchFrom = matchPos + len(trimmed)
-		for currentLine+1 < nLines && offsets[currentLine+1] <= matchPos {
-			currentLine++
-		}
+		currentLine = advanceLine(offsets, currentLine, matchPos)
+		endLine = advanceLine(offsets, max(endLine, currentLine), searchFrom-1)
 		lastRaw = startRi + currentLine
-		result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
+		result[i] = formattedLine{text: text, raw: lastRaw, rawEnd: startRi + endLine, links: wrapped[i].links}
 	}
 	return result
+}
+
+// advanceLine returns the last line at or after line whose offset is at most
+// pos.
+func advanceLine(offsets []int, line, pos int) int {
+	n := len(offsets)
+	for line+1 < n && offsets[line+1] <= pos {
+		line++
+	}
+	return line
 }
 
 // formatParagraph wraps a single non-blank raw line into display lines with
