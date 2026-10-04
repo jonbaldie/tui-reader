@@ -6,8 +6,14 @@ import (
 	"testing"
 )
 
+// formatMarkdownLines returns the Markdown formatter's display lines with
+// their provenance.
+func formatMarkdownLines(rawLines []string, width int) []formattedLine {
+	return formatDocument(rawLines, width, false).lines
+}
+
 // projectText extracts just the display text from the formatter output, which
-// is exactly what FormatParagraphs must return.
+// is exactly what Read lays out onto pages.
 func projectText(lines []formattedLine) []string {
 	out := make([]string, len(lines))
 	for i, fl := range lines {
@@ -34,13 +40,13 @@ var formatterInputs = []struct {
 	{"whitespace-only", []string{"   ", "\t"}, 60},
 }
 
-// TestFormatter_TextMatchesFormatParagraphs is the tracer: the formatter's text
-// projection must be byte-for-byte identical to FormatParagraphs today.
-func TestFormatter_TextMatchesFormatParagraphs(t *testing.T) {
+// TestFormatter_TextMatchesReadPages is the tracer: the formatter's text
+// projection must be byte-for-byte identical to the lines Read paginates.
+func TestFormatter_TextMatchesReadPages(t *testing.T) {
 	for _, tc := range formatterInputs {
 		t.Run(tc.name, func(t *testing.T) {
-			want := FormatParagraphs(tc.raw, tc.width)
-			got := projectText(formatParagraphsWithProvenance(tc.raw, tc.width))
+			want := formatMarkdown(t, tc.raw, tc.width)
+			got := projectText(formatMarkdownLines(tc.raw, tc.width))
 			if len(got) != len(want) {
 				t.Fatalf("len = %d, want %d\ngot  %q\nwant %q", len(got), len(want), got, want)
 			}
@@ -58,11 +64,11 @@ func TestFormatter_TextMatchesFormatParagraphs(t *testing.T) {
 // wrap-width mutations in the provenance assignment.
 func checkFormatterInvariants(t *testing.T, rawLines []string, width int) []formattedLine {
 	t.Helper()
-	lines := formatParagraphsWithProvenance(rawLines, width)
+	lines := formatMarkdownLines(rawLines, width)
 
 	// INV1: exactly one provenance entry per formatted line (the projection has
 	// the same length as the formatter output).
-	if len(lines) != len(FormatParagraphs(rawLines, width)) {
+	if len(lines) != len(formatMarkdown(t, rawLines, width)) {
 		t.Fatalf("formatter produced %d lines, want one per formatted line", len(lines))
 	}
 
@@ -206,10 +212,10 @@ func TestFormatter_IndentedCodeSpacingAndProvenance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FormatParagraphs(tt.raw, 80); !reflect.DeepEqual(got, tt.wantText) {
-				t.Fatalf("FormatParagraphs = %q, want %q", got, tt.wantText)
+			if got := formatMarkdown(t, tt.raw, 80); !reflect.DeepEqual(got, tt.wantText) {
+				t.Fatalf("display lines = %q, want %q", got, tt.wantText)
 			}
-			lines := formatParagraphsWithProvenance(tt.raw, 80)
+			lines := formatMarkdownLines(tt.raw, 80)
 			if got := projectText(lines); !reflect.DeepEqual(got, tt.wantText) {
 				t.Fatalf("text = %q, want %q", got, tt.wantText)
 			}
@@ -234,7 +240,7 @@ func TestFormatter_MultiLineParagraphProvenance(t *testing.T) {
 		"Line one words here.",
 		"Line two words here.",
 	}
-	lines := formatParagraphsWithProvenance(raw, 25)
+	lines := formatMarkdownLines(raw, 25)
 	if len(lines) != 3 {
 		t.Fatalf("expected 3 lines, got %d: %+v", len(lines), lines)
 	}

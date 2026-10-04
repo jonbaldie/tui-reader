@@ -13,12 +13,12 @@ func TestIssue77_SoftWrapParagraph(t *testing.T) {
 	}
 
 	// At width 120, both source lines reflow into a single display line.
-	out := FormatParagraphs(raw, 120)
+	out := formatMarkdown(t, raw, 120)
 	want := []string{
 		"This is one Markdown paragraph deliberately split across physical source lines without a blank line.",
 	}
 	if !reflect.DeepEqual(out, want) {
-		t.Fatalf("FormatParagraphs (width 120) =\n%q\nwant:\n%q", out, want)
+		t.Fatalf("display lines (width 120) =\n%q\nwant:\n%q", out, want)
 	}
 
 	// There must not be a blank line between lines of the same paragraph.
@@ -64,9 +64,9 @@ func TestIssue77_AdjacentListItemsNoBlankLines(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FormatParagraphs(tt.raw, 80)
+			got := formatMarkdown(t, tt.raw, 80)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Fatalf("FormatParagraphs =\n%q\nwant:\n%q", got, tt.want)
+				t.Fatalf("display lines =\n%q\nwant:\n%q", got, tt.want)
 			}
 		})
 	}
@@ -85,7 +85,7 @@ func TestIssue77_SoftWrapFixture(t *testing.T) {
 		"- second list item",
 	}
 
-	out := FormatParagraphs(raw, 62)
+	out := formatMarkdown(t, raw, 62)
 
 	// Check that the two list items appear consecutively without a blank row.
 	foundItem1 := -1
@@ -126,8 +126,7 @@ func TestIssue77_ReflowedLinesLinksPreserved(t *testing.T) {
 		"Paragraph starting here with [link one](#one)",
 		"and continuation on line two with [link two](#two).",
 	}
-	pages := Paginate(raw, 120, 10)
-	pages = AttachLinks(pages, raw, 120, 10)
+	pages := readMarkdown(t, raw, 120, 10).Pages
 	if len(pages[0].Links) != 2 {
 		t.Fatalf("expected 2 links attached to page 0, got %d: %+v", len(pages[0].Links), pages[0].Links)
 	}
@@ -143,7 +142,7 @@ func TestIssue77_SecondMultiLineParagraphIndented(t *testing.T) {
 		"Second paragraph line one",
 		"and line two.",
 	}
-	out := FormatParagraphs(raw, 80)
+	out := formatMarkdown(t, raw, 80)
 	if len(out) != 3 {
 		t.Fatalf("expected 3 lines, got %d: %q", len(out), out)
 	}

@@ -12,7 +12,7 @@ func TestIndentedCodeBlock_WrappingPreservesIndentation(t *testing.T) {
 	raw := []string{"    this is a long indented code line that wraps past width"}
 
 	// At width 20, lines should wrap and every line must start with "    ".
-	formatted := FormatParagraphs(raw, 20)
+	formatted := formatMarkdown(t, raw, 20)
 	if len(formatted) < 2 {
 		t.Fatalf("expected multiple wrapped lines, got %v", formatted)
 	}
@@ -29,7 +29,7 @@ func TestIndentedCodeBlock_WrappingPreservesIndentation(t *testing.T) {
 
 func TestIndentedCodeBlock_ShortLinePreservesIndentation(t *testing.T) {
 	raw := []string{"    short code"}
-	formatted := FormatParagraphs(raw, 20)
+	formatted := formatMarkdown(t, raw, 20)
 	want := []string{"    short code"}
 	if !reflect.DeepEqual(formatted, want) {
 		t.Errorf("got %v, want %v", formatted, want)
@@ -39,7 +39,7 @@ func TestIndentedCodeBlock_ShortLinePreservesIndentation(t *testing.T) {
 func TestIndentedCodeBlock_NotGivenParagraphIndent(t *testing.T) {
 	// A code block following a paragraph must NOT receive a 2-space paragraph indent.
 	raw := []string{"First paragraph", "", "    code line"}
-	formatted := FormatParagraphs(raw, 40)
+	formatted := formatMarkdown(t, raw, 40)
 	if len(formatted) != 3 {
 		t.Fatalf("expected 3 lines, got %v", formatted)
 	}
@@ -50,7 +50,7 @@ func TestIndentedCodeBlock_NotGivenParagraphIndent(t *testing.T) {
 
 func TestIndentedCodeBlock_SpecialLinesNoParagraphIndent(t *testing.T) {
 	lines := []string{"para 1", "", "# Heading", "", "---", "", "para 2"}
-	formatted := FormatParagraphs(lines, 40)
+	formatted := formatMarkdown(t, lines, 40)
 	if len(formatted) != 7 {
 		t.Fatalf("expected 7 lines, got %v", formatted)
 	}
@@ -67,7 +67,7 @@ func TestIndentedCodeBlock_SpecialLinesNoParagraphIndent(t *testing.T) {
 
 func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 	// At exact boundary width 5, width - 4 = 1. "ab" wraps to "a", "b", each prefixed by 4 spaces.
-	formatted := FormatParagraphs([]string{"    ab"}, 5)
+	formatted := formatMarkdown(t, []string{"    ab"}, 5)
 	want := []string{"    a", "    b"}
 	if !reflect.DeepEqual(formatted, want) {
 		t.Errorf("at width 5: got %v, want %v", formatted, want)
@@ -75,11 +75,11 @@ func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 
 	// At width 4, code block wrapping does not apply 4-space indent (width < 5).
 	// Content must not be dropped (non-empty output), and provenance must be preserved.
-	layout := buildBookLayout([]string{"    ab"}, 4, 10)
-	if len(layout.formatted) == 0 {
+	formattedLines := formatMarkdownLines([]string{"    ab"}, 4)
+	if len(formattedLines) == 0 {
 		t.Fatal("at width 4, formatted lines must not be empty")
 	}
-	for _, fl := range layout.formatted {
+	for _, fl := range formattedLines {
 		if fl.raw != 0 {
 			t.Errorf("expected provenance raw=0, got %d", fl.raw)
 		}
@@ -87,7 +87,7 @@ func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 			t.Errorf("at width 4, line %q exceeds width 4", fl.text)
 		}
 	}
-	if len(layout.pages[0].Lines) == 0 {
+	if len(readMarkdown(t, []string{"    ab"}, 4, 10).Pages[0].Lines) == 0 {
 		t.Fatal("at width 4, pages must not be empty")
 	}
 }
@@ -95,7 +95,7 @@ func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 func TestIndentedCodeBlock_ExactWidthMinus4(t *testing.T) {
 	// At width 6, available width for code is 6 - 4 = 2.
 	// "abc" must wrap into "ab" and "c", resulting in "    ab" and "    c".
-	formatted := FormatParagraphs([]string{"    abc"}, 6)
+	formatted := formatMarkdown(t, []string{"    abc"}, 6)
 	want := []string{"    ab", "    c"}
 	if !reflect.DeepEqual(formatted, want) {
 		t.Errorf("at width 6: got %v, want %v", formatted, want)

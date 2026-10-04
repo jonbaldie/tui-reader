@@ -25,8 +25,7 @@ func pageLines(b *Book, page int) string {
 // the same paragraph (issue #61).
 func TestReflow_PositionRoundTripThroughRawAnchors(t *testing.T) {
 	lines := loadFixture(t, "reading-journey.md")
-	b := &Book{RawLines: lines}
-	b.Reflow(72, 17)
+	b := readMarkdown(t, lines, 72, 17)
 	lastPage := len(b.Pages) - 1
 
 	anchor := b.RawLineForPage(lastPage)
@@ -69,8 +68,7 @@ func TestReflow_EmptyDocument(t *testing.T) {
 // preceding page (issue #61).
 func TestRawLineForPage_HeadingAnchors(t *testing.T) {
 	lines := loadFixture(t, "link-history-journey.md")
-	b := &Book{RawLines: lines}
-	b.Reflow(72, 17)
+	b := readMarkdown(t, lines, 72, 17)
 
 	// RETURN MARKER is the last heading on the wide page the reader leaves,
 	// so going back resumes at that section.
@@ -107,8 +105,7 @@ func TestRawLineForPage_MultipleHeadingsAnchorsFirstHeading(t *testing.T) {
 		"",
 		"Content of chapter 2.",
 	}
-	b := &Book{RawLines: lines}
-	b.Reflow(60, 20)
+	b := readMarkdown(t, lines, 60, 20)
 
 	// Page 0 has Title (0), TOC (2), Chapter 1 (4), Chapter 2 (8).
 	// Anchors must point to first content (raw 0), not last heading (raw 8).
@@ -132,8 +129,7 @@ func TestRawLineForPage_MultipleHeadingsAnchorsFirstHeading(t *testing.T) {
 		"",
 		"# P1 Section B",
 	}
-	b2 := &Book{RawLines: subsequentDoc}
-	b2.Reflow(60, 4)
+	b2 := readMarkdown(t, subsequentDoc, 60, 4)
 	// Page 0 has raw 0 (P0) and raw 2 (Content P0) (4 formatted lines).
 	// Page 1 has both raw 4 (Section A) and raw 6 (Section B).
 	// Page 1 must anchor to Section A (raw 4), not Section B (raw 6).
