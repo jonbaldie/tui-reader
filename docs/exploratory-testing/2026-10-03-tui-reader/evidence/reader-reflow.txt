@@ -1,0 +1,192 @@
+===== Run exp-rf1: initial 80x24 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 001: Plain text log/prose line without paragraph merging.
+    Marker 002: Plain text log/prose line without paragraph merging.
+    Marker 003: Plain text log/prose line without paragraph merging.
+    Marker 004: Plain text log/prose line without paragraph merging.
+    Marker 005: Plain text log/prose line without paragraph merging.
+    Marker 006: Plain text log/prose line without paragraph merging.
+    Marker 007: Plain text log/prose line without paragraph merging.
+    Marker 008: Plain text log/prose line without paragraph merging.
+    Marker 009: Plain text log/prose line without paragraph merging.
+    Marker 010: Plain text log/prose line without paragraph merging.
+    Marker 011: Plain text log/prose line without paragraph merging.
+    Marker 012: Plain text log/prose line without paragraph merging.
+    Marker 013: Plain text log/prose line without paragraph merging.
+    Marker 014: Plain text log/prose line without paragraph merging.
+    Marker 015: Plain text log/prose line without paragraph merging.
+    Marker 016: Plain text log/prose line without paragraph merging.
+    Marker 017: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Run exp-rf1: Right x2 -> Page 3 of 8 (Marker 035) =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 035: Plain text log/prose line without paragraph merging.
+    Marker 036: Plain text log/prose line without paragraph merging.
+    Marker 037: Plain text log/prose line without paragraph merging.
+    Marker 038: Plain text log/prose line without paragraph merging.
+    Marker 039: Plain text log/prose line without paragraph merging.
+    Marker 040: Plain text log/prose line without paragraph merging.
+    Marker 041: Plain text log/prose line without paragraph merging.
+    Marker 042: Plain text log/prose line without paragraph merging.
+    Marker 043: Plain text log/prose line without paragraph merging.
+    Marker 044: Plain text log/prose line without paragraph merging.
+    Marker 045: Plain text log/prose line without paragraph merging.
+    Marker 046: Plain text log/prose line without paragraph merging.
+    Marker 047: Plain text log/prose line without paragraph merging.
+    Marker 048: Plain text log/prose line without paragraph merging.
+    Marker 049: Plain text log/prose line without paragraph merging.
+    Marker 050: Plain text log/prose line without paragraph merging.
+    Marker 051: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Run exp-rf1: resize to 48x14 -> Marker 035 visible =====
+
+                 Plain Reading
+  ────────────────────────────────────────────
+  without paragraph merging.
+  Marker 033: Plain text log/prose line
+  without paragraph merging.
+  Marker 034: Plain text log/prose line
+  without paragraph merging.
+  Marker 035: Plain text log/prose line
+  without paragraph merging.
+  ────────────────────────────────────────────
+                 Page 10 of 35
+  ←/→ page • tab link • enter follow • b ba...
+
+
+===== Run exp-rf1: resize back to 80x24 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 018: Plain text log/prose line without paragraph merging.
+    Marker 019: Plain text log/prose line without paragraph merging.
+    Marker 020: Plain text log/prose line without paragraph merging.
+    Marker 021: Plain text log/prose line without paragraph merging.
+    Marker 022: Plain text log/prose line without paragraph merging.
+    Marker 023: Plain text log/prose line without paragraph merging.
+    Marker 024: Plain text log/prose line without paragraph merging.
+    Marker 025: Plain text log/prose line without paragraph merging.
+    Marker 026: Plain text log/prose line without paragraph merging.
+    Marker 027: Plain text log/prose line without paragraph merging.
+    Marker 028: Plain text log/prose line without paragraph merging.
+    Marker 029: Plain text log/prose line without paragraph merging.
+    Marker 030: Plain text log/prose line without paragraph merging.
+    Marker 031: Plain text log/prose line without paragraph merging.
+    Marker 032: Plain text log/prose line without paragraph merging.
+    Marker 033: Plain text log/prose line without paragraph merging.
+    Marker 034: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+Run exp-rf1 exited cleanly
+
+===== Run exp-rf2: initial 80x24 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 001: Plain text log/prose line without paragraph merging.
+    Marker 002: Plain text log/prose line without paragraph merging.
+    Marker 003: Plain text log/prose line without paragraph merging.
+    Marker 004: Plain text log/prose line without paragraph merging.
+    Marker 005: Plain text log/prose line without paragraph merging.
+    Marker 006: Plain text log/prose line without paragraph merging.
+    Marker 007: Plain text log/prose line without paragraph merging.
+    Marker 008: Plain text log/prose line without paragraph merging.
+    Marker 009: Plain text log/prose line without paragraph merging.
+    Marker 010: Plain text log/prose line without paragraph merging.
+    Marker 011: Plain text log/prose line without paragraph merging.
+    Marker 012: Plain text log/prose line without paragraph merging.
+    Marker 013: Plain text log/prose line without paragraph merging.
+    Marker 014: Plain text log/prose line without paragraph merging.
+    Marker 015: Plain text log/prose line without paragraph merging.
+    Marker 016: Plain text log/prose line without paragraph merging.
+    Marker 017: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Run exp-rf2: Right x2 -> Page 3 of 8 (Marker 035) =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 035: Plain text log/prose line without paragraph merging.
+    Marker 036: Plain text log/prose line without paragraph merging.
+    Marker 037: Plain text log/prose line without paragraph merging.
+    Marker 038: Plain text log/prose line without paragraph merging.
+    Marker 039: Plain text log/prose line without paragraph merging.
+    Marker 040: Plain text log/prose line without paragraph merging.
+    Marker 041: Plain text log/prose line without paragraph merging.
+    Marker 042: Plain text log/prose line without paragraph merging.
+    Marker 043: Plain text log/prose line without paragraph merging.
+    Marker 044: Plain text log/prose line without paragraph merging.
+    Marker 045: Plain text log/prose line without paragraph merging.
+    Marker 046: Plain text log/prose line without paragraph merging.
+    Marker 047: Plain text log/prose line without paragraph merging.
+    Marker 048: Plain text log/prose line without paragraph merging.
+    Marker 049: Plain text log/prose line without paragraph merging.
+    Marker 050: Plain text log/prose line without paragraph merging.
+    Marker 051: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Run exp-rf2: resize to 48x14 -> Marker 035 visible =====
+
+                 Plain Reading
+  ────────────────────────────────────────────
+  without paragraph merging.
+  Marker 033: Plain text log/prose line
+  without paragraph merging.
+  Marker 034: Plain text log/prose line
+  without paragraph merging.
+  Marker 035: Plain text log/prose line
+  without paragraph merging.
+  ────────────────────────────────────────────
+                 Page 10 of 35
+  ←/→ page • tab link • enter follow • b ba...
+
+
+===== Run exp-rf2: resize back to 80x24 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 018: Plain text log/prose line without paragraph merging.
+    Marker 019: Plain text log/prose line without paragraph merging.
+    Marker 020: Plain text log/prose line without paragraph merging.
+    Marker 021: Plain text log/prose line without paragraph merging.
+    Marker 022: Plain text log/prose line without paragraph merging.
+    Marker 023: Plain text log/prose line without paragraph merging.
+    Marker 024: Plain text log/prose line without paragraph merging.
+    Marker 025: Plain text log/prose line without paragraph merging.
+    Marker 026: Plain text log/prose line without paragraph merging.
+    Marker 027: Plain text log/prose line without paragraph merging.
+    Marker 028: Plain text log/prose line without paragraph merging.
+    Marker 029: Plain text log/prose line without paragraph merging.
+    Marker 030: Plain text log/prose line without paragraph merging.
+    Marker 031: Plain text log/prose line without paragraph merging.
+    Marker 032: Plain text log/prose line without paragraph merging.
+    Marker 033: Plain text log/prose line without paragraph merging.
+    Marker 034: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+Run exp-rf2 exited cleanly
+

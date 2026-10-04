@@ -37,5 +37,5 @@ silently ignored when you press Enter.
 
 ## Exploratory feedback
 
-See the [2026-09-26 live exploratory-testing report](exploratory-testing/2026-09-26-tui-reader/REPORT.md)
+See the [2026-10-03 live exploratory-testing report](exploratory-testing/2026-10-03-tui-reader/REPORT.md)
 for recent reading, link-navigation, error-screen, and resize observations.
