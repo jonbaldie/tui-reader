@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.11 (2026-10-05)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.10...v0.1.11
+
+### Bug Fixes
+
+- **Keep link attachment linear in long paragraphs (#149, fixes #146).** `Read` and `Reflow` no longer take quadratic time on a single long prose paragraph; link locations are unchanged.
+- **Attach repeated paragraph links where rendered (#154, fixes #148).** When the same link markup appears on two source lines of one paragraph, the later link now attaches to the display line that renders it instead of the earlier occurrence's line.
+- **Attribute wrapped links to source occurrences (#156, fixes #150).** Repeated link markup spanning source lines within one display line now pairs each rendered link with its own source occurrence, so every page with a rendered link has it attached.
+
 ## v0.1.10 (2026-10-01)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.9...v0.1.10
