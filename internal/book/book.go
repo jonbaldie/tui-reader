@@ -923,28 +923,24 @@ func Read(r io.Reader, title string, width, height int, plainText bool) (*Book, 
 	if err != nil {
 		return nil, err
 	}
-	sourceLinks := sourceLinksFor(lines, plainText)
-	width = normalizePageWidth(width)
-	layout := layoutFromDocument(formatDocument(lines, width, plainText), height)
-	pages := attachLinks(layout.pages, lines, layout.formatted, layout.height, sourceLinks)
-
-	return &Book{
-		Title:        title,
-		RawLines:     lines,
-		Pages:        pages,
-		Anchors:      layout.anchors,
-		PageWidth:    width,
-		PageHeight:   layout.height,
-		sourceLinks:  sourceLinks,
-		rawLinePages: layout.rawLinePages,
-		pageRawLines: layout.pageRawLines,
-		plainText:    plainText,
-	}, nil
+	b := &Book{
+		Title:     title,
+		RawLines:  lines,
+		plainText: plainText,
+	}
+	b.layout(width, height)
+	return b, nil
 }
 
 // Reflow re-paginates the book for new dimensions.
 func (b *Book) Reflow(width, height int) {
-	if b.plainText || b.sourceLinks.links == nil {
+	b.layout(width, height)
+}
+
+// layout paginates RawLines at the given geometry and sets every laid-out
+// field. Source links are computed once and cached across reflows.
+func (b *Book) layout(width, height int) {
+	if b.sourceLinks.links == nil {
 		b.sourceLinks = sourceLinksFor(b.RawLines, b.plainText)
 	}
 	width = normalizePageWidth(width)
