@@ -186,13 +186,19 @@ func isFenceDelimiter(raw string) bool {
 	return !strings.Contains(trimmed[3:], "`")
 }
 
+// isClosingFence reports whether raw closes an open fence. A closing fence is
+// backticks only. An info string, as in ```go, is another opener, not a closer.
+func isClosingFence(raw string) bool {
+	return strings.TrimSpace(raw) == "```"
+}
+
 func findFenceBlockEnd(rawLines []string, start int) int {
 	n := len(rawLines)
 	for end := start + 1; end < n; end++ {
 		if IsIndentedCodeLine(rawLines[end]) {
 			continue
 		}
-		if isFenceDelimiter(rawLines[end]) {
+		if isClosingFence(rawLines[end]) {
 			return end + 1
 		}
 	}
