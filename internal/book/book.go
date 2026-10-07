@@ -50,10 +50,20 @@ type Book struct {
 	PageWidth  int
 	PageHeight int
 
-	sourceLinks  sourceLinkSet
-	rawLinePages map[int]int
-	pageRawLines []int
-	plainText    bool
+	sourceLinks   sourceLinkSet
+	rawLinePages  map[int]int
+	pagePositions []Position
+	lineSources   []Position
+	plainText     bool
+}
+
+// Position is a place in the source text: a raw line index and the number of
+// non-space runes of that line's display text before it. Unlike a page index,
+// it survives a reflow to a new width, even inside a paragraph that spans
+// pages (#168).
+type Position struct {
+	Raw    int
+	Offset int
 }
 
 // Load reads a file from disk and returns its raw content lines.
@@ -163,12 +173,13 @@ type wrappedLine struct {
 }
 
 type bookLayout struct {
-	formatted    []formattedLine
-	pages        []Page
-	anchors      map[string]int
-	rawLinePages map[int]int
-	pageRawLines []int
-	height       int
+	formatted     []formattedLine
+	pages         []Page
+	anchors       map[string]int
+	rawLinePages  map[int]int
+	pagePositions []Position
+	lineSources   []Position
+	height        int
 }
 
 // IsIndentedCodeLine reports whether raw is an indented Markdown code line.
@@ -610,11 +621,12 @@ func buildBookLayout(rawLines []string, width, height int) bookLayout {
 func layoutFromFormatted(formatted []formattedLine, height int) bookLayout {
 	height = normalizePageHeight(height)
 	return bookLayout{
-		formatted:    formatted,
-		pages:        paginateFormatted(formatted, height),
-		rawLinePages: rawLinePages(formatted, height),
-		pageRawLines: pageRawLines(formatted, height),
-		height:       height,
+		formatted:     formatted,
+		pages:         paginateFormatted(formatted, height),
+		rawLinePages:  rawLinePages(formatted, height),
+		pagePositions: pagePositions(formatted, height),
+		lineSources:   lineSources(formatted),
+		height:        height,
 	}
 }
 
@@ -673,58 +685,83 @@ func rawLinePages(formatted []formattedLine, height int) map[int]int {
 	return pages
 }
 
-// pageRawLines maps each page index to a representative raw source line: the
+// pagePositions maps each page index to a representative source position: the
 // first heading displayed on the page — the section the reader was in — else
 // its first content line, falling back to the nearest preceding content
 // line, then to 0. Page 0 always anchors to its first content line so the
 // reader never skips the start of the document (#91). It is the reverse query
 // of rawLinePages and stays in sync with it: both divide formatted indices by
 // the same height.
-func pageRawLines(formatted []formattedLine, height int) []int {
+func pagePositions(formatted []formattedLine, height int) []Position {
 	if len(formatted) == 0 {
 		// Empty content paginates to a single empty page.
-		return []int{0}
+		return []Position{{}}
 	}
 	n := len(formatted)
-	anchors := make([]int, (n+height-1)/height)
-	var last int
+	sources := lineSources(formatted)
+	anchors := make([]Position, (n+height-1)/height)
+	var last Position
 	end0 := min(height, n)
-	anchors[0], last = firstPageAnchor(formatted[:end0])
+	anchors[0], last = firstPageAnchor(formatted[:end0], sources[:end0])
 	for start := height; start < n; start += height {
 		end := min(start+height, n)
-		anchors[start/height], last = pageAnchor(formatted[start:end], last)
+		anchors[start/height], last = pageAnchor(formatted[start:end], sources[start:end], last)
 	}
 	return anchors
 }
 
-func firstPageAnchor(lines []formattedLine) (int, int) {
-	for _, fl := range lines {
-		if fl.text != "" {
-			return fl.raw, fl.raw
+// lineSources returns the source position of each formatted line. The offset
+// counts non-space runes, which wrapping and indentation do not change, of the
+// earlier display lines from the same raw line.
+func lineSources(formatted []formattedLine) []Position {
+	sources := make([]Position, len(formatted))
+	for i, fl := range formatted {
+		sources[i] = Position{Raw: fl.raw}
+		if i > 0 && fl.raw >= 0 && fl.raw == formatted[i-1].raw {
+			sources[i].Offset = sources[i-1].Offset + nonSpaceRunes(formatted[i-1].text)
 		}
 	}
-	return 0, 0
+	return sources
 }
 
-func pageAnchor(pageLines []formattedLine, last int) (int, int) {
+func nonSpaceRunes(s string) int {
+	n := 0
+	for _, r := range s {
+		if !unicode.IsSpace(r) {
+			n++
+		}
+	}
+	return n
+}
+
+func firstPageAnchor(lines []formattedLine, sources []Position) (Position, Position) {
+	for i, fl := range lines {
+		if fl.text != "" {
+			return sources[i], sources[i]
+		}
+	}
+	return Position{}, Position{}
+}
+
+func pageAnchor(pageLines []formattedLine, sources []Position, last Position) (Position, Position) {
 	heading, content := -1, -1
-	for _, fl := range pageLines {
+	for i, fl := range pageLines {
 		if fl.text == "" {
 			continue
 		}
-		last = fl.raw
+		last = sources[i]
 		if content < 0 {
-			content = fl.raw
+			content = i
 		}
 		if heading < 0 && isHeadingLine(fl.text) {
-			heading = fl.raw
+			heading = i
 		}
 	}
 	if heading >= 0 {
-		return heading, last
+		return sources[heading], last
 	}
 	if content >= 0 {
-		return content, last
+		return sources[content], last
 	}
 	return last, last
 }
@@ -998,7 +1035,8 @@ func (b *Book) layout(width, height int) {
 	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height, b.sourceLinks)
 	b.Anchors = layout.anchors
 	b.rawLinePages = layout.rawLinePages
-	b.pageRawLines = layout.pageRawLines
+	b.pagePositions = layout.pagePositions
+	b.lineSources = layout.lineSources
 }
 
 // PageForAnchor returns the page index containing the given anchor.
@@ -1026,24 +1064,55 @@ func (b *Book) PageForAnchor(anchor string) int {
 	return -1
 }
 
-// RawLineForPage returns the raw source line the page is anchored to: the
+// RawLineForPage returns the raw source line the page is anchored to; see
+// PositionForPage.
+func (b *Book) RawLineForPage(page int) int {
+	return b.PositionForPage(page).Raw
+}
+
+// PositionForPage returns the source position the page is anchored to: the
 // first content line for page 0, otherwise the first heading displayed on
 // the page, else its first content line, falling back to the nearest
-// preceding content line, then to 0. Call it before
-// Reflow; PageForRawLine is
-// the matching query after, so a page index survives a re-pagination by
-// round-tripping through its source location.
-func (b *Book) RawLineForPage(page int) int {
-	if len(b.pageRawLines) == 0 {
-		return 0
+// preceding content line, then to 0. Call it before Reflow; PageForPosition
+// is the matching query after, so a page index survives a re-pagination by
+// round-tripping through its source position.
+func (b *Book) PositionForPage(page int) Position {
+	if len(b.pagePositions) == 0 {
+		return Position{}
 	}
 	if page < 0 {
-		return b.pageRawLines[0]
+		return b.pagePositions[0]
 	}
-	if page >= len(b.pageRawLines) {
-		return b.pageRawLines[len(b.pageRawLines)-1]
+	if page >= len(b.pagePositions) {
+		return b.pagePositions[len(b.pagePositions)-1]
 	}
-	return b.pageRawLines[page]
+	return b.pagePositions[page]
+}
+
+// PageForPosition returns the page displaying the given source position: the
+// page of the last display line of pos.Raw that starts at or before
+// pos.Offset, falling back to PageForRawLine.
+func (b *Book) PageForPosition(pos Position) int {
+	first, ok := b.rawLinePages[pos.Raw]
+	if !ok || pos.Offset <= 0 {
+		return b.PageForRawLine(pos.Raw)
+	}
+	// lineSources is empty when rawLinePages was built lazily by
+	// PageForAnchor on a Book that was never laid out.
+	start := min(first*b.PageHeight, len(b.lineSources))
+	best := -1
+	for i, src := range b.lineSources[start:] {
+		if src.Raw > pos.Raw {
+			break
+		}
+		if src.Raw == pos.Raw && src.Offset <= pos.Offset {
+			best = start + i
+		}
+	}
+	if best < 0 {
+		return b.PageForRawLine(pos.Raw)
+	}
+	return b.clampPage(best / b.PageHeight)
 }
 
 // PageForRawLine returns the page on which the given raw source line is
