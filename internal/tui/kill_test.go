@@ -196,6 +196,7 @@ func TestIsHeading(t *testing.T) {
 		{"# Heading", true},
 		{"### Deep", true},
 		{"   # Indented heading", true},
+		{"    # indented code", false},
 		{"plain text", false},
 		{"", false},
 		{"   ", false},
