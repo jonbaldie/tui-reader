@@ -173,7 +173,28 @@ type bookLayout struct {
 
 // IsIndentedCodeLine reports whether raw is an indented Markdown code line.
 func IsIndentedCodeLine(raw string) bool {
-	return strings.HasPrefix(raw, "    ")
+	return codeIndentLength(raw) > 0
+}
+
+// codeIndentLength returns the byte length of the leading whitespace that
+// indents raw to column 4, or 0 if raw is not indented code. A tab advances
+// to the next multiple of 4 columns.
+func codeIndentLength(raw string) int {
+	column := 0
+	for i, c := range []byte(raw) {
+		switch c {
+		case ' ':
+			column++
+		case '\t':
+			column += 4 - column%4
+		default:
+			return 0
+		}
+		if column >= 4 {
+			return i + 1
+		}
+	}
+	return 0
 }
 
 // fenceDelimiterLength returns the length of a Markdown fenced-code opener,
@@ -491,12 +512,13 @@ func formatParagraph(raw string, ri int, firstParagraph bool, width int) []forma
 const codeBlockIndent = "    "
 
 func formatCodeBlock(raw string, ri int, width int) []formattedLine {
+	code := raw[codeIndentLength(raw):]
+	raw = codeBlockIndent + code
 	indentWidth := stringWidth(codeBlockIndent)
 	if width <= indentWidth {
 		return wrapFormattedLines(WrapLines([]string{raw}, width), ri, "")
 	}
 
-	code := strings.TrimPrefix(raw, codeBlockIndent)
 	wrapped := WrapLines([]string{code}, width-indentWidth)
 	if fitsWithIndent(wrapped, indentWidth, width) {
 		return wrapFormattedLines(wrapped, ri, codeBlockIndent)
