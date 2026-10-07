@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.12 (2026-10-07)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.11...v0.1.12
+
+### Bug Fixes
+
+- **Ignore link syntax inside inline code during wrapping (#163, fixes #161).** Links written in inline code no longer interfere with word wrapping.
+- **Report interactive load failures (#164, fixes #157).** Failed document loads now exit with a non-zero status instead of appearing successful.
+- **Keep info-string lines inside fenced code blocks (#169, fixes #165).** A fence line with a language label no longer closes an open code block and hides later headings or links.
+
 ## v0.1.11 (2026-10-05)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.10...v0.1.11
