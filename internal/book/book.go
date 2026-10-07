@@ -176,29 +176,39 @@ func IsIndentedCodeLine(raw string) bool {
 	return strings.HasPrefix(raw, "    ")
 }
 
-// isFenceDelimiter reports whether raw is a Markdown fenced-code delimiter:
-// a line consisting of ``` or ``` followed by an info string with no backticks.
-func isFenceDelimiter(raw string) bool {
+// fenceDelimiterLength returns the length of a Markdown fenced-code opener,
+// or 0 if raw is not an opener. An opener has at least three backticks and may
+// have an info string with no backticks.
+func fenceDelimiterLength(raw string) int {
 	trimmed := strings.TrimSpace(raw)
-	if !strings.HasPrefix(trimmed, "```") {
-		return false
+	runLength := len(trimmed) - len(strings.TrimLeft(trimmed, "`"))
+	if runLength < 3 || strings.Contains(trimmed[runLength:], "`") {
+		return 0
 	}
-	return !strings.Contains(trimmed[3:], "`")
+	return runLength
 }
 
-// isClosingFence reports whether raw closes an open fence. A closing fence is
-// backticks only. An info string, as in ```go, is another opener, not a closer.
-func isClosingFence(raw string) bool {
-	return strings.TrimSpace(raw) == "```"
+// isFenceDelimiter reports whether raw is a Markdown fenced-code opener.
+func isFenceDelimiter(raw string) bool {
+	return fenceDelimiterLength(raw) > 0
+}
+
+// isClosingFence reports whether raw closes a fence opened with fenceLength
+// backticks. A closing fence contains only backticks and is at least as long
+// as its opener.
+func isClosingFence(raw string, fenceLength int) bool {
+	trimmed := strings.TrimSpace(raw)
+	return len(trimmed) >= fenceLength && strings.Trim(trimmed, "`") == ""
 }
 
 func findFenceBlockEnd(rawLines []string, start int) int {
 	n := len(rawLines)
+	fenceLength := fenceDelimiterLength(rawLines[start])
 	for end := start + 1; end < n; end++ {
 		if IsIndentedCodeLine(rawLines[end]) {
 			continue
 		}
-		if isClosingFence(rawLines[end]) {
+		if isClosingFence(rawLines[end], fenceLength) {
 			return end + 1
 		}
 	}
