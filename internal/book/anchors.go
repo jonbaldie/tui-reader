@@ -181,19 +181,21 @@ func collectSourceLinks(rawLines []string) sourceLinkSet {
 	sourceOrder := make([]int, 0)
 	n := len(rawLines)
 	inFence := false
+	fenceLength := 0
 	for ri := 0; ri < n; ri++ {
 		raw := rawLines[ri]
 		if IsIndentedCodeLine(raw) {
 			continue
 		}
 		if inFence {
-			if isClosingFence(raw) {
+			if isClosingFence(raw, fenceLength) {
 				inFence = false
 			}
 			continue
 		}
-		if isFenceDelimiter(raw) {
+		if length := fenceDelimiterLength(raw); length > 0 {
 			inFence = true
+			fenceLength = length
 			continue
 		}
 		if !isProseLine(raw) {
