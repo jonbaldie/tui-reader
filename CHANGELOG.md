@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.13 (2026-10-07)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.12...v0.1.13
+
+### Bug Fixes
+
+- **Support variable-length backtick fences (#166).** Closing fences must now be at least as long as their opening fence, so code blocks with longer fences parse correctly.
+- **Treat tab-indented lines as indented code (#167).** Tabs now count toward the four-column indentation rule, keeping Markdown-looking text inside code blocks inert.
+- **Preserve reading position when resizing mid-paragraph (#168).** Reflow now anchors pages to text within the source line, so resizing keeps the reader on the same content.
+
 ## v0.1.12 (2026-10-07)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.11...v0.1.12
