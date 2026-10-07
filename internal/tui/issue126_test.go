@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewModelUsesBookDefaultPageGeometry(t *testing.T) {
-	m := NewModel(writeTempFile(t, "default-geometry.md", "# Title\n"))
+	m := newTestModel(t, "default-geometry.md", "# Title\n")
 
 	if m.contentWidth != book.DefaultPageWidth {
 		t.Errorf("contentWidth = %d, want %d", m.contentWidth, book.DefaultPageWidth)

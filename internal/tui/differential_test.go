@@ -15,7 +15,7 @@ func FuzzPageNavigationAgainstReference(f *testing.F) {
 		if len(actions) == 0 || len(actions) > 256 {
 			t.Skip()
 		}
-		m := NewModel(writeTempFile(t, "navigation.md", strings.Repeat("content line\n", 100)))
+		m := newTestModel(t, "navigation.md", strings.Repeat("content line\n", 100))
 		m = applyWindowSize(m, 40, 12)
 		last := len(m.book.Pages) - 1
 		expected := 0

@@ -12,8 +12,7 @@ func TestCJKDisplayWidth_TUIViewDoesNotOverflowTerminal(t *testing.T) {
 		sb.WriteString(strings.Repeat("東", 20))
 		sb.WriteString("\n")
 	}
-	path := writeTempFile(t, "cjk.md", sb.String())
-	m := NewModel(path)
+	m := newTestModel(t, "cjk.md", sb.String())
 	m = applyWindowSize(m, 40, 30) // contentWidth=36, contentHeight=23
 
 	view := m.View()

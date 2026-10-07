@@ -24,8 +24,7 @@ Look—I could have walked down there. Checked the gasket myself. Part of me wan
 }
 
 func TestRendering_FirstLineVisible(t *testing.T) {
-	path := writeTempFile(t, "prose.txt", longProseDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "prose.txt", longProseDoc())
 	// Simulate a wide, tall terminal
 	m = applyWindowSize(m, 200, 50)
 
@@ -51,8 +50,7 @@ func TestRendering_FirstLineVisible(t *testing.T) {
 }
 
 func TestRendering_ViewFitsTerminal(t *testing.T) {
-	path := writeTempFile(t, "prose.txt", longProseDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "prose.txt", longProseDoc())
 
 	sizes := []struct{ w, h int }{
 		{80, 24},
@@ -86,8 +84,7 @@ func TestRendering_ViewFitsTerminal(t *testing.T) {
 }
 
 func TestRendering_ContentNotClipped(t *testing.T) {
-	path := writeTempFile(t, "prose.txt", longProseDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "prose.txt", longProseDoc())
 	m = applyWindowSize(m, 200, 50)
 
 	view := m.View()
@@ -145,8 +142,7 @@ func TestRendering_MultipleLinksHighlightedOnPage(t *testing.T) {
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
 	doc := "# Section\n\nSee [first](#one) and [second](#two) here.\n\nAlso [third](#three) on next line.\n"
-	path := writeTempFile(t, "links.md", doc)
-	m := NewModel(path)
+	m := newTestModel(t, "links.md", doc)
 	m = applyWindowSize(m, 80, 24)
 
 	// Default: selectedLink is -1
@@ -170,8 +166,7 @@ func TestRendering_DuplicateTargetSelectsOnlyActiveLink(t *testing.T) {
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
 	doc := "# Target\n\nSee [First Link](#target) and [Second Link](#target).\n"
-	path := writeTempFile(t, "same_target.md", doc)
-	m := NewModel(path)
+	m := newTestModel(t, "same_target.md", doc)
 	m = applyWindowSize(m, 80, 24)
 
 	m = pressKey(m, "tab")

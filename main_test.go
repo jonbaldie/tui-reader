@@ -2,11 +2,15 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jonbaldie/tui-reader/internal/book"
 )
 
@@ -425,6 +429,58 @@ func TestRun_DumpInvalidCount(t *testing.T) {
 				t.Errorf("expected no stdout on error, got %q", out.String())
 			}
 		})
+	}
+}
+
+func TestRun_InteractiveLoadFailureExitsNonZero(t *testing.T) {
+	missing := "/nonexistent/tui-reader-file.md"
+	directory := t.TempDir()
+	valid := writeTempFile(t, "ok.md", "# Hi\n\nThere.\n")
+
+	tests := []struct {
+		name string
+		path string
+		want int
+	}{
+		{name: "missing file", path: missing, want: 1},
+		{name: "directory", path: directory, want: 1},
+		{name: "valid file", path: valid, want: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			quitInteractive(t)
+			var out, errBuf bytes.Buffer
+			code := run([]string{tt.path}, &out, &errBuf)
+			if code != tt.want {
+				t.Fatalf("exit code = %d, want %d; stderr=%q stdout=%q", code, tt.want, errBuf.String(), out.String())
+			}
+			if errBuf.Len() != 0 {
+				t.Fatalf("stderr = %q, want empty (load errors stay on the error screen)", errBuf.String())
+			}
+			if out.Len() != 0 {
+				t.Fatalf("stdout = %q, want empty", out.String())
+			}
+		})
+	}
+}
+
+// quitInteractive runs the interactive program headless and sends q.
+func quitInteractive(t *testing.T) {
+	t.Helper()
+	var in bytes.Buffer
+	in.WriteString("q")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(func() {
+		cancel()
+		interactiveOptions = nil
+	})
+	interactiveOptions = []tea.ProgramOption{
+		tea.WithInput(&in),
+		tea.WithOutput(io.Discard),
+		tea.WithoutRenderer(),
+		tea.WithoutSignalHandler(),
+		tea.WithContext(ctx),
 	}
 }
 

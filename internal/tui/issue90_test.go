@@ -14,7 +14,7 @@ func TestIssue90_InlineCodeMatchingLinkDoesNotStealSelection(t *testing.T) {
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
 	doc := "`[demo](#demo)`[demo](#demo)"
-	m := NewModel(writeTempFile(t, "issue90.md", doc))
+	m := newTestModel(t, "issue90.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}

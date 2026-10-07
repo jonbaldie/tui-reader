@@ -27,7 +27,7 @@ func visibleCompact(s string) string {
 }
 
 func TestView_ErrorWrapsAtWidth40(t *testing.T) {
-	m := NewModel("missing.md")
+	m := newErrorTestModel(t, "missing.md")
 	m = applyWindowSize(m, 40, 12)
 
 	view := m.View()
@@ -44,7 +44,7 @@ func TestView_ErrorWrapsAtWidth40(t *testing.T) {
 }
 
 func TestView_ErrorUnclippedAtWidth80(t *testing.T) {
-	m := NewModel("missing.md")
+	m := newErrorTestModel(t, "missing.md")
 	m = applyWindowSize(m, 80, 24)
 
 	view := m.View()
@@ -60,7 +60,7 @@ func TestView_ErrorUnclippedAtWidth80(t *testing.T) {
 }
 
 func TestView_ErrorTinyTerminals(t *testing.T) {
-	m := NewModel("missing.md")
+	m := newErrorTestModel(t, "missing.md")
 
 	view0 := m.View()
 	if !strings.Contains(visibleCompact(view0), "Error") {
@@ -75,7 +75,7 @@ func TestView_ErrorTinyTerminals(t *testing.T) {
 }
 
 func TestQuit_ErrorScreen(t *testing.T) {
-	m := NewModel("missing.md")
+	m := newErrorTestModel(t, "missing.md")
 	m = applyWindowSize(m, 40, 12)
 
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")})

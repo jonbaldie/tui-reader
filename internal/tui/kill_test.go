@@ -8,8 +8,7 @@ import (
 // ==================== NewModel defaults ====================
 
 func TestNewModel_DefaultFieldValues(t *testing.T) {
-	path := writeTempFile(t, "d.md", "# Hi\n\nthere\n")
-	m := NewModel(path)
+	m := newTestModel(t, "d.md", "# Hi\n\nthere\n")
 	if m.SelectedLink() != -1 {
 		t.Errorf("default selectedLink = %d, want -1", m.SelectedLink())
 	}
@@ -27,8 +26,7 @@ func TestNewModel_DefaultFieldValues(t *testing.T) {
 // ==================== recalcLayout dimensions ====================
 
 func TestRecalcLayout_ContentWidthFromTermWidth(t *testing.T) {
-	path := writeTempFile(t, "w.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "w.md", "text\n")
 	m = applyWindowSize(m, 50, 40)
 	// 50 - 4 padding = 46 (below the 72 cap, above the 20 floor).
 	if m.contentWidth != 46 {
@@ -37,8 +35,7 @@ func TestRecalcLayout_ContentWidthFromTermWidth(t *testing.T) {
 }
 
 func TestRecalcLayout_ContentWidthCappedAt72(t *testing.T) {
-	path := writeTempFile(t, "w.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "w.md", "text\n")
 	m = applyWindowSize(m, 200, 40)
 	if m.contentWidth != 72 {
 		t.Errorf("contentWidth = %d, want 72 (cap)", m.contentWidth)
@@ -46,8 +43,7 @@ func TestRecalcLayout_ContentWidthCappedAt72(t *testing.T) {
 }
 
 func TestRecalcLayout_ContentHeightFromTermHeight(t *testing.T) {
-	path := writeTempFile(t, "w.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "w.md", "text\n")
 	m = applyWindowSize(m, 80, 30)
 	// 30 - 7 = 23 (above the 5 floor).
 	if m.contentHeight != 23 {
@@ -56,8 +52,7 @@ func TestRecalcLayout_ContentHeightFromTermHeight(t *testing.T) {
 }
 
 func TestRecalcLayout_ContentHeightFloorIsFive(t *testing.T) {
-	path := writeTempFile(t, "w.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "w.md", "text\n")
 	m = applyWindowSize(m, 80, 8) // 8-7 = 1, must clamp up to exactly 5
 	if m.contentHeight != 5 {
 		t.Errorf("contentHeight = %d, want exactly 5 (floor)", m.contentHeight)
@@ -67,8 +62,7 @@ func TestRecalcLayout_ContentHeightFloorIsFive(t *testing.T) {
 // ==================== recalcLayout page/link handling on resize ====================
 
 func TestRecalcLayout_KeepsCurrentPageOnResize(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
 	if len(m.BookRef().Pages) < 3 {
 		t.Fatalf("need >=3 pages, got %d", len(m.BookRef().Pages))
@@ -87,8 +81,7 @@ func TestRecalcLayout_KeepsCurrentPageOnResize(t *testing.T) {
 }
 
 func TestRecalcLayout_ResetsSelectedLinkOnResize(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
 	if len(m.BookRef().Pages[0].Links) == 0 {
 		t.Skip("page 0 has no links in this layout")
@@ -104,8 +97,7 @@ func TestRecalcLayout_ResetsSelectedLinkOnResize(t *testing.T) {
 }
 
 func TestRecalcLayout_ClampsPageWhenShrinking(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 80, 40) // few pages
 	// Go to the last page.
 	m = pressKey(m, "end")
@@ -123,7 +115,7 @@ func TestRecalcLayout_ClampsPageWhenShrinking(t *testing.T) {
 // ==================== nil-book navigation (book != nil guards) ====================
 
 func TestHandleKey_NilBookNeverPanics(t *testing.T) {
-	m := NewModel("/no/such/file.md")
+	m := newErrorTestModel(t, "/no/such/file.md")
 	if m.BookRef() != nil {
 		t.Fatal("expected nil book for missing file")
 	}
@@ -138,8 +130,7 @@ func TestHandleKey_NilBookNeverPanics(t *testing.T) {
 // ==================== link selection wrap-around ====================
 
 func TestPrevLink_StopsAtZeroWithoutWrapping(t *testing.T) {
-	path := writeTempFile(t, "links.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "links.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
 	if len(m.BookRef().Pages[0].Links) < 2 {
 		t.Skipf("need >=2 links on page 0, got %d", len(m.BookRef().Pages[0].Links))
@@ -168,8 +159,7 @@ func selfLinkDoc() string {
 }
 
 func TestFollowLink_TargetOnFirstPageFollowsAndResets(t *testing.T) {
-	path := writeTempFile(t, "self.md", selfLinkDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "self.md", selfLinkDoc())
 	m = applyWindowSize(m, 80, 20)
 
 	if dest := m.BookRef().PageForAnchor("top-section"); dest != 0 {
@@ -206,6 +196,7 @@ func TestIsHeading(t *testing.T) {
 		{"# Heading", true},
 		{"### Deep", true},
 		{"   # Indented heading", true},
+		{"    # indented code", false},
 		{"plain text", false},
 		{"", false},
 		{"   ", false},

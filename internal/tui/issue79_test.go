@@ -9,7 +9,7 @@ import (
 
 func TestIssue79_WidthClipping_18x12(t *testing.T) {
 	fixture := "../../docs/exploratory-testing/2026-09-10/evidence/fixtures/small-terminal.md"
-	m := NewModel(fixture)
+	m := newTestModelFromFile(t, fixture)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
@@ -37,7 +37,7 @@ func TestIssue79_WidthClipping_18x12(t *testing.T) {
 
 func TestIssue79_HeightClipping_40x10(t *testing.T) {
 	fixture := "../../docs/exploratory-testing/2026-09-10/evidence/fixtures/small-terminal.md"
-	m := NewModel(fixture)
+	m := newTestModelFromFile(t, fixture)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
@@ -68,7 +68,7 @@ func TestIssue79_HeightClipping_40x10(t *testing.T) {
 
 func TestIssue79_LongFilenameTitleClipping_80x24(t *testing.T) {
 	fixture := "../../docs/exploratory-testing/2026-09-10/evidence/fixtures/this-is-an-extremely-long-reader-file-name-created-to-test-whether-the-title-header-can-grow-beyond-two-lines-and-hide-the-footer-and-controls-without-clipping-the-reading-content-or-page-indicator-or-key-help-during-real-terminal-use.md"
-	m := NewModel(fixture)
+	m := newTestModelFromFile(t, fixture)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
@@ -124,8 +124,7 @@ func TestTruncate(t *testing.T) {
 }
 
 func TestRecalcLayout_NarrowTerminalWidth(t *testing.T) {
-	path := writeTempFile(t, "narrow.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "narrow.md", "text\n")
 
 	testCases := []struct {
 		termWidth int
@@ -149,8 +148,7 @@ func TestRecalcLayout_NarrowTerminalWidth(t *testing.T) {
 }
 
 func TestView_VerticalPaddingSwitch(t *testing.T) {
-	path := writeTempFile(t, "vp.md", "# Title\nline 1\nline 2\nline 3\nline 4\nline 5\n")
-	m := NewModel(path)
+	m := newTestModel(t, "vp.md", "# Title\nline 1\nline 2\nline 3\nline 4\nline 5\n")
 
 	// In 80x24, full height is 22 < 24, so View starts with top padding newline "\n"
 	m24 := applyWindowSize(m, 80, 24)
@@ -178,4 +176,3 @@ func TestRenderHeaderFooter_NilBook(t *testing.T) {
 		t.Errorf("expected footer with nil book to contain Page 1 of 0: %q", ftr)
 	}
 }
-

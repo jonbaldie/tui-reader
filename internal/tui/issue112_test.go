@@ -16,8 +16,7 @@ func TestIssue112_FollowCJKHeadingLink(t *testing.T) {
 		sb.WriteString("A short paragraph of filler text.\n\n")
 	}
 	sb.WriteString("## Chapter Two\n")
-	path := writeTempFile(t, "min-cjk.md", sb.String())
-	m := NewModel(path)
+	m := newTestModel(t, "min-cjk.md", sb.String())
 	m = applyWindowSize(m, 60, 14)
 
 	want := m.book.PageForAnchor("第一章")

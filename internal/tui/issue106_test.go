@@ -14,7 +14,7 @@ func TestIssue106_TabSelectsSoftWrappedSpanningLink(t *testing.T) {
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
 	doc := "# Section\nHere is a [link\nlabel](#target) across lines.\n\n# Target\nTarget content.\n"
-	m := NewModel(writeTempFile(t, "issue106.md", doc))
+	m := newTestModel(t, "issue106.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}

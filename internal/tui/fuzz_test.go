@@ -22,7 +22,7 @@ func FuzzModelActions(f *testing.F) {
 			t.Skip()
 		}
 
-		m := NewModel(writeTempFile(t, "fuzz.md", tuiFuzzDocument(seed)))
+		m := newTestModel(t, "fuzz.md", tuiFuzzDocument(seed))
 		if m.err != nil || m.book == nil {
 			t.Fatalf("NewModel: book=%v err=%v", m.book, m.err)
 		}

@@ -14,7 +14,7 @@ func TestIssue100_TabHighlightsLinkAtSourceLineBoundary(t *testing.T) {
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
 	doc := "000[\n[0](#00)\n\n" + strings.Repeat("filler\n\n", 4) + "# 00\nTarget body.\n"
-	m := NewModel(writeTempFile(t, "issue100.md", doc))
+	m := newTestModel(t, "issue100.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
@@ -46,7 +46,7 @@ func TestIssue100_TabHighlightsUnwrappedLinkAtSourceLineBoundary(t *testing.T) {
 	lipgloss.SetColorProfile(termenv.ANSI256)
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
-	m := NewModel(writeTempFile(t, "issue100-wide.md", "000[\n[0](#00)\n"))
+	m := newTestModel(t, "issue100-wide.md", "000[\n[0](#00)\n")
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}

@@ -25,8 +25,7 @@ const (
 func TestStatefulActionSequences(t *testing.T) {
 	for _, seed := range []int64{1, 7, 19, 37, 101} {
 		t.Run(fmt.Sprintf("seed-%d", seed), func(t *testing.T) {
-			path := writeTempFile(t, "stateful.md", statefulDocument())
-			model := applyWindowSize(NewModel(path), 20, 5)
+			model := applyWindowSize(newTestModel(t, "stateful.md", statefulDocument()), 20, 5)
 			rng := rand.New(rand.NewSource(seed))
 			var trace []string
 
@@ -41,8 +40,7 @@ func TestStatefulActionSequences(t *testing.T) {
 }
 
 func TestStateful_BackHistoryRemainsValidAfterReflow(t *testing.T) {
-	path := writeTempFile(t, "history-reflow.md", statefulDocument())
-	model := applyWindowSize(NewModel(path), 20, 5)
+	model := applyWindowSize(newTestModel(t, "history-reflow.md", statefulDocument()), 20, 5)
 
 	for follows := 0; follows < 2; follows++ {
 		model = pressKey(model, "tab")
