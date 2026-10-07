@@ -857,8 +857,20 @@ type wrapToken struct {
 	link        bool
 }
 
+func matchLinkToken(line string, i int, spans [][2]int) int {
+	if line[i] != '[' {
+		return 0
+	}
+	match := linkRegex.FindStringIndex(line[i:])
+	if match == nil || match[0] != 0 || IsInlineCodeRange(spans, i, i+match[1]) {
+		return 0
+	}
+	return match[1]
+}
+
 // eachWrapToken consumes words as they are scanned, without retaining a token slice.
 func eachWrapToken(line string, consume func(wrapToken)) {
+	spans := InlineCodeSpans(line)
 	spaceBefore := false
 	n := len(line)
 	for i := 0; i < n; {
@@ -879,13 +891,11 @@ func eachWrapToken(line string, consume func(wrapToken)) {
 			if unicode.IsSpace(r) {
 				break
 			}
-			if line[i] == '[' {
-				if match := linkRegex.FindStringIndex(line[i:]); match != nil && match[0] == 0 {
-					consume(wrapToken{text: line[start : i+match[1]], spaceBefore: spaceBefore, link: true})
-					i += match[1]
-					link = true
-					break
-				}
+			if matchLen := matchLinkToken(line, i, spans); matchLen > 0 {
+				consume(wrapToken{text: line[start : i+matchLen], spaceBefore: spaceBefore, link: true})
+				i += matchLen
+				link = true
+				break
 			}
 			i += size
 		}
