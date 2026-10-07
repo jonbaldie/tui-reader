@@ -31,8 +31,7 @@ func pageText(m Model) string {
 // TestResize_KeepsReadingPosition reproduces issue #61: resize must preserve
 // the reader's position by source location, not page index.
 func TestResize_KeepsReadingPosition(t *testing.T) {
-	path := writeTempFile(t, "reading-journey.md", loadFixture(t, "reading-journey.md"))
-	m := NewModel(path)
+	m := newTestModel(t, "reading-journey.md", loadFixture(t, "reading-journey.md"))
 	m = applyWindowSize(m, 90, 24) // wide: 72x17 content
 
 	// Jump to the end of the document.
@@ -57,8 +56,7 @@ func TestResize_KeepsReadingPosition(t *testing.T) {
 // issue #61: follow a link, resize, go back — `b` must return to the page
 // containing RETURN MARKER.
 func TestResize_HistoryKeepsLinkSource(t *testing.T) {
-	path := writeTempFile(t, "link-history-journey.md", loadFixture(t, "link-history-journey.md"))
-	m := NewModel(path)
+	m := newTestModel(t, "link-history-journey.md", loadFixture(t, "link-history-journey.md"))
 	m = applyWindowSize(m, 90, 24) // wide: 72x17 content
 
 	// Advance to the page containing RETURN MARKER and its link.
@@ -102,8 +100,7 @@ func firstNonEmpty(s string) string {
 // every back-history entry is remapped through its source position — not
 // clamped — when a resize increases the page count.
 func TestResize_HistoryRemappedNotClamped(t *testing.T) {
-	path := writeTempFile(t, "stateful.md", statefulDocument())
-	m := NewModel(path)
+	m := newTestModel(t, "stateful.md", statefulDocument())
 	m = applyWindowSize(m, 90, 24) // wide: fewer pages
 
 	// Chain through three chapters; every landed page carries a
@@ -154,8 +151,7 @@ func TestResize_HistoryRemappedNotClamped(t *testing.T) {
 // TestResize_UnchangedDimensionsNoOp covers the acceptance criterion that a
 // resize with unchanged content dimensions leaves the page and history alone.
 func TestResize_UnchangedDimensionsNoOp(t *testing.T) {
-	path := writeTempFile(t, "reading-journey.md", loadFixture(t, "reading-journey.md"))
-	m := NewModel(path)
+	m := newTestModel(t, "reading-journey.md", loadFixture(t, "reading-journey.md"))
 	m = applyWindowSize(m, 90, 24)
 	m = pressKey(m, " ")
 	m = pressKey(m, "tab")

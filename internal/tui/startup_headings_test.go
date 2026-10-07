@@ -26,8 +26,7 @@ func TestStartup_InitialWindowSizeDisplaysFirstPage(t *testing.T) {
 		"Content of chapter 2.",
 	}, "\n")
 
-	path := writeTempFile(t, "startup-headings.md", fixture)
-	m := NewModel(path)
+	m := newTestModel(t, "startup-headings.md", fixture)
 	// Terminal 80x15: content width 72, content height 8 (15-7).
 	m = applyWindowSize(m, 80, 15)
 
@@ -47,8 +46,7 @@ func TestStartup_InitialWindowSizeDisplaysFirstPage_Minimal(t *testing.T) {
 	}
 	sb.WriteString("# Heading 2\n\n")
 
-	path := writeTempFile(t, "startup-minimal.md", sb.String())
-	m := NewModel(path)
+	m := newTestModel(t, "startup-minimal.md", sb.String())
 	m = applyWindowSize(m, 80, 15)
 
 	if m.CurrentPage() != 0 {
@@ -68,8 +66,7 @@ func TestStartup_DocumentStartingWithBodyText(t *testing.T) {
 	sb.WriteString("# Chapter 1\n\n")
 	sb.WriteString("Chapter 1 content.\n")
 
-	path := writeTempFile(t, "startup-prologue.md", sb.String())
-	m := NewModel(path)
+	m := newTestModel(t, "startup-prologue.md", sb.String())
 	m = applyWindowSize(m, 80, 15)
 
 	if m.CurrentPage() != 0 {

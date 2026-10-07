@@ -13,8 +13,7 @@ import (
 // to use 'b' and there's no history? It should be a no-op.
 
 func TestAdversarial_BKeyNoHistory(t *testing.T) {
-	path := writeTempFile(t, "adv.md", "# Title\n\nText\n")
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", "# Title\n\nText\n")
 	m = applyWindowSize(m, 60, 15)
 
 	pageBefore := m.CurrentPage()
@@ -28,8 +27,7 @@ func TestAdversarial_BKeyNoHistory(t *testing.T) {
 // Both 'b' and 'backspace' are GoBack. Verify backspace works too.
 
 func TestAdversarial_BackspaceGoBack(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	origPage := m.CurrentPage()
@@ -46,8 +44,7 @@ func TestAdversarial_BackspaceGoBack(t *testing.T) {
 // ==================== Tiny terminal ====================
 
 func TestAdversarial_TinyTerminal(t *testing.T) {
-	path := writeTempFile(t, "adv.md", "# Hello\n\nWorld\n")
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", "# Hello\n\nWorld\n")
 	// 1x1 terminal - should not panic
 	m = applyWindowSize(m, 1, 1)
 	view := m.View()
@@ -55,8 +52,7 @@ func TestAdversarial_TinyTerminal(t *testing.T) {
 }
 
 func TestAdversarial_ZeroTerminal(t *testing.T) {
-	path := writeTempFile(t, "adv.md", "# Hello\n\nWorld\n")
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", "# Hello\n\nWorld\n")
 	// 0x0 terminal
 	m = applyWindowSize(m, 0, 0)
 	view := m.View()
@@ -66,8 +62,7 @@ func TestAdversarial_ZeroTerminal(t *testing.T) {
 // ==================== Rapid resize ====================
 
 func TestAdversarial_RapidResize(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 
 	sizes := []struct{ w, h int }{
 		{80, 24}, {40, 12}, {200, 50}, {20, 5}, {1, 1}, {120, 40}, {60, 20},
@@ -89,8 +84,7 @@ func TestAdversarial_RapidResize(t *testing.T) {
 // ==================== Navigate then resize ====================
 
 func TestAdversarial_NavigateThenResize(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 	m = applyWindowSize(m, 40, 5) // many pages
 
 	// Go to last page
@@ -129,8 +123,7 @@ func TestAdversarial_DeepHistory(t *testing.T) {
 	}
 	sb.WriteString("# Chapter 3\n\nThe end.\n")
 
-	path := writeTempFile(t, "deep.md", sb.String())
-	m := NewModel(path)
+	m := newTestModel(t, "deep.md", sb.String())
 	// Use height large enough that heading + link are on the same page
 	m = applyWindowSize(m, 60, 32)
 
@@ -175,8 +168,7 @@ func TestAdversarial_DeepHistory(t *testing.T) {
 // ==================== Space key for next page ====================
 
 func TestAdversarial_SpaceNextPage(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(" ")})
@@ -189,8 +181,7 @@ func TestAdversarial_SpaceNextPage(t *testing.T) {
 // ==================== L key for next page ====================
 
 func TestAdversarial_LKeyNextPage(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")})
@@ -203,8 +194,7 @@ func TestAdversarial_LKeyNextPage(t *testing.T) {
 // ==================== H key for prev page ====================
 
 func TestAdversarial_HKeyPrevPage(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	m = pressKey(m, "right") // page 1
@@ -218,8 +208,7 @@ func TestAdversarial_HKeyPrevPage(t *testing.T) {
 // ==================== G key for first page ====================
 
 func TestAdversarial_GKeyFirstPage(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	m = pressKey(m, "right")
@@ -234,8 +223,7 @@ func TestAdversarial_GKeyFirstPage(t *testing.T) {
 // ==================== G key (capital) for last page ====================
 
 func TestAdversarial_GCapKeyLastPage(t *testing.T) {
-	path := writeTempFile(t, "adv.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
@@ -249,8 +237,7 @@ func TestAdversarial_GCapKeyLastPage(t *testing.T) {
 // ==================== Unknown key does nothing ====================
 
 func TestAdversarial_UnknownKey(t *testing.T) {
-	path := writeTempFile(t, "adv.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "adv.md", "text\n")
 	m = applyWindowSize(m, 60, 15)
 
 	pageBefore := m.CurrentPage()
@@ -260,21 +247,5 @@ func TestAdversarial_UnknownKey(t *testing.T) {
 	m = updated.(Model)
 	if m.CurrentPage() != pageBefore || m.SelectedLink() != linkBefore {
 		t.Error("unknown key should be a no-op")
-	}
-}
-
-// ==================== View with nil book ====================
-
-func TestAdversarial_ViewNilBook(t *testing.T) {
-	// Construct a model with nil book but no error (shouldn't happen, but defensive)
-	m := Model{
-		book:       nil,
-		err:        nil,
-		termWidth:  80,
-		termHeight: 24,
-	}
-	view := m.View()
-	if !strings.Contains(view, "Loading") {
-		t.Errorf("nil book with no error should show 'Loading', got: %q", view)
 	}
 }

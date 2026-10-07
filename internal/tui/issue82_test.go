@@ -25,8 +25,7 @@ Target 1 body content.
 
 Target 2 body content.
 `
-	path := writeTempFile(t, "issue82.md", doc)
-	m := NewModel(path)
+	m := newTestModel(t, "issue82.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
@@ -92,8 +91,7 @@ Target 1 body content.
 
 Target 2 body content.
 `
-	path := writeTempFile(t, "issue82_follow.md", doc)
-	m := NewModel(path)
+	m := newTestModel(t, "issue82_follow.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
@@ -137,8 +135,7 @@ Overwide target content.
 
 Second target content.
 `
-	path := writeTempFile(t, "issue82_between.md", doc)
-	m := NewModel(path)
+	m := newTestModel(t, "issue82_between.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}

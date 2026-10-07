@@ -3,8 +3,6 @@ package tui
 import (
 	"crypto/sha256"
 	"fmt"
-	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -15,9 +13,8 @@ import (
 	"github.com/muesli/termenv"
 )
 
-// novelFile represents a 120,000-word manuscript with chapter links and Unicode.
-func novelFile(t testing.TB) string {
-	t.Helper()
+// novelDocument is a 120,000-word manuscript with chapter links and Unicode.
+func novelDocument() string {
 	var text strings.Builder
 	for chapter := range 30 {
 		fmt.Fprintf(&text, "# Chapter %d\n\n[Contents](#chapter-0)\n\n", chapter)
@@ -26,22 +23,18 @@ func novelFile(t testing.TB) string {
 			text.WriteString("\n\n")
 		}
 	}
-	path := filepath.Join(t.TempDir(), "novel.md")
-	if err := os.WriteFile(path, []byte(text.String()), 0600); err != nil {
-		t.Fatal(err)
-	}
-	return path
+	return text.String()
 }
 
 func BenchmarkNovelJourney(b *testing.B) {
-	path := novelFile(b)
+	doc := novelDocument()
 	b.Run("OpenToFirstView", func(b *testing.B) {
 		samples := make([]time.Duration, b.N)
 		b.ReportAllocs()
 		b.ResetTimer()
 		for i := range b.N {
 			start := time.Now()
-			model, _ := NewModel(path).Update(tea.WindowSizeMsg{Width: 80, Height: 30})
+			model, _ := newTestModel(b, "novel.md", doc).Update(tea.WindowSizeMsg{Width: 80, Height: 30})
 			if model.(Model).err != nil {
 				b.Fatal(model.(Model).err)
 			}
@@ -53,7 +46,7 @@ func BenchmarkNovelJourney(b *testing.B) {
 		b.ReportMetric(float64(samples[(len(samples)*3+3)/4-1].Nanoseconds()), "p75-ns/op")
 	})
 	b.Run("ResizeToView", func(b *testing.B) {
-		model, _ := NewModel(path).Update(tea.WindowSizeMsg{Width: 80, Height: 30})
+		model, _ := newTestModel(b, "novel.md", doc).Update(tea.WindowSizeMsg{Width: 80, Height: 30})
 		samples := make([]time.Duration, b.N)
 		b.ReportAllocs()
 		b.ResetTimer()
@@ -75,7 +68,7 @@ func TestNovelJourneyOutput(t *testing.T) {
 	profile := lipgloss.ColorProfile()
 	lipgloss.SetColorProfile(termenv.Ascii)
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
-	model := NewModel(novelFile(t))
+	model := newTestModel(t, "novel.md", novelDocument())
 	if model.err != nil {
 		t.Fatal(model.err)
 	}

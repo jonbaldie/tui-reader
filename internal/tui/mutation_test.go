@@ -14,8 +14,7 @@ import (
 
 // Mutation: removing the `currentPage > 0` guard would allow negative pages.
 func TestMutation_PrevPageNeverNegative(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "content\n")
 	m = applyWindowSize(m, 60, 15)
 
 	// Press prev many times
@@ -29,8 +28,7 @@ func TestMutation_PrevPageNeverNegative(t *testing.T) {
 
 // Mutation: removing the `currentPage < len(Pages)-1` guard would allow overflow.
 func TestMutation_NextPageNeverExceedsMax(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "content\n")
 	m = applyWindowSize(m, 60, 15)
 
 	// Press next many times
@@ -47,8 +45,7 @@ func TestMutation_NextPageNeverExceedsMax(t *testing.T) {
 
 // Mutation: not resetting selectedLink on page change.
 func TestMutation_LinkResetOnNext(t *testing.T) {
-	path := writeTempFile(t, "mut.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", simpleDoc())
 	m = applyWindowSize(m, 60, 40)
 
 	m = pressKey(m, "tab")
@@ -62,8 +59,7 @@ func TestMutation_LinkResetOnNext(t *testing.T) {
 }
 
 func TestMutation_LinkResetOnPrev(t *testing.T) {
-	path := writeTempFile(t, "mut.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", simpleDoc())
 	m = applyWindowSize(m, 60, 40)
 
 	m = pressKey(m, "right") // go to page 1
@@ -76,8 +72,7 @@ func TestMutation_LinkResetOnPrev(t *testing.T) {
 
 // Mutation: tab on page with no links should not crash or change selection.
 func TestMutation_TabOnNoLinksPage(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "No links here\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "No links here\n")
 	m = applyWindowSize(m, 60, 40)
 
 	m = pressKey(m, "tab")
@@ -90,8 +85,7 @@ func TestMutation_TabOnNoLinksPage(t *testing.T) {
 
 // Mutation: not pushing to history before navigation.
 func TestMutation_HistoryPushedOnFollow(t *testing.T) {
-	path := writeTempFile(t, "mut.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	m = pressKey(m, "tab")
@@ -108,8 +102,7 @@ func TestMutation_HistoryPushedOnFollow(t *testing.T) {
 
 // Mutation: not popping from history on back.
 func TestMutation_HistoryPoppedOnBack(t *testing.T) {
-	path := writeTempFile(t, "mut.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	m = pressKey(m, "tab")
@@ -124,8 +117,7 @@ func TestMutation_HistoryPoppedOnBack(t *testing.T) {
 
 // Mutation: going back restores wrong page.
 func TestMutation_BackRestoresCorrectPage(t *testing.T) {
-	path := writeTempFile(t, "mut.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	origPage := m.CurrentPage()
@@ -141,8 +133,7 @@ func TestMutation_BackRestoresCorrectPage(t *testing.T) {
 
 // Mutation: header not showing title.
 func TestMutation_ViewContainsTitle(t *testing.T) {
-	path := writeTempFile(t, "my-doc.md", "# Heading\ntext\n")
-	m := NewModel(path)
+	m := newTestModel(t, "my-doc.md", "# Heading\ntext\n")
 	m = applyWindowSize(m, 80, 24)
 	view := m.View()
 	if !strings.Contains(view, "My Doc") {
@@ -152,8 +143,7 @@ func TestMutation_ViewContainsTitle(t *testing.T) {
 
 // Mutation: footer not showing page count.
 func TestMutation_ViewContainsPageCount(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "text\n")
 	m = applyWindowSize(m, 80, 24)
 	view := m.View()
 	if !strings.Contains(view, "Page 1") {
@@ -163,8 +153,7 @@ func TestMutation_ViewContainsPageCount(t *testing.T) {
 
 // Mutation: view still renders after quitting.
 func TestMutation_QuitClearsView(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "text\n")
 	m = applyWindowSize(m, 80, 24)
 	m = pressKey(m, "q")
 	if m.View() != "" {
@@ -176,8 +165,7 @@ func TestMutation_QuitClearsView(t *testing.T) {
 
 // Mutation: contentWidth not capped at maxWidth.
 func TestMutation_ContentWidthCapped(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "text\n")
 	m = applyWindowSize(m, 200, 50) // very wide terminal
 	if m.contentWidth > 72 {
 		t.Errorf("contentWidth should be capped at 72, got %d", m.contentWidth)
@@ -186,8 +174,7 @@ func TestMutation_ContentWidthCapped(t *testing.T) {
 
 // Mutation: contentHeight calculation wrong.
 func TestMutation_ContentHeightMinimum(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "text\n")
 	m = applyWindowSize(m, 80, 8) // very short terminal
 	if m.contentHeight < 5 {
 		t.Errorf("contentHeight should be at least 5, got %d", m.contentHeight)
@@ -198,8 +185,7 @@ func TestMutation_ContentHeightMinimum(t *testing.T) {
 
 // Mutation: quit key produces no command (wouldn't actually quit).
 func TestMutation_QuitProducesCommand(t *testing.T) {
-	path := writeTempFile(t, "mut.md", "text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "mut.md", "text\n")
 	m = applyWindowSize(m, 80, 24)
 
 	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")})
@@ -212,7 +198,7 @@ func TestMutation_QuitProducesCommand(t *testing.T) {
 
 // Mutation: error state not shown properly.
 func TestMutation_ErrorViewShowsMessage(t *testing.T) {
-	m := NewModel("/absolutely/nonexistent/path.txt")
+	m := newErrorTestModel(t, "/absolutely/nonexistent/path.txt")
 	m = applyWindowSize(m, 80, 24)
 	view := m.View()
 	if !strings.Contains(view, "Error") {
@@ -225,7 +211,7 @@ func TestMutation_ErrorViewShowsMessage(t *testing.T) {
 
 // Mutation: BookRef returns non-nil for failed loads.
 func TestMutation_FailedLoadNilBook(t *testing.T) {
-	m := NewModel("/absolutely/nonexistent/path.txt")
+	m := newErrorTestModel(t, "/absolutely/nonexistent/path.txt")
 	if m.BookRef() != nil {
 		t.Error("book should be nil after failed load")
 	}

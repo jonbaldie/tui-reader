@@ -22,8 +22,7 @@ This paragraph begins on page zero and continues across the page boundary onto p
 
 Target content.
 `
-	path := writeTempFile(t, "issue83.md", doc)
-	m := NewModel(path)
+	m := newTestModel(t, "issue83.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}

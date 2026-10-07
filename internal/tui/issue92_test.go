@@ -10,7 +10,7 @@ import (
 // TestIssue92_FooterPageInfoFitsCompactTerminal reproduces the footer wrapping
 // that can push the title off the top of a short terminal.
 func TestIssue92_FooterPageInfoFitsCompactTerminal(t *testing.T) {
-	m := NewModel(writeTempFile(t, "compact-footer-probe.md", "Short.\n"))
+	m := newTestModel(t, "compact-footer-probe.md", "Short.\n")
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}

@@ -1,23 +1,16 @@
 package tui
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func TestIssue99_NarrowResizeDoesNotPanic(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "doc.md")
 	content := "00000000 00000000000 \n0 000 000000\n"
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	m := NewModel(path)
+	m := newTestModel(t, "doc.md", content)
 	if m.Err() != nil {
-		t.Fatalf("NewModel: %v", m.Err())
+		t.Fatalf("newTestModel: %v", m.Err())
 	}
 
 	defer func() {

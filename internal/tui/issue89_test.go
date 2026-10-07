@@ -22,8 +22,7 @@ Second chapter content.
 
 Table of contents.
 `
-	path := writeTempFile(t, "issue89.md", doc)
-	m := NewModel(path)
+	m := newTestModel(t, "issue89.md", doc)
 	if m.Err() != nil {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}

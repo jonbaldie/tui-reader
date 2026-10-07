@@ -10,8 +10,7 @@ func TestPathAnalysis_InitHasNoStartupCommand(t *testing.T) {
 }
 
 func TestPathAnalysis_UnknownUpdateMessagePreservesModel(t *testing.T) {
-	path := writeTempFile(t, "path-analysis.md", "# Title\n\nBody\n")
-	m := NewModel(path)
+	m := newTestModel(t, "path-analysis.md", "# Title\n\nBody\n")
 	updated, cmd := m.Update(struct{}{})
 	if cmd != nil {
 		t.Fatalf("unknown message command = %v, want nil", cmd)

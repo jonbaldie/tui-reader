@@ -16,6 +16,10 @@ const usage = "Usage: tui-reader [--dump[=N]] <file>\n"
 
 var osExit = os.Exit
 
+// interactiveOptions are extra Bubble Tea options. Production leaves this nil.
+// Tests set it so interactive mode can run without a terminal.
+var interactiveOptions []tea.ProgramOption
+
 type parsedArgs struct {
 	path      string
 	dumpMode  bool
@@ -46,8 +50,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
+	b, err := book.NewBook(parsed.path, book.DefaultPageWidth, book.DefaultPageHeight)
 	if parsed.dumpMode {
-		b, err := book.NewBook(parsed.path, book.DefaultPageWidth, book.DefaultPageHeight)
 		if err != nil {
 			fmt.Fprintf(stderr, "Error: %v\n", err)
 			return 1
@@ -56,10 +60,25 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 
-	model := tui.NewModel(parsed.path)
-	p := tea.NewProgram(model, tea.WithAltScreen())
+	return runInteractive(b, err, stderr)
+}
+
+// runInteractive starts the reader. A load error still shows the in-TUI error
+// screen; after it exits, the process status is 1.
+func runInteractive(b *book.Book, loadErr error, stderr io.Writer) int {
+	var model tui.Model
+	if loadErr != nil {
+		model = tui.NewErrorModel(loadErr)
+	} else {
+		model = tui.NewModelFromBook(b)
+	}
+	opts := append([]tea.ProgramOption{tea.WithAltScreen()}, interactiveOptions...)
+	p := tea.NewProgram(model, opts...)
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(stderr, "Error: %v\n", err)
+		return 1
+	}
+	if loadErr != nil {
 		return 1
 	}
 	return 0

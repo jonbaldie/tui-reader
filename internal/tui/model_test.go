@@ -1,23 +1,11 @@
 package tui
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-func writeTempFile(t *testing.T, name, content string) string {
-	t.Helper()
-	dir := t.TempDir()
-	path := filepath.Join(dir, name)
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-		t.Fatalf("failed to write temp file: %v", err)
-	}
-	return path
-}
 
 func simpleDoc() string {
 	var sb strings.Builder
@@ -42,8 +30,7 @@ func simpleDoc() string {
 // ==================== NewModel ====================
 
 func TestNewModel_ValidFile(t *testing.T) {
-	path := writeTempFile(t, "test.md", "# Hello\n\nWorld\n")
-	m := NewModel(path)
+	m := newTestModel(t, "test.md", "# Hello\n\nWorld\n")
 	if m.Err() != nil {
 		t.Fatalf("unexpected error: %v", m.Err())
 	}
@@ -56,7 +43,7 @@ func TestNewModel_ValidFile(t *testing.T) {
 }
 
 func TestNewModel_MissingFile(t *testing.T) {
-	m := NewModel("/nonexistent/file.txt")
+	m := newErrorTestModel(t, "/nonexistent/file.txt")
 	if m.Err() == nil {
 		t.Fatal("expected error for missing file")
 	}
@@ -65,8 +52,7 @@ func TestNewModel_MissingFile(t *testing.T) {
 // ==================== Page Navigation ====================
 
 func TestNavigation_NextPage(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 60, 15)
 
 	if m.CurrentPage() != 0 {
@@ -80,8 +66,7 @@ func TestNavigation_NextPage(t *testing.T) {
 }
 
 func TestNavigation_PrevPage(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 60, 15)
 
 	m = pressKey(m, "right") // go to page 1
@@ -92,8 +77,7 @@ func TestNavigation_PrevPage(t *testing.T) {
 }
 
 func TestNavigation_PrevPageAtStart(t *testing.T) {
-	path := writeTempFile(t, "nav.md", "Short content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", "Short content\n")
 	m = applyWindowSize(m, 60, 15)
 
 	m = pressKey(m, "left") // already at page 0
@@ -103,8 +87,7 @@ func TestNavigation_PrevPageAtStart(t *testing.T) {
 }
 
 func TestNavigation_NextPageAtEnd(t *testing.T) {
-	path := writeTempFile(t, "nav.md", "Short content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", "Short content\n")
 	m = applyWindowSize(m, 60, 15)
 
 	m = pressKey(m, "right") // already at last page
@@ -114,8 +97,7 @@ func TestNavigation_NextPageAtEnd(t *testing.T) {
 }
 
 func TestNavigation_FirstPage(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 60, 15)
 
 	m = pressKey(m, "right")
@@ -127,8 +109,7 @@ func TestNavigation_FirstPage(t *testing.T) {
 }
 
 func TestNavigation_LastPage(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 60, 15)
 
 	m = pressKey(m, "end") // jump to last
@@ -141,8 +122,7 @@ func TestNavigation_LastPage(t *testing.T) {
 // ==================== Link Navigation ====================
 
 func TestLink_TabCyclesLinks(t *testing.T) {
-	path := writeTempFile(t, "links.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "links.md", simpleDoc())
 	m = applyWindowSize(m, 60, 40) // large enough to see links on page 0
 
 	// Initially no link selected
@@ -168,8 +148,7 @@ func TestLink_TabCyclesLinks(t *testing.T) {
 }
 
 func TestLink_ShiftTabReverse(t *testing.T) {
-	path := writeTempFile(t, "links.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "links.md", simpleDoc())
 	m = applyWindowSize(m, 60, 40)
 
 	m = pressKey(m, "shift+tab") // should wrap to last link
@@ -183,8 +162,7 @@ func TestLink_ShiftTabReverse(t *testing.T) {
 }
 
 func TestLink_FollowLink(t *testing.T) {
-	path := writeTempFile(t, "links.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "links.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	// Tab to first link, then follow
@@ -206,8 +184,7 @@ func TestLink_FollowLink(t *testing.T) {
 }
 
 func TestLink_GoBack(t *testing.T) {
-	path := writeTempFile(t, "links.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "links.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	startPage := m.CurrentPage()
@@ -224,8 +201,7 @@ func TestLink_GoBack(t *testing.T) {
 }
 
 func TestLink_GoBackEmptyHistory(t *testing.T) {
-	path := writeTempFile(t, "nav.md", "Short text\n")
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", "Short text\n")
 	m = applyWindowSize(m, 60, 15)
 
 	m = pressKey(m, "b") // nothing should happen
@@ -235,8 +211,7 @@ func TestLink_GoBackEmptyHistory(t *testing.T) {
 }
 
 func TestLink_EnterWithNoSelection(t *testing.T) {
-	path := writeTempFile(t, "nav.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 60, 10)
 
 	// Press enter without selecting a link
@@ -249,8 +224,7 @@ func TestLink_EnterWithNoSelection(t *testing.T) {
 // ==================== Window Resize ====================
 
 func TestResize_PagesReflowed(t *testing.T) {
-	path := writeTempFile(t, "resize.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "resize.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
 	pagesAt80 := len(m.BookRef().Pages)
 
@@ -263,8 +237,7 @@ func TestResize_PagesReflowed(t *testing.T) {
 }
 
 func TestResize_CurrentPageClamped(t *testing.T) {
-	path := writeTempFile(t, "resize.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "resize.md", simpleDoc())
 	m = applyWindowSize(m, 40, 5) // many pages
 
 	// Go to a high page
@@ -281,8 +254,7 @@ func TestResize_CurrentPageClamped(t *testing.T) {
 // ==================== View ====================
 
 func TestView_NoError(t *testing.T) {
-	path := writeTempFile(t, "view.md", "# Hello\n\nWorld\n")
-	m := NewModel(path)
+	m := newTestModel(t, "view.md", "# Hello\n\nWorld\n")
 	m = applyWindowSize(m, 80, 24)
 
 	view := m.View()
@@ -292,7 +264,7 @@ func TestView_NoError(t *testing.T) {
 }
 
 func TestView_ErrorState(t *testing.T) {
-	m := NewModel("/nonexistent.txt")
+	m := newErrorTestModel(t, "/nonexistent.txt")
 	m = applyWindowSize(m, 80, 24)
 
 	view := m.View()
@@ -302,8 +274,7 @@ func TestView_ErrorState(t *testing.T) {
 }
 
 func TestView_Quitting(t *testing.T) {
-	path := writeTempFile(t, "quit.md", "content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "quit.md", "content\n")
 	m = applyWindowSize(m, 80, 24)
 	m = pressKey(m, "q")
 
@@ -316,8 +287,7 @@ func TestView_Quitting(t *testing.T) {
 // ==================== Key bindings ====================
 
 func TestQuit_Q(t *testing.T) {
-	path := writeTempFile(t, "quit.md", "content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "quit.md", "content\n")
 	m = applyWindowSize(m, 80, 24)
 
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")})
@@ -328,8 +298,7 @@ func TestQuit_Q(t *testing.T) {
 }
 
 func TestQuit_CtrlC(t *testing.T) {
-	path := writeTempFile(t, "quit.md", "content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "quit.md", "content\n")
 	m = applyWindowSize(m, 80, 24)
 
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyCtrlC})
@@ -341,8 +310,7 @@ func TestQuit_CtrlC(t *testing.T) {
 }
 
 func TestQuit_Escape(t *testing.T) {
-	path := writeTempFile(t, "quit.md", "content\n")
-	m := NewModel(path)
+	m := newTestModel(t, "quit.md", "content\n")
 	m = applyWindowSize(m, 80, 24)
 
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
@@ -356,8 +324,7 @@ func TestQuit_Escape(t *testing.T) {
 // ==================== Link selection resets on page change ====================
 
 func TestLink_SelectionResetsOnPageChange(t *testing.T) {
-	path := writeTempFile(t, "links.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "links.md", simpleDoc())
 	m = applyWindowSize(m, 60, 40)
 
 	m = pressKey(m, "tab") // select a link
@@ -372,8 +339,7 @@ func TestLink_SelectionResetsOnPageChange(t *testing.T) {
 }
 
 func TestRecalcLayout_NoReflowWhenDimensionsUnchanged(t *testing.T) {
-	path := writeTempFile(t, "layout.md", simpleDoc())
-	m := NewModel(path)
+	m := newTestModel(t, "layout.md", simpleDoc())
 	// 80x30 produces contentWidth = min(72, max(20, 76)) = 72, contentHeight = max(5, 23) = 23
 	m = applyWindowSize(m, 80, 30)
 
@@ -402,7 +368,6 @@ func TestRecalcLayout_NoReflowWhenDimensionsUnchanged(t *testing.T) {
 		t.Fatalf("expected selected link to reset to -1 when content dimensions change, got %d", m.SelectedLink())
 	}
 }
-
 
 // ==================== Helpers ====================
 

@@ -27,11 +27,10 @@ type Model struct {
 	history       []int // page history stack for back navigation
 }
 
-// NewModel creates a new TUI model for the given file.
-func NewModel(path string) Model {
-	// We'll start with default dimensions; they'll be updated on WindowSizeMsg
-	b, err := book.NewBook(path, book.DefaultPageWidth, book.DefaultPageHeight)
-	m := NewModelFromBook(b)
+// NewErrorModel creates a TUI model that shows err until the reader quits.
+// The book is nil: loading happens before the TUI is constructed.
+func NewErrorModel(err error) Model {
+	m := NewModelFromBook(nil)
 	m.err = err
 	return m
 }
@@ -218,9 +217,6 @@ func (m Model) View() string {
 	}
 	if m.err != nil {
 		return m.renderError()
-	}
-	if m.book == nil {
-		return "Loading..."
 	}
 
 	header := renderHeader(m.book, m.contentWidth)
