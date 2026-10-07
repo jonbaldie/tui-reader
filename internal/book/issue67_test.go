@@ -45,7 +45,7 @@ func TestIndentedCodeDoesNotAnchorPagePositionAsHeading(t *testing.T) {
 		"    # Not a heading",
 	}, 80, 3)
 
-	if got, want := layout.pageRawLines[0], 0; got != want {
+	if got, want := layout.pagePositions[0].Raw, 0; got != want {
 		t.Fatalf("page raw anchor = %d, want %d for the body line", got, want)
 	}
 }

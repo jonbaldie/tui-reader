@@ -83,18 +83,18 @@ func (m Model) recalcLayout() Model {
 	if m.book != nil {
 		// Preserve position by source location, not page index: page
 		// indices are not stable across a reflow, so capture where the
-		// reader is before reflowing and resolve afterwards (#61).
-		current := m.book.RawLineForPage(m.currentPage)
-		historyAnchors := make([]int, len(m.history))
+		// reader is before reflowing and resolve afterwards (#61, #168).
+		current := m.book.PositionForPage(m.currentPage)
+		historyAnchors := make([]book.Position, len(m.history))
 		for i, page := range m.history {
-			historyAnchors[i] = m.book.RawLineForPage(page)
+			historyAnchors[i] = m.book.PositionForPage(page)
 		}
 
 		m.book.Reflow(m.contentWidth, m.contentHeight)
 
-		m.currentPage = m.book.PageForRawLine(current)
+		m.currentPage = m.book.PageForPosition(current)
 		for i := range m.history {
-			m.history[i] = m.book.PageForRawLine(historyAnchors[i])
+			m.history[i] = m.book.PageForPosition(historyAnchors[i])
 		}
 		m.selectedLink = -1
 	}
