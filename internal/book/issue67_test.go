@@ -19,13 +19,13 @@ func TestIndentedCodeDoesNotCreateAnchorsOrLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got, want := b.Anchors, map[string]int{"intro": 0}; !reflect.DeepEqual(got, want) {
+	if got, want := b.anchors, map[string]int{"intro": 0}; !reflect.DeepEqual(got, want) {
 		t.Errorf("anchors = %#v, want %#v", got, want)
 	}
 
 	var links int
 	var found Link
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links += len(page.Links)
 		if len(page.Links) == 1 {
 			found = page.Links[0]

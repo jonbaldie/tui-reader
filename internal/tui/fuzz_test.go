@@ -71,18 +71,18 @@ func tuiFuzzDocument(seed []byte) string {
 
 func checkFuzzModel(t *testing.T, m Model, step int) {
 	t.Helper()
-	if m.book == nil || len(m.book.Pages) == 0 {
+	if m.book == nil || m.book.PageCount() == 0 {
 		t.Fatalf("step %d: model has no usable book", step)
 	}
-	if m.currentPage < 0 || m.currentPage >= len(m.book.Pages) {
-		t.Fatalf("step %d: page %d outside [0,%d)", step, m.currentPage, len(m.book.Pages))
+	if m.currentPage < 0 || m.currentPage >= m.book.PageCount() {
+		t.Fatalf("step %d: page %d outside [0,%d)", step, m.currentPage, m.book.PageCount())
 	}
-	page := m.book.Pages[m.currentPage]
+	page := m.book.Page(m.currentPage)
 	if m.selectedLink < -1 || m.selectedLink >= len(page.Links) {
 		t.Fatalf("step %d: selection %d invalid for %d links", step, m.selectedLink, len(page.Links))
 	}
 	for index, historyPage := range m.history {
-		if historyPage < 0 || historyPage >= len(m.book.Pages) {
+		if historyPage < 0 || historyPage >= m.book.PageCount() {
 			t.Fatalf("step %d: history %d has invalid page %d", step, index, historyPage)
 		}
 	}

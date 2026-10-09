@@ -74,9 +74,9 @@ func TestAdversarial_RapidResize(t *testing.T) {
 		if m.CurrentPage() < 0 {
 			t.Errorf("negative page after resize to %dx%d", s.w, s.h)
 		}
-		if m.BookRef() != nil && m.CurrentPage() >= len(m.BookRef().Pages) {
+		if m.BookRef() != nil && m.CurrentPage() >= m.BookRef().PageCount() {
 			t.Errorf("page %d exceeds max %d after resize to %dx%d",
-				m.CurrentPage(), len(m.BookRef().Pages)-1, s.w, s.h)
+				m.CurrentPage(), m.BookRef().PageCount()-1, s.w, s.h)
 		}
 	}
 }
@@ -93,9 +93,9 @@ func TestAdversarial_NavigateThenResize(t *testing.T) {
 
 	// Resize much bigger - should clamp
 	m = applyWindowSize(m, 200, 100)
-	if m.CurrentPage() >= len(m.BookRef().Pages) {
+	if m.CurrentPage() >= m.BookRef().PageCount() {
 		t.Errorf("page %d out of bounds (max %d) after resize",
-			m.CurrentPage(), len(m.BookRef().Pages)-1)
+			m.CurrentPage(), m.BookRef().PageCount()-1)
 	}
 	// Page should be <= lastPage since there are fewer pages now
 	if m.CurrentPage() > lastPage {
@@ -132,10 +132,10 @@ func TestAdversarial_DeepHistory(t *testing.T) {
 	// Verify precondition: each chapter page has a link
 	for _, anchor := range []string{"toc", "chapter-1", "chapter-2"} {
 		pg := b.PageForAnchor(anchor)
-		if pg < 0 || pg >= len(b.Pages) {
+		if pg < 0 || pg >= b.PageCount() {
 			t.Fatalf("anchor %q not found or out of range (page %d)", anchor, pg)
 		}
-		if len(b.Pages[pg].Links) == 0 {
+		if len(b.Page(pg).Links) == 0 {
 			t.Fatalf("anchor %q on page %d has no links — heading and link are on different pages", anchor, pg)
 		}
 	}
@@ -228,7 +228,7 @@ func TestAdversarial_GCapKeyLastPage(t *testing.T) {
 
 	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("G")})
 	m = updated.(Model)
-	lastPage := len(m.BookRef().Pages) - 1
+	lastPage := m.BookRef().PageCount() - 1
 	if m.CurrentPage() != lastPage {
 		t.Errorf("'G' should go to page %d, got %d", lastPage, m.CurrentPage())
 	}

@@ -20,8 +20,8 @@ func TestIssue106_TabSelectsSoftWrappedSpanningLink(t *testing.T) {
 	}
 	m = applyWindowSize(m, 80, 24)
 
-	if len(m.BookRef().Pages[0].Links) != 1 {
-		t.Fatalf("page 0 links = %d, want 1: %+v", len(m.BookRef().Pages[0].Links), m.BookRef().Pages[0].Links)
+	if len(m.BookRef().Page(0).Links) != 1 {
+		t.Fatalf("page 0 links = %d, want 1: %+v", len(m.BookRef().Page(0).Links), m.BookRef().Page(0).Links)
 	}
 
 	m = pressKey(m, "tab")

@@ -36,7 +36,8 @@ func bookFromContent(t *testing.T, content string, width, height int) *book.Book
 // findLink returns the first link with the given target across all pages, plus
 // the index of the page it sits on.
 func findLink(b *book.Book, target string) (book.Link, int, bool) {
-	for pi, p := range b.Pages {
+	for pi := range b.PageCount() {
+		p := b.Page(pi)
 		for _, l := range p.Links {
 			if l.Target == target {
 				return l, pi, true
@@ -66,7 +67,7 @@ func TestNav_LinkLineIndexPointsAtItsDisplayText(t *testing.T) {
 	if !ok {
 		t.Fatal("link with target chapter-1 not found on any page")
 	}
-	page := b.Pages[pi]
+	page := b.Page(pi)
 	if link.LineOnPage < 0 || link.LineOnPage >= len(page.Lines) {
 		t.Fatalf("LineOnPage = %d, out of range for page of %d lines", link.LineOnPage, len(page.Lines))
 	}
@@ -79,25 +80,25 @@ func TestNav_OverwideLinkCrossingPageBoundaryStaysWithDisplayedLink(t *testing.T
 	content := "F0\n\nprefix [abcdefghijk](#target)\n"
 	b := bookFromContent(t, content, 10, 3)
 
-	if len(b.Pages) < 2 {
-		t.Fatalf("expected at least two pages, got %d", len(b.Pages))
+	if b.PageCount() < 2 {
+		t.Fatalf("expected at least two pages, got %d", b.PageCount())
 	}
-	if len(b.Pages[0].Links) != 0 {
-		t.Fatalf("page 0 has %d phantom links, want 0: %+v", len(b.Pages[0].Links), b.Pages[0].Links)
+	if len(b.Page(0).Links) != 0 {
+		t.Fatalf("page 0 has %d phantom links, want 0: %+v", len(b.Page(0).Links), b.Page(0).Links)
 	}
-	if len(b.Pages[1].Links) != 1 {
-		t.Fatalf("page 1 has %d links, want 1: %+v", len(b.Pages[1].Links), b.Pages[1].Links)
+	if len(b.Page(1).Links) != 1 {
+		t.Fatalf("page 1 has %d links, want 1: %+v", len(b.Page(1).Links), b.Page(1).Links)
 	}
 
-	link := b.Pages[1].Links[0]
+	link := b.Page(1).Links[0]
 	if link.Target != "target" {
 		t.Fatalf("page 1 link target = %q, want %q", link.Target, "target")
 	}
-	if link.LineOnPage < 0 || link.LineOnPage >= len(b.Pages[1].Lines) {
-		t.Fatalf("page 1 link line = %d, out of range for %d lines", link.LineOnPage, len(b.Pages[1].Lines))
+	if link.LineOnPage < 0 || link.LineOnPage >= len(b.Page(1).Lines) {
+		t.Fatalf("page 1 link line = %d, out of range for %d lines", link.LineOnPage, len(b.Page(1).Lines))
 	}
-	if !strings.Contains(b.Pages[1].Lines[link.LineOnPage], "abc") {
-		t.Errorf("page 1 link line %d = %q, want the displayed link text", link.LineOnPage, b.Pages[1].Lines[link.LineOnPage])
+	if !strings.Contains(b.Page(1).Lines[link.LineOnPage], "abc") {
+		t.Errorf("page 1 link line %d = %q, want the displayed link text", link.LineOnPage, b.Page(1).Lines[link.LineOnPage])
 	}
 }
 
@@ -125,11 +126,11 @@ func TestNav_FollowingLinkLandsOnHeadingPage(t *testing.T) {
 	if page < 0 {
 		t.Fatalf("PageForAnchor(%q) = -1, anchor not resolved", link.Target)
 	}
-	if page >= len(b.Pages) {
-		t.Fatalf("PageForAnchor(%q) = %d, out of range for %d pages", link.Target, page, len(b.Pages))
+	if page >= b.PageCount() {
+		t.Fatalf("PageForAnchor(%q) = %d, out of range for %d pages", link.Target, page, b.PageCount())
 	}
-	if !pageContains(b.Pages[page], "Chapter One") {
-		t.Errorf("page %d does not contain target heading %q; lines=%v", page, "Chapter One", b.Pages[page].Lines)
+	if !pageContains(b.Page(page), "Chapter One") {
+		t.Errorf("page %d does not contain target heading %q; lines=%v", page, "Chapter One", b.Page(page).Lines)
 	}
 }
 
@@ -155,16 +156,16 @@ func TestNav_ReflowUpdatesAnchorPages(t *testing.T) {
 	if after <= before {
 		t.Fatalf("PageForAnchor(target) after reflow = %d, want greater than before %d", after, before)
 	}
-	if !pageContains(b.Pages[after], "Target") {
-		t.Errorf("page %d after reflow does not contain target heading; lines=%v", after, b.Pages[after].Lines)
+	if !pageContains(b.Page(after), "Target") {
+		t.Errorf("page %d after reflow does not contain target heading; lines=%v", after, b.Page(after).Lines)
 	}
 }
 
 // countLinks returns the total number of links attached across all pages.
 func countLinks(b *book.Book) int {
 	n := 0
-	for _, p := range b.Pages {
-		n += len(p.Links)
+	for i := range b.PageCount() {
+		n += len(b.Page(i).Links)
 	}
 	return n
 }
@@ -199,7 +200,7 @@ func linkLineHasLabel(b *book.Book, target, label string) bool {
 	if !ok {
 		return false
 	}
-	p := b.Pages[pi]
+	p := b.Page(pi)
 	if l.LineOnPage < 0 || l.LineOnPage >= len(p.Lines) {
 		return false
 	}
@@ -210,10 +211,10 @@ func linkLineHasLabel(b *book.Book, target, label string) bool {
 // lines contain headingText.
 func followLandsOnHeading(b *book.Book, target, headingText string) bool {
 	page := b.PageForAnchor(target)
-	if page < 0 || page >= len(b.Pages) {
+	if page < 0 || page >= b.PageCount() {
 		return false
 	}
-	return pageContains(b.Pages[page], headingText)
+	return pageContains(b.Page(page), headingText)
 }
 
 // Resizing the terminal (Reflow) must not change navigation outcomes: a link
@@ -263,10 +264,11 @@ func TestNav_DegenerateInputsAreWellFormed(t *testing.T) {
 	for name, content := range cases {
 		t.Run(name, func(t *testing.T) {
 			b := bookFromContent(t, content, 60, 10)
-			if len(b.Pages) < 1 {
-				t.Fatalf("expected >=1 page, got %d", len(b.Pages))
+			if b.PageCount() < 1 {
+				t.Fatalf("expected >=1 page, got %d", b.PageCount())
 			}
-			for i, p := range b.Pages {
+			for i := range b.PageCount() {
+				p := b.Page(i)
 				if p.Lines == nil {
 					t.Errorf("page %d has nil Lines", i)
 				}
@@ -307,7 +309,8 @@ Table of contents.
 
 	const markup = "[Back to Contents](#contents)"
 	displayed := 0
-	for pi, p := range b.Pages {
+	for pi := range b.PageCount() {
+		p := b.Page(pi)
 		shows := 0
 		showLine := -1
 		for li, line := range p.Lines {

@@ -16,7 +16,7 @@ func loadFixture(t *testing.T, name string) []string {
 }
 
 func pageLines(b *Book, page int) string {
-	return strings.Join(b.Pages[page].Lines, " ")
+	return strings.Join(b.pages[page].Lines, " ")
 }
 
 // TestReflow_PositionRoundTripThroughRawAnchors covers the acceptance
@@ -25,9 +25,9 @@ func pageLines(b *Book, page int) string {
 // the same paragraph (issue #61).
 func TestReflow_PositionRoundTripThroughRawAnchors(t *testing.T) {
 	lines := loadFixture(t, "reading-journey.md")
-	b := &Book{RawLines: lines}
+	b := &Book{rawLines: lines}
 	b.Reflow(72, 17)
-	lastPage := len(b.Pages) - 1
+	lastPage := len(b.pages) - 1
 
 	anchor := b.RawLineForPage(lastPage)
 	b.Reflow(36, 5)
@@ -51,8 +51,8 @@ func TestReflow_EmptyDocument(t *testing.T) {
 			t.Fatal(err)
 		}
 		b.Reflow(36, 5)
-		if len(b.Pages) != 1 {
-			t.Fatalf("expected a single empty page, got %d", len(b.Pages))
+		if len(b.pages) != 1 {
+			t.Fatalf("expected a single empty page, got %d", len(b.pages))
 		}
 		if got := b.RawLineForPage(0); got != 0 {
 			t.Errorf("expected anchor 0 for empty content, got %d", got)
@@ -69,7 +69,7 @@ func TestReflow_EmptyDocument(t *testing.T) {
 // preceding page (issue #61).
 func TestRawLineForPage_HeadingAnchors(t *testing.T) {
 	lines := loadFixture(t, "link-history-journey.md")
-	b := &Book{RawLines: lines}
+	b := &Book{rawLines: lines}
 	b.Reflow(72, 17)
 
 	// RETURN MARKER is the last heading on the wide page the reader leaves,
@@ -84,7 +84,7 @@ func TestRawLineForPage_HeadingAnchors(t *testing.T) {
 
 	// A raw line past the last displayed content line falls back to the
 	// nearest preceding page.
-	if got := b.PageForRawLine(60); got < 0 || got >= len(b.Pages) {
+	if got := b.PageForRawLine(60); got < 0 || got >= len(b.pages) {
 		t.Errorf("expected a clamped page for raw 60, got %d", got)
 	}
 }
@@ -107,7 +107,7 @@ func TestRawLineForPage_MultipleHeadingsAnchorsFirstHeading(t *testing.T) {
 		"",
 		"Content of chapter 2.",
 	}
-	b := &Book{RawLines: lines}
+	b := &Book{rawLines: lines}
 	b.Reflow(60, 20)
 
 	// Page 0 has Title (0), TOC (2), Chapter 1 (4), Chapter 2 (8).
@@ -132,7 +132,7 @@ func TestRawLineForPage_MultipleHeadingsAnchorsFirstHeading(t *testing.T) {
 		"",
 		"# P1 Section B",
 	}
-	b2 := &Book{RawLines: subsequentDoc}
+	b2 := &Book{rawLines: subsequentDoc}
 	b2.Reflow(60, 4)
 	// Page 0 has raw 0 (P0) and raw 2 (Content P0) (4 formatted lines).
 	// Page 1 has both raw 4 (Section A) and raw 6 (Section B).

@@ -10,7 +10,7 @@ func TestIssue78_InlineCodeLinkIsNotSelectable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for pi, p := range b.Pages {
+	for pi, p := range b.pages {
 		if len(p.Links) > 0 {
 			t.Errorf("page %d links = %+v, want none: the only link is inside inline code", pi+1, p.Links)
 		}

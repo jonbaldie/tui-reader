@@ -34,7 +34,7 @@ Target 2 body content.
 	m = applyWindowSize(m, 30, 20)
 
 	// Verify page 0 has 2 links
-	page0 := m.book.Pages[0]
+	page0 := m.book.Page(0)
 	if len(page0.Links) != 2 {
 		t.Fatalf("expected 2 links on page 0, got %d", len(page0.Links))
 	}

@@ -22,10 +22,10 @@ func loadFixture(t *testing.T, name string) string {
 // pageText returns the display text of the model's current page.
 func pageText(m Model) string {
 	b := m.BookRef()
-	if b == nil || m.CurrentPage() >= len(b.Pages) {
+	if b == nil || m.CurrentPage() >= b.PageCount() {
 		return ""
 	}
-	return strings.Join(b.Pages[m.CurrentPage()].Lines, " ")
+	return strings.Join(b.Page(m.CurrentPage()).Lines, " ")
 }
 
 // TestResize_KeepsReadingPosition reproduces issue #61: resize must preserve
@@ -115,7 +115,7 @@ func TestResize_HistoryRemappedNotClamped(t *testing.T) {
 
 	// Snapshot the heading each history entry's wide page ends with.
 	heading := func(page int) string {
-		for _, line := range m.BookRef().Pages[page].Lines {
+		for _, line := range m.BookRef().Page(page).Lines {
 			if strings.HasPrefix(line, "# ") {
 				return line
 			}
@@ -131,17 +131,17 @@ func TestResize_HistoryRemappedNotClamped(t *testing.T) {
 	}
 
 	// Resize to a narrow terminal: the page count grows.
-	widePages := len(m.BookRef().Pages)
+	widePages := m.BookRef().PageCount()
 	m = applyWindowSize(m, 40, 12)
-	if len(m.BookRef().Pages) <= widePages {
-		t.Fatalf("setup: expected page count to grow, %d -> %d", widePages, len(m.BookRef().Pages))
+	if m.BookRef().PageCount() <= widePages {
+		t.Fatalf("setup: expected page count to grow, %d -> %d", widePages, m.BookRef().PageCount())
 	}
 
 	for i, page := range m.History() {
-		if page < 0 || page >= len(m.BookRef().Pages) {
+		if page < 0 || page >= m.BookRef().PageCount() {
 			t.Fatalf("history entry %d (%d) outside the new page range", i, page)
 		}
-		if got := strings.Join(m.BookRef().Pages[page].Lines, " "); !strings.Contains(got, want[i]) {
+		if got := strings.Join(m.BookRef().Page(page).Lines, " "); !strings.Contains(got, want[i]) {
 			t.Errorf("history entry %d was clamped, not remapped: expected page %d to contain %q, got %q",
 				i, page, want[i], firstNonEmpty(got))
 		}

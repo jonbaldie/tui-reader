@@ -38,7 +38,7 @@ func TestIssue129_IndentedFenceDelimiterKeepsAnchorsAndLinksInSync(t *testing.T)
 	}
 
 	var links []Link
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links = append(links, page.Links...)
 	}
 	if len(links) != 1 {

@@ -113,19 +113,20 @@ func parseArgs(args []string) (parsedArgs, error) {
 func renderDump(b *book.Book, maxPages int) string {
 	var sb strings.Builder
 
-	total := len(b.Pages)
+	total := b.PageCount()
 	if maxPages > 0 && maxPages < total {
 		total = maxPages
 	}
 
 	for i := 0; i < total; i++ {
-		fmt.Fprintf(&sb, "┌─── %s ── Page %d of %d ───┐\n", b.Title, i+1, len(b.Pages))
+		fmt.Fprintf(&sb, "┌─── %s ── Page %d of %d ───┐\n", b.Title, i+1, b.PageCount())
 		fmt.Fprintln(&sb, "│")
-		for _, line := range b.Pages[i].Lines {
+		page := b.Page(i)
+		for _, line := range page.Lines {
 			fmt.Fprintf(&sb, "│  %s\n", line)
 		}
 		// Pad to page height
-		for j := len(b.Pages[i].Lines); j < b.PageHeight; j++ {
+		for j := len(page.Lines); j < b.PageHeight(); j++ {
 			fmt.Fprintln(&sb, "│")
 		}
 		fmt.Fprintln(&sb, "│")

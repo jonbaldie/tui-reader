@@ -35,7 +35,7 @@ func TestMutation_NextPageNeverExceedsMax(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		m = pressKey(m, "right")
 	}
-	max := len(m.BookRef().Pages) - 1
+	max := m.BookRef().PageCount() - 1
 	if m.CurrentPage() > max {
 		t.Errorf("page exceeded max: %d > %d", m.CurrentPage(), max)
 	}

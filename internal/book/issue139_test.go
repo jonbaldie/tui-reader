@@ -33,7 +33,7 @@ func assertPlainTextLinksInert(t *testing.T, b *Book) {
 	t.Helper()
 	var links int
 	var joined strings.Builder
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links += len(page.Links)
 		joined.WriteString(strings.Join(page.Lines, "\n"))
 		joined.WriteByte('\n')
@@ -49,7 +49,7 @@ func assertPlainTextLinksInert(t *testing.T, b *Book) {
 func assertMarkdownLinkResolves(t *testing.T, b *Book) {
 	t.Helper()
 	var links []Link
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links = append(links, page.Links...)
 	}
 	if len(links) == 0 {

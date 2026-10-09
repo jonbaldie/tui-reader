@@ -17,7 +17,7 @@ func issue168Chapter(sentences int) string {
 func TestIssue168_ResizeKeepsPositionInsideMultiPageParagraph(t *testing.T) {
 	m := newTestModel(t, "chapter.md", issue168Chapter(5))
 	m = applyWindowSize(m, 48, 12)
-	if n := len(m.BookRef().Pages); n != 2 {
+	if n := m.BookRef().PageCount(); n != 2 {
 		t.Fatalf("setup: %d pages, want 2", n)
 	}
 	m = pressKey(m, "right")

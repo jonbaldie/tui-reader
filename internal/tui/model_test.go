@@ -113,7 +113,7 @@ func TestNavigation_LastPage(t *testing.T) {
 	m = applyWindowSize(m, 60, 15)
 
 	m = pressKey(m, "end") // jump to last
-	lastPage := len(m.BookRef().Pages) - 1
+	lastPage := m.BookRef().PageCount() - 1
 	if m.CurrentPage() != lastPage {
 		t.Errorf("expected page %d, got %d", lastPage, m.CurrentPage())
 	}
@@ -152,7 +152,7 @@ func TestLink_ShiftTabReverse(t *testing.T) {
 	m = applyWindowSize(m, 60, 40)
 
 	m = pressKey(m, "shift+tab") // should wrap to last link
-	page := m.BookRef().Pages[m.CurrentPage()]
+	page := m.BookRef().Page(m.CurrentPage())
 	if len(page.Links) > 0 {
 		expected := len(page.Links) - 1
 		if m.SelectedLink() != expected {
@@ -226,10 +226,10 @@ func TestLink_EnterWithNoSelection(t *testing.T) {
 func TestResize_PagesReflowed(t *testing.T) {
 	m := newTestModel(t, "resize.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
-	pagesAt80 := len(m.BookRef().Pages)
+	pagesAt80 := m.BookRef().PageCount()
 
 	m = applyWindowSize(m, 40, 10) // smaller
-	pagesAt40 := len(m.BookRef().Pages)
+	pagesAt40 := m.BookRef().PageCount()
 
 	if pagesAt40 <= pagesAt80 {
 		t.Errorf("expected more pages at smaller size: %d vs %d", pagesAt40, pagesAt80)
@@ -246,7 +246,7 @@ func TestResize_CurrentPageClamped(t *testing.T) {
 
 	// Now resize bigger — fewer pages, current should clamp
 	m = applyWindowSize(m, 80, 40)
-	if m.CurrentPage() >= highPage && highPage > len(m.BookRef().Pages)-1 {
+	if m.CurrentPage() >= highPage && highPage > m.BookRef().PageCount()-1 {
 		t.Error("expected page to be clamped after resize")
 	}
 }

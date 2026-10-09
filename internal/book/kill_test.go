@@ -226,19 +226,19 @@ func TestNewBook_PopulatesAllFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewBook: %v", err)
 	}
-	if b.PageWidth != 55 {
-		t.Errorf("PageWidth = %d, want 55", b.PageWidth)
+	if b.pageWidth != 55 {
+		t.Errorf("PageWidth = %d, want 55", b.pageWidth)
 	}
-	if b.PageHeight != 12 {
-		t.Errorf("PageHeight = %d, want 12", b.PageHeight)
+	if b.pageHeight != 12 {
+		t.Errorf("PageHeight = %d, want 12", b.pageHeight)
 	}
-	if b.Anchors == nil {
+	if b.anchors == nil {
 		t.Error("Anchors must be populated")
 	}
-	if len(b.RawLines) == 0 {
+	if len(b.rawLines) == 0 {
 		t.Error("RawLines must be populated")
 	}
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Error("Pages must be populated")
 	}
 	if b.Title != "My Doc" {
@@ -264,10 +264,10 @@ func TestPageForAnchor_HeightOneGivesNonZeroPage(t *testing.T) {
 
 func TestPageForAnchor_ZeroHeightReturnsZero(t *testing.T) {
 	b := &Book{
-		Anchors:    map[string]int{"intro": 0},
-		RawLines:   []string{"# Intro"},
-		PageWidth:  60,
-		PageHeight: 0,
+		anchors:    map[string]int{"intro": 0},
+		rawLines:   []string{"# Intro"},
+		pageWidth:  60,
+		pageHeight: 0,
 	}
 	if got := b.PageForAnchor("intro"); got != 0 {
 		t.Errorf("PageForAnchor with height 0 = %d, want 0", got)
@@ -278,10 +278,10 @@ func TestPageForAnchor_AnchorLineMissingFromMapReturnsNeg1(t *testing.T) {
 	// Anchor exists in the map but points at a raw line that never appears in
 	// the formatted output: the loop falls through to the final return -1.
 	b := &Book{
-		Anchors:    map[string]int{"ghost": 999},
-		RawLines:   []string{"# Real Heading"},
-		PageWidth:  60,
-		PageHeight: 20,
+		anchors:    map[string]int{"ghost": 999},
+		rawLines:   []string{"# Real Heading"},
+		pageWidth:  60,
+		pageHeight: 20,
 	}
 	if got := b.PageForAnchor("ghost"); got != -1 {
 		t.Errorf("PageForAnchor for unreachable anchor line = %d, want -1", got)
@@ -309,9 +309,9 @@ func TestPageForAnchor_HeightZeroMatchesDefaultHeight(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewBook zero: %v", err)
 	}
-	if len(zeroBook.Pages) != len(defaultBook.Pages) {
+	if len(zeroBook.pages) != len(defaultBook.pages) {
 		t.Fatalf("height 0 paginated into %d pages, height 20 into %d; 0 must mean default 20",
-			len(zeroBook.Pages), len(defaultBook.Pages))
+			len(zeroBook.pages), len(defaultBook.pages))
 	}
 
 	want := defaultBook.PageForAnchor("target-heading")

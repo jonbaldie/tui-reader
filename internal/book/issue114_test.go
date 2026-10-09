@@ -26,11 +26,11 @@ func TestIssue114_PlainTextLogLinesStaySeparate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Fatal("expected at least 1 page")
 	}
 
-	joined := pageText(b.Pages[0])
+	joined := pageText(b.pages[0])
 	want := []string{
 		"2026-09-19 10:00:01 INFO server started",
 		"2026-09-19 10:00:02 WARN disk 91%",
@@ -54,7 +54,7 @@ func TestIssue114_PlainTextTabsFileNotCollapsed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	joined := pageText(b.Pages[0])
+	joined := pageText(b.pages[0])
 	if strings.Contains(joined, "col3 indented") || strings.Contains(joined, "tab normal") {
 		t.Errorf("tabs.txt lines were collapsed:\n%s", joined)
 	}
@@ -71,7 +71,7 @@ func TestIssue114_PlainTextLongLineStillWraps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	lines := b.Pages[0].Lines
+	lines := b.pages[0].Lines
 	if len(lines) < 3 {
 		t.Fatalf("expected wrapped long line plus short line, got %q", lines)
 	}
@@ -100,7 +100,7 @@ func TestIssue114_MarkdownStillSoftWraps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	joined := pageText(b.Pages[0])
+	joined := pageText(b.pages[0])
 	want := "This is one Markdown paragraph deliberately split across physical source lines without a blank line."
 	if !strings.Contains(joined, want) {
 		t.Errorf("markdown page =\n%s\nwant soft-wrapped paragraph %q", joined, want)
@@ -134,7 +134,7 @@ func TestIssue114_PlainTextReflowKeepsLinesSeparate(t *testing.T) {
 		t.Fatal(err)
 	}
 	b.Reflow(40, 8)
-	joined := pageText(b.Pages[0])
+	joined := pageText(b.pages[0])
 	if strings.Contains(joined, "started 2026-09-19") {
 		t.Errorf("reflow merged log lines:\n%s", joined)
 	}

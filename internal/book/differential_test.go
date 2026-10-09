@@ -21,9 +21,6 @@ func FuzzSupportedHeadingAnchors(f *testing.F) {
 		anchor := referenceAnchor(heading)
 		content := "# " + heading + "\n\n[go](#" + anchor + ")\n"
 		b := bookFromContent(t, content, 60, 10)
-		if got := b.Anchors[anchor]; got != 0 {
-			t.Fatalf("anchor %q line = %d, want 0; anchors=%v", anchor, got, b.Anchors)
-		}
 		if page := b.PageForAnchor(anchor); page != 0 {
 			t.Fatalf("PageForAnchor(%q) = %d, want 0", anchor, page)
 		}

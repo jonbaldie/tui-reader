@@ -185,11 +185,11 @@ func TestMutation_PageForAnchor_Precision(t *testing.T) {
 		t.Fatal("anchor not found")
 	}
 	// Verify the heading is actually on the reported page
-	if page >= len(b.Pages) {
-		t.Fatalf("page %d out of range (max %d)", page, len(b.Pages)-1)
+	if page >= len(b.pages) {
+		t.Fatalf("page %d out of range (max %d)", page, len(b.pages)-1)
 	}
 	foundHeading := false
-	for _, line := range b.Pages[page].Lines {
+	for _, line := range b.pages[page].Lines {
 		if strings.Contains(line, "Exact") {
 			foundHeading = true
 			break
@@ -223,9 +223,9 @@ func TestMutation_ReflowUpdatesPages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pagesBefore := len(b.Pages)
+	pagesBefore := len(b.pages)
 	b.Reflow(20, 5) // much smaller
-	pagesAfter := len(b.Pages)
+	pagesAfter := len(b.pages)
 	if pagesAfter <= pagesBefore {
 		t.Errorf("expected more pages after shrinking: before=%d, after=%d", pagesBefore, pagesAfter)
 	}
@@ -239,11 +239,11 @@ func TestMutation_ReflowUpdatesDimensions(t *testing.T) {
 		t.Fatal(err)
 	}
 	b.Reflow(40, 10)
-	if b.PageWidth != 40 {
-		t.Errorf("expected width 40 after reflow, got %d", b.PageWidth)
+	if b.pageWidth != 40 {
+		t.Errorf("expected width 40 after reflow, got %d", b.pageWidth)
 	}
-	if b.PageHeight != 10 {
-		t.Errorf("expected height 10 after reflow, got %d", b.PageHeight)
+	if b.pageHeight != 10 {
+		t.Errorf("expected height 10 after reflow, got %d", b.pageHeight)
 	}
 }
 

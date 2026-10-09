@@ -26,18 +26,18 @@ func TestIssue146_ReadLargeSingleParagraph(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(b.Pages) < 1500 {
-		t.Fatalf("expected 1500+ pages, got %d", len(b.Pages))
+	if len(b.pages) < 1500 {
+		t.Fatalf("expected 1500+ pages, got %d", len(b.pages))
 	}
 
 	var links []Link
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links = append(links, page.Links...)
 	}
 	if len(links) != n/10 {
 		t.Fatalf("expected %d links, got %d", n/10, len(links))
 	}
-	last := b.Pages[len(b.Pages)-1].Links
+	last := b.pages[len(b.pages)-1].Links
 	if len(last) == 0 || last[len(last)-1].Target != fmt.Sprintf("target-%d", n-10) {
 		t.Fatalf("expected the final link on the last page, got %+v", last)
 	}
@@ -90,7 +90,7 @@ func TestIssue146_ReflowedLinksLandWhereRendered(t *testing.T) {
 func assertLinksLandWhereRendered(t *testing.T, b *Book, total int) {
 	t.Helper()
 	got := 0
-	for pi, page := range b.Pages {
+	for pi, page := range b.pages {
 		want := map[string]int{}
 		for li, line := range page.Lines {
 			for _, link := range ExtractLinks(line) {
@@ -102,11 +102,11 @@ func assertLinksLandWhereRendered(t *testing.T, b *Book, total int) {
 			have[fmt.Sprintf("%d:%s", link.LineOnPage, link.Label)]++
 		}
 		if fmt.Sprint(have) != fmt.Sprint(want) {
-			t.Errorf("width %d page %d: links %v, rendered %v\n%s", b.PageWidth, pi, have, want, strings.Join(page.Lines, "\n"))
+			t.Errorf("width %d page %d: links %v, rendered %v\n%s", b.pageWidth, pi, have, want, strings.Join(page.Lines, "\n"))
 		}
 		got += len(page.Links)
 	}
 	if got != total {
-		t.Errorf("width %d: expected %d links, got %d", b.PageWidth, total, got)
+		t.Errorf("width %d: expected %d links, got %d", b.pageWidth, total, got)
 	}
 }

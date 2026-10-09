@@ -20,8 +20,8 @@ func TestIssue100_TabHighlightsLinkAtSourceLineBoundary(t *testing.T) {
 	}
 	m = applyWindowSize(m, 14, 12) // content width 10, height 5
 
-	if len(m.BookRef().Pages[0].Links) != 1 {
-		t.Fatalf("page 0 links = %+v, want one link", m.BookRef().Pages[0].Links)
+	if len(m.BookRef().Page(0).Links) != 1 {
+		t.Fatalf("page 0 links = %+v, want one link", m.BookRef().Page(0).Links)
 	}
 
 	m = pressKey(m, "tab")
@@ -51,8 +51,8 @@ func TestIssue100_TabHighlightsUnwrappedLinkAtSourceLineBoundary(t *testing.T) {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
 
-	if len(m.BookRef().Pages[0].Links) != 1 {
-		t.Fatalf("page 0 links = %+v, want one link", m.BookRef().Pages[0].Links)
+	if len(m.BookRef().Page(0).Links) != 1 {
+		t.Fatalf("page 0 links = %+v, want one link", m.BookRef().Page(0).Links)
 	}
 	m = pressKey(m, "tab")
 	selectedMarkup := "[" + selectedLinkStyle.Render("0") + "](#00)"

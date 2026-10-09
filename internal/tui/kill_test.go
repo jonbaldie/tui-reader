@@ -64,8 +64,8 @@ func TestRecalcLayout_ContentHeightFloorIsFive(t *testing.T) {
 func TestRecalcLayout_KeepsCurrentPageOnResize(t *testing.T) {
 	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
-	if len(m.BookRef().Pages) < 3 {
-		t.Fatalf("need >=3 pages, got %d", len(m.BookRef().Pages))
+	if m.BookRef().PageCount() < 3 {
+		t.Fatalf("need >=3 pages, got %d", m.BookRef().PageCount())
 	}
 	m = pressKey(m, "right")
 	m = pressKey(m, "right")
@@ -83,7 +83,7 @@ func TestRecalcLayout_KeepsCurrentPageOnResize(t *testing.T) {
 func TestRecalcLayout_ResetsSelectedLinkOnResize(t *testing.T) {
 	m := newTestModel(t, "nav.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
-	if len(m.BookRef().Pages[0].Links) == 0 {
+	if len(m.BookRef().Page(0).Links) == 0 {
 		t.Skip("page 0 has no links in this layout")
 	}
 	m = pressKey(m, "tab") // selects link 0
@@ -107,8 +107,8 @@ func TestRecalcLayout_ClampsPageWhenShrinking(t *testing.T) {
 	}
 	// Shrink height a lot: more pages now, but the clamp must keep us in range.
 	m = applyWindowSize(m, 80, 12)
-	if m.CurrentPage() < 0 || m.CurrentPage() >= len(m.BookRef().Pages) {
-		t.Errorf("currentPage %d out of range after shrink (pages=%d)", m.CurrentPage(), len(m.BookRef().Pages))
+	if m.CurrentPage() < 0 || m.CurrentPage() >= m.BookRef().PageCount() {
+		t.Errorf("currentPage %d out of range after shrink (pages=%d)", m.CurrentPage(), m.BookRef().PageCount())
 	}
 }
 
@@ -132,8 +132,8 @@ func TestHandleKey_NilBookNeverPanics(t *testing.T) {
 func TestPrevLink_StopsAtZeroWithoutWrapping(t *testing.T) {
 	m := newTestModel(t, "links.md", simpleDoc())
 	m = applyWindowSize(m, 80, 20)
-	if len(m.BookRef().Pages[0].Links) < 2 {
-		t.Skipf("need >=2 links on page 0, got %d", len(m.BookRef().Pages[0].Links))
+	if len(m.BookRef().Page(0).Links) < 2 {
+		t.Skipf("need >=2 links on page 0, got %d", len(m.BookRef().Page(0).Links))
 	}
 	m = pressKey(m, "tab") // -> 0
 	m = pressKey(m, "tab") // -> 1
@@ -165,7 +165,7 @@ func TestFollowLink_TargetOnFirstPageFollowsAndResets(t *testing.T) {
 	if dest := m.BookRef().PageForAnchor("top-section"); dest != 0 {
 		t.Fatalf("setup: anchor resolves to page %d, want 0", dest)
 	}
-	if len(m.BookRef().Pages[0].Links) == 0 {
+	if len(m.BookRef().Page(0).Links) == 0 {
 		t.Fatalf("setup: no links on page 0")
 	}
 

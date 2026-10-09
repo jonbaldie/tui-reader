@@ -19,26 +19,26 @@ func TestRead_BuildsBookFromReader(t *testing.T) {
 	if b.Title != "Stream Title" {
 		t.Errorf("Title = %q, want %q", b.Title, "Stream Title")
 	}
-	if b.RawLines[0] != "# Chapter One" {
-		t.Errorf("first raw line = %q, want BOM-free heading", b.RawLines[0])
+	if b.rawLines[0] != "# Chapter One" {
+		t.Errorf("first raw line = %q, want BOM-free heading", b.rawLines[0])
 	}
-	if got, want := b.RawLines[1], ""; got != want {
+	if got, want := b.rawLines[1], ""; got != want {
 		t.Errorf("second raw line = %q, want %q", got, want)
 	}
-	if got, want := b.RawLines[2], "See [the index](#index)."; got != want {
+	if got, want := b.rawLines[2], "See [the index](#index)."; got != want {
 		t.Errorf("third raw line = %q, want %q", got, want)
 	}
-	if _, ok := b.Anchors["chapter-one"]; !ok {
+	if _, ok := b.anchors["chapter-one"]; !ok {
 		t.Error("expected chapter-one anchor")
 	}
 	if b.PageForAnchor("index") < 0 {
 		t.Error("expected index anchor to have a page")
 	}
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Fatal("expected a laid out page")
 	}
 	var foundIndexLink bool
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		for _, link := range page.Links {
 			if link.Target == "index" {
 				foundIndexLink = true
