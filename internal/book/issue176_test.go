@@ -76,4 +76,3 @@ func TestIssue176_PageHeightReportsLaidOutHeight(t *testing.T) {
 		t.Errorf("PageHeight() after Reflow(80, 0) = %d, want %d", got, book.DefaultPageHeight)
 	}
 }
-
