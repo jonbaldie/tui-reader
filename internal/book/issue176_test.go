@@ -2,6 +2,7 @@ package book_test
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestIssue176_ReflowKeepsRenderedLinksAndPageLinksConsistent(t *testing.T) {
 				for _, m := range renderedLink.FindAllStringSubmatch(line, -1) {
 					rendered++
 					want := book.Link{Label: m[1], Target: m[2], LineOnPage: i}
-					if !containsLink(page.Links, want) {
+					if !slices.Contains(page.Links, want) {
 						t.Errorf("width %d page %d: rendered link %+v missing from Links %+v", width, p, want, page.Links)
 					}
 				}
@@ -76,11 +77,3 @@ func TestIssue176_PageHeightReportsLaidOutHeight(t *testing.T) {
 	}
 }
 
-func containsLink(links []book.Link, want book.Link) bool {
-	for _, l := range links {
-		if l == want {
-			return true
-		}
-	}
-	return false
-}
