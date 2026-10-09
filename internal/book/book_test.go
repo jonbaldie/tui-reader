@@ -128,7 +128,6 @@ func TestLoad_LineEndingEquivalence(t *testing.T) {
 	}
 }
 
-
 // Unhappy paths
 
 func TestLoad_MissingFile(t *testing.T) {
@@ -306,10 +305,10 @@ func TestNewBook_ValidFile(t *testing.T) {
 	if b.Title != "Book" {
 		t.Errorf("expected title 'Book', got %q", b.Title)
 	}
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Error("expected at least 1 page")
 	}
-	if len(b.Anchors) == 0 {
+	if len(b.anchors) == 0 {
 		t.Error("expected at least 1 anchor from heading")
 	}
 }
@@ -330,10 +329,10 @@ func TestReflow_ChangeDimensions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	origPages := len(b.Pages)
+	origPages := len(b.pages)
 
 	b.Reflow(40, 10) // smaller view
-	if len(b.Pages) <= origPages {
+	if len(b.pages) <= origPages {
 		t.Error("expected more pages after reducing dimensions")
 	}
 }
@@ -400,11 +399,11 @@ func TestPageForAnchor_CachedAndFallbackParity(t *testing.T) {
 	anchors := ExtractAnchors(rawLines)
 	layout := buildBookLayout(rawLines, 40, 4)
 	b := &Book{
-		RawLines:     rawLines,
-		Pages:        layout.pages,
-		Anchors:      anchors,
-		PageWidth:    40,
-		PageHeight:   4,
+		rawLines:     rawLines,
+		pages:        layout.pages,
+		anchors:      anchors,
+		pageWidth:    40,
+		pageHeight:   4,
 		rawLinePages: layout.rawLinePages,
 	}
 
@@ -432,4 +431,3 @@ func TestPageForAnchor_CachedAndFallbackParity(t *testing.T) {
 		t.Fatalf("expected -1 for non-existent anchor in fallback")
 	}
 }
-

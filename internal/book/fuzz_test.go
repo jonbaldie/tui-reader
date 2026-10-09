@@ -40,10 +40,10 @@ func FuzzBookLayout(f *testing.F) {
 		secondWidth, secondHeight := fuzzDimensions(append(seed, 97))
 		b.Reflow(secondWidth, secondHeight)
 		checkFuzzBook(t, b, headings)
-		first := snapshotPages(b.Pages)
+		first := snapshotPages(b.pages)
 		b.Reflow(secondWidth, secondHeight)
-		if !reflect.DeepEqual(first, b.Pages) {
-			t.Fatalf("same reflow changed pages\nbefore: %#v\nafter:  %#v", first, b.Pages)
+		if !reflect.DeepEqual(first, b.pages) {
+			t.Fatalf("same reflow changed pages\nbefore: %#v\nafter:  %#v", first, b.pages)
 		}
 
 		// The loader normalizes all supported line endings before formatting.
@@ -52,8 +52,8 @@ func FuzzBookLayout(f *testing.F) {
 		if err != nil {
 			t.Fatalf("NewBook with CRLF: %v", err)
 		}
-		if !reflect.DeepEqual(b.RawLines, crlfBook.RawLines) {
-			t.Fatalf("line-ending normalization changed raw lines\nLF:   %q\nCRLF: %q", b.RawLines, crlfBook.RawLines)
+		if !reflect.DeepEqual(b.rawLines, crlfBook.rawLines) {
+			t.Fatalf("line-ending normalization changed raw lines\nLF:   %q\nCRLF: %q", b.rawLines, crlfBook.rawLines)
 		}
 	})
 }
@@ -108,27 +108,27 @@ func writeFuzzDocument(t *testing.T, name, content string) string {
 
 func checkFuzzBook(t *testing.T, b *Book, headings map[string]string) {
 	t.Helper()
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Fatal("book has no pages")
 	}
 
-	formatted := formatParagraphsWithProvenance(b.RawLines, b.PageWidth)
+	formatted := formatParagraphsWithProvenance(b.rawLines, b.pageWidth)
 	previousRaw := -1
 	for index, line := range formatted {
 		if line.raw < 0 {
 			continue
 		}
-		if line.raw < previousRaw || line.raw >= len(b.RawLines) {
+		if line.raw < previousRaw || line.raw >= len(b.rawLines) {
 			t.Fatalf("formatted line %d has invalid provenance %d", index, line.raw)
 		}
-		if line.text != "" && strings.TrimSpace(b.RawLines[line.raw]) == "" {
+		if line.text != "" && strings.TrimSpace(b.rawLines[line.raw]) == "" {
 			t.Fatalf("non-blank formatted line %d maps to blank source line %d", index, line.raw)
 		}
 		previousRaw = line.raw
 	}
 
 	seenTargets := make(map[string]int, len(headings))
-	for pageIndex, page := range b.Pages {
+	for pageIndex, page := range b.pages {
 		if page.Lines == nil {
 			t.Fatalf("page %d has nil lines", pageIndex)
 		}
@@ -145,10 +145,10 @@ func checkFuzzBook(t *testing.T, b *Book, headings map[string]string) {
 				t.Fatalf("generated link target %q has no heading", link.Target)
 			}
 			destination := b.PageForAnchor(link.Target)
-			if destination < 0 || destination >= len(b.Pages) {
-				t.Fatalf("PageForAnchor(%q) = %d for %d pages", link.Target, destination, len(b.Pages))
+			if destination < 0 || destination >= len(b.pages) {
+				t.Fatalf("PageForAnchor(%q) = %d for %d pages", link.Target, destination, len(b.pages))
 			}
-			if !pageHasText(b.Pages[destination], heading) {
+			if !pageHasText(b.pages[destination], heading) {
 				t.Fatalf("link target %q resolves to page %d without heading %q", link.Target, destination, heading)
 			}
 		}

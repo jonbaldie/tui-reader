@@ -106,7 +106,7 @@ func TestAdversarial_LinkToNonexistentAnchor(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The link should be detected
-	if len(b.Pages[0].Links) == 0 {
+	if len(b.pages[0].Links) == 0 {
 		t.Fatal("expected link to be detected even if target doesn't exist")
 	}
 	// PageForAnchor should return -1
@@ -124,7 +124,7 @@ func TestAdversarial_WhitespaceOnlyFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Error("expected at least 1 page")
 	}
 }
@@ -137,7 +137,7 @@ func TestAdversarial_SingleNewline(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Error("expected at least 1 page")
 	}
 }
@@ -278,7 +278,7 @@ func TestAdversarial_PageForAnchorZeroHeight(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Manually set PageHeight to 0 (shouldn't happen normally but let's be safe)
-	b.PageHeight = 0
+	b.pageHeight = 0
 	// This should not panic (division by zero)
 	page := b.PageForAnchor("heading")
 	_ = page // just checking it doesn't panic
@@ -295,7 +295,7 @@ func TestAdversarial_ReflowTiny(t *testing.T) {
 	}
 	// Should not panic
 	b.Reflow(1, 1)
-	if len(b.Pages) == 0 {
+	if len(b.pages) == 0 {
 		t.Error("expected at least 1 page after tiny reflow")
 	}
 }

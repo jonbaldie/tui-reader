@@ -28,18 +28,18 @@ func TestIssue165_InfoStringLineDoesNotCloseFence(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, ok := b.Anchors["usage"]; !ok {
-		t.Errorf("anchors missing usage: %#v", b.Anchors)
+	if _, ok := b.anchors["usage"]; !ok {
+		t.Errorf("anchors missing usage: %#v", b.anchors)
 	}
-	if _, ok := b.Anchors["fake-heading"]; ok {
-		t.Errorf("anchors contain fake-heading, want it inside the fence: %#v", b.Anchors)
+	if _, ok := b.anchors["fake-heading"]; ok {
+		t.Errorf("anchors contain fake-heading, want it inside the fence: %#v", b.anchors)
 	}
 	if page := b.PageForAnchor("usage"); page < 0 {
 		t.Errorf("PageForAnchor(usage) = %d, want a displayed heading page", page)
 	}
 
 	var links []Link
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links = append(links, page.Links...)
 	}
 	if len(links) != 1 || links[0].Label != "usage" || links[0].Target != "usage" {

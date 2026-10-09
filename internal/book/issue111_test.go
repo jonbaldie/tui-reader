@@ -62,13 +62,13 @@ func TestIssue111_FencedCodeDoesNotCreateAnchorsOrLinks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := b.Anchors, map[string]int{"intro": 0}; !reflect.DeepEqual(got, want) {
+	if got, want := b.anchors, map[string]int{"intro": 0}; !reflect.DeepEqual(got, want) {
 		t.Errorf("anchors = %#v, want %#v", got, want)
 	}
 
 	var links int
 	var found Link
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links += len(page.Links)
 		if len(page.Links) == 1 {
 			found = page.Links[0]
@@ -93,7 +93,7 @@ func TestIssue111_UsageLinkNavigatesToRealHeading(t *testing.T) {
 	if got != want {
 		t.Fatalf("PageForAnchor(usage) = %d, want page %d of ## Usage", got, want)
 	}
-	page := b.Pages[got]
+	page := b.pages[got]
 	if !pageContains(page, "## Usage") {
 		t.Fatalf("usage page %d missing ## Usage: %q", got, page.Lines)
 	}

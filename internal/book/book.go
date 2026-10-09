@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -41,15 +42,17 @@ type Page struct {
 	Links []Link   // clickable links on this page
 }
 
-// Book is a loaded and paginated document.
+// Book is a loaded and paginated document. Its source and layout are
+// private so that only Reflow can change them, keeping the derived caches
+// consistent (#176).
 type Book struct {
-	Title      string
-	RawLines   []string
-	Pages      []Page
-	Anchors    map[string]int // anchor name -> line index in RawLines
-	PageWidth  int
-	PageHeight int
+	Title string
 
+	rawLines      []string
+	pages         []Page
+	anchors       map[string]int // anchor name -> line index in rawLines
+	pageWidth     int
+	pageHeight    int
 	sourceLinks   sourceLinkSet
 	rawLinePages  map[int]int
 	pagePositions []Position
@@ -1010,7 +1013,7 @@ func Read(r io.Reader, title string, width, height int, plainText bool) (*Book, 
 	}
 	b := &Book{
 		Title:     title,
-		RawLines:  lines,
+		rawLines:  lines,
 		plainText: plainText,
 	}
 	b.layout(width, height)
@@ -1022,28 +1025,48 @@ func (b *Book) Reflow(width, height int) {
 	b.layout(width, height)
 }
 
-// layout paginates RawLines at the given geometry and sets every laid-out
+// layout paginates rawLines at the given geometry and sets every laid-out
 // field. Source links are computed once and cached across reflows.
 func (b *Book) layout(width, height int) {
 	if b.sourceLinks.links == nil {
-		b.sourceLinks = sourceLinksFor(b.RawLines, b.plainText)
+		b.sourceLinks = sourceLinksFor(b.rawLines, b.plainText)
 	}
 	width = normalizePageWidth(width)
-	layout := layoutFromDocument(formatDocument(b.RawLines, width, b.plainText), height)
-	b.PageWidth = width
-	b.PageHeight = layout.height
-	b.Pages = attachLinks(layout.pages, b.RawLines, layout.formatted, layout.height, b.sourceLinks)
-	b.Anchors = layout.anchors
+	layout := layoutFromDocument(formatDocument(b.rawLines, width, b.plainText), height)
+	b.pageWidth = width
+	b.pageHeight = layout.height
+	b.pages = attachLinks(layout.pages, b.rawLines, layout.formatted, layout.height, b.sourceLinks)
+	b.anchors = layout.anchors
 	b.rawLinePages = layout.rawLinePages
 	b.pagePositions = layout.pagePositions
 	b.lineSources = layout.lineSources
+}
+
+// PageCount returns the number of laid-out pages.
+func (b *Book) PageCount() int {
+	return len(b.pages)
+}
+
+// Page returns a copy of the page at index i, so callers cannot change the
+// book's own page data.
+func (b *Book) Page(i int) Page {
+	p := b.pages[i]
+	return Page{
+		Lines: slices.Clone(p.Lines),
+		Links: slices.Clone(p.Links),
+	}
+}
+
+// PageHeight returns the number of lines per laid-out page.
+func (b *Book) PageHeight() int {
+	return b.pageHeight
 }
 
 // PageForAnchor returns the page index containing the given anchor.
 // The anchor is normalized like heading text, so "#Usage" finds "## Usage".
 // Returns -1 if the anchor is not found.
 func (b *Book) PageForAnchor(anchor string) int {
-	lineIdx, ok := b.Anchors[NormalizeAnchor(anchor)]
+	lineIdx, ok := b.anchors[NormalizeAnchor(anchor)]
 	if !ok {
 		return -1
 	}
@@ -1051,9 +1074,9 @@ func (b *Book) PageForAnchor(anchor string) int {
 	if b.rawLinePages == nil {
 		// formatParagraphsWithProvenance normalizes width, and normalizePageHeight
 		// normalizes a non-positive height to DefaultPageHeight, so a Book built
-		// (or mutated) with PageHeight <= 0 is still mapped to its true pages.
-		height := normalizePageHeight(b.PageHeight)
-		document := formatDocument(b.RawLines, b.PageWidth, b.plainText)
+		// (or mutated) with pageHeight <= 0 is still mapped to its true pages.
+		height := normalizePageHeight(b.pageHeight)
+		document := formatDocument(b.rawLines, b.pageWidth, b.plainText)
 		b.rawLinePages = rawLinePages(document.lines, height)
 	}
 
@@ -1099,7 +1122,7 @@ func (b *Book) PageForPosition(pos Position) int {
 	}
 	// lineSources is empty when rawLinePages was built lazily by
 	// PageForAnchor on a Book that was never laid out.
-	start := min(first*b.PageHeight, len(b.lineSources))
+	start := min(first*b.pageHeight, len(b.lineSources))
 	best := -1
 	for i, src := range b.lineSources[start:] {
 		if src.Raw > pos.Raw {
@@ -1112,7 +1135,7 @@ func (b *Book) PageForPosition(pos Position) int {
 	if best < 0 {
 		return b.PageForRawLine(pos.Raw)
 	}
-	return b.clampPage(best / b.PageHeight)
+	return b.clampPage(best / b.pageHeight)
 }
 
 // PageForRawLine returns the page on which the given raw source line is
@@ -1143,7 +1166,7 @@ func (b *Book) PageForRawLine(raw int) int {
 // clampPage pins a page index into the valid page range, treating an empty
 // book as a single page 0.
 func (b *Book) clampPage(page int) int {
-	last := len(b.Pages) - 1
+	last := len(b.pages) - 1
 	if last < 0 {
 		return 0
 	}

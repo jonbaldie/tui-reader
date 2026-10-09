@@ -30,14 +30,14 @@ Target content.
 	// A 29x20 terminal gives the reported content dimensions: 25x13.
 	m = applyWindowSize(m, 29, 20)
 	m = pressKey(m, "home")
-	if len(m.book.Pages) < 2 {
-		t.Fatalf("expected at least two pages, got %d", len(m.book.Pages))
+	if m.book.PageCount() < 2 {
+		t.Fatalf("expected at least two pages, got %d", m.book.PageCount())
 	}
-	if len(m.book.Pages[0].Links) != 0 {
-		t.Fatalf("page 0 has %d phantom links, want 0: %+v", len(m.book.Pages[0].Links), m.book.Pages[0].Links)
+	if len(m.book.Page(0).Links) != 0 {
+		t.Fatalf("page 0 has %d phantom links, want 0: %+v", len(m.book.Page(0).Links), m.book.Page(0).Links)
 	}
-	if len(m.book.Pages[1].Links) != 1 {
-		t.Fatalf("page 1 has %d links, want 1: %+v", len(m.book.Pages[1].Links), m.book.Pages[1].Links)
+	if len(m.book.Page(1).Links) != 1 {
+		t.Fatalf("page 1 has %d links, want 1: %+v", len(m.book.Page(1).Links), m.book.Page(1).Links)
 	}
 
 	m = pressKey(m, "tab")
@@ -59,7 +59,7 @@ Target content.
 	if m.CurrentPage() != targetPage {
 		t.Fatalf("Enter landed on page %d, want target page %d", m.CurrentPage(), targetPage)
 	}
-	if !strings.Contains(strings.Join(m.book.Pages[m.CurrentPage()].Lines, "\n"), "# Target") {
-		t.Fatalf("target page does not contain heading: %v", m.book.Pages[m.CurrentPage()].Lines)
+	if !strings.Contains(strings.Join(m.book.Page(m.CurrentPage()).Lines, "\n"), "# Target") {
+		t.Fatalf("target page does not contain heading: %v", m.book.Page(m.CurrentPage()).Lines)
 	}
 }

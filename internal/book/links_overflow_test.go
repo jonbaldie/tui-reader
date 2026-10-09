@@ -32,7 +32,7 @@ func TestLinkOverflow_WideMarkupWrapsToWidth(t *testing.T) {
 		t.Fatalf("NewBook: %v", err)
 	}
 	var found bool
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		for _, lnk := range page.Links {
 			if lnk.Target == "target" {
 				found = true

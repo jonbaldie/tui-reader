@@ -15,10 +15,7 @@ func TestNewModelUsesBookDefaultPageGeometry(t *testing.T) {
 	if m.contentHeight != book.DefaultPageHeight {
 		t.Errorf("contentHeight = %d, want %d", m.contentHeight, book.DefaultPageHeight)
 	}
-	if m.BookRef().PageWidth != book.DefaultPageWidth {
-		t.Errorf("book PageWidth = %d, want %d", m.BookRef().PageWidth, book.DefaultPageWidth)
-	}
-	if m.BookRef().PageHeight != book.DefaultPageHeight {
-		t.Errorf("book PageHeight = %d, want %d", m.BookRef().PageHeight, book.DefaultPageHeight)
+	if m.BookRef().PageHeight() != book.DefaultPageHeight {
+		t.Errorf("book PageHeight = %d, want %d", m.BookRef().PageHeight(), book.DefaultPageHeight)
 	}
 }

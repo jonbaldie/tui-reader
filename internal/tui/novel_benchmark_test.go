@@ -80,9 +80,9 @@ func TestNovelJourneyOutput(t *testing.T) {
 		updated, _ := model.Update(tea.WindowSizeMsg{Width: width, Height: 30})
 		model = updated.(Model)
 		digest := sha256.New()
-		for page := range model.book.Pages {
+		for page := range model.book.PageCount() {
 			model.currentPage = page
-			fmt.Fprintf(digest, "%v\n%d\n%s\n", model.book.Pages[page], model.book.RawLineForPage(page), model.View())
+			fmt.Fprintf(digest, "%v\n%d\n%s\n", model.book.Page(page), model.book.RawLineForPage(page), model.View())
 		}
 		if got := fmt.Sprintf("%x", digest.Sum(nil)); got != want[width] {
 			t.Fatalf("width=%d: output hash %s, want %s", width, got, want[width])

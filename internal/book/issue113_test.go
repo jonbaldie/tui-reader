@@ -21,11 +21,11 @@ func TestIssue113_BOMAtFileStartDoesNotHideFirstHeading(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := b.RawLines[0]; got != "# Start" {
+	if got := b.rawLines[0]; got != "# Start" {
 		t.Errorf("first raw line = %q, want %q (BOM stripped)", got, "# Start")
 	}
-	if _, ok := b.Anchors["start"]; !ok {
-		t.Errorf("anchors = %v, want an entry for %q", b.Anchors, "start")
+	if _, ok := b.anchors["start"]; !ok {
+		t.Errorf("anchors = %v, want an entry for %q", b.anchors, "start")
 	}
 	if page := b.PageForAnchor("start"); page != 0 {
 		t.Errorf("PageForAnchor(%q) = %d, want 0", "start", page)

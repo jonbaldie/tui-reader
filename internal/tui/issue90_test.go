@@ -19,8 +19,8 @@ func TestIssue90_InlineCodeMatchingLinkDoesNotStealSelection(t *testing.T) {
 		t.Fatalf("failed to open fixture: %v", m.Err())
 	}
 
-	if got := len(m.book.Pages[0].Links); got != 1 {
-		t.Fatalf("page 0 has %d links, want 1: %+v", got, m.book.Pages[0].Links)
+	if got := len(m.book.Page(0).Links); got != 1 {
+		t.Fatalf("page 0 has %d links, want 1: %+v", got, m.book.Page(0).Links)
 	}
 
 	m = pressKey(m, "tab")

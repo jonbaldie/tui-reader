@@ -138,15 +138,15 @@ func countPageBlocks(out string) int {
 func TestRenderDump_AllPages(t *testing.T) {
 	b := dumpBook(t)
 	out := renderDump(b, 0)
-	if got := countPageBlocks(out); got != len(b.Pages) {
-		t.Errorf("rendered %d page blocks, want %d", got, len(b.Pages))
+	if got := countPageBlocks(out); got != b.PageCount() {
+		t.Errorf("rendered %d page blocks, want %d", got, b.PageCount())
 	}
 }
 
 func TestRenderDump_MaxPagesTruncates(t *testing.T) {
 	b := dumpBook(t)
-	if len(b.Pages) < 3 {
-		t.Fatalf("need >=3 pages, got %d", len(b.Pages))
+	if b.PageCount() < 3 {
+		t.Fatalf("need >=3 pages, got %d", b.PageCount())
 	}
 	out := renderDump(b, 2)
 	if got := countPageBlocks(out); got != 2 {
@@ -157,16 +157,16 @@ func TestRenderDump_MaxPagesTruncates(t *testing.T) {
 func TestRenderDump_MaxPagesZeroMeansAll(t *testing.T) {
 	b := dumpBook(t)
 	out := renderDump(b, 0)
-	if got := countPageBlocks(out); got != len(b.Pages) {
-		t.Errorf("with 0 rendered %d blocks, want all %d", got, len(b.Pages))
+	if got := countPageBlocks(out); got != b.PageCount() {
+		t.Errorf("with 0 rendered %d blocks, want all %d", got, b.PageCount())
 	}
 }
 
 func TestRenderDump_MaxPagesLargerThanTotal(t *testing.T) {
 	b := dumpBook(t)
-	out := renderDump(b, len(b.Pages)+100)
-	if got := countPageBlocks(out); got != len(b.Pages) {
-		t.Errorf("rendered %d blocks, want %d", got, len(b.Pages))
+	out := renderDump(b, b.PageCount()+100)
+	if got := countPageBlocks(out); got != b.PageCount() {
+		t.Errorf("rendered %d blocks, want %d", got, b.PageCount())
 	}
 }
 
@@ -191,7 +191,7 @@ func TestRenderDump_TotalShowsFullCount(t *testing.T) {
 	b := dumpBook(t)
 	out := renderDump(b, 1)
 	// Even when truncated, "of N" must reflect the real total page count.
-	want := "of " + itoa(len(b.Pages))
+	want := "of " + itoa(b.PageCount())
 	if !strings.Contains(out, want) {
 		t.Errorf("expected %q in header, got:\n%s", want, firstLine(out))
 	}
@@ -212,7 +212,7 @@ func TestRenderDump_ContainsPageContent(t *testing.T) {
 	b := dumpBook(t)
 	out := renderDump(b, 1)
 	// First content line of page 0 should appear, prefixed by the gutter.
-	first := b.Pages[0].Lines[0]
+	first := b.Page(0).Lines[0]
 	if !strings.Contains(out, "│  "+first) {
 		t.Errorf("expected gutter-prefixed content line %q in output", first)
 	}
@@ -235,7 +235,7 @@ func TestRenderDump_PadsToTwentyLines(t *testing.T) {
 		}
 	}
 	// 1 leading "│" + (20 - contentLines) padding + 1 trailing "│".
-	contentLines := len(b.Pages[0].Lines)
+	contentLines := len(b.Page(0).Lines)
 	want := 1 + (20 - contentLines) + 1
 	if bareGutters != want {
 		t.Errorf("bare gutter lines = %d, want %d (pad to 20, content=%d)", bareGutters, want, contentLines)
@@ -258,10 +258,10 @@ func TestRenderDump_PadsToBookPageHeight(t *testing.T) {
 		}
 	}
 
-	contentLines := len(b.Pages[0].Lines)
-	want := 1 + (b.PageHeight - contentLines) + 1
+	contentLines := len(b.Page(0).Lines)
+	want := 1 + (b.PageHeight() - contentLines) + 1
 	if bareGutters != want {
-		t.Errorf("bare gutter lines = %d, want %d (pad to book height %d, content=%d)", bareGutters, want, b.PageHeight, contentLines)
+		t.Errorf("bare gutter lines = %d, want %d (pad to book height %d, content=%d)", bareGutters, want, b.PageHeight(), contentLines)
 	}
 }
 

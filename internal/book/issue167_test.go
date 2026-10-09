@@ -15,13 +15,13 @@ func TestIssue167_TabIndentedCodeDoesNotCreateAnchorsOrLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got, want := b.Anchors, map[string]int{"intro": 0}; !reflect.DeepEqual(got, want) {
+	if got, want := b.anchors, map[string]int{"intro": 0}; !reflect.DeepEqual(got, want) {
 		t.Errorf("anchors = %#v, want %#v", got, want)
 	}
 
 	var links []Link
 	var lines []string
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links = append(links, page.Links...)
 		lines = append(lines, page.Lines...)
 	}

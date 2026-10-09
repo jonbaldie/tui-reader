@@ -33,24 +33,24 @@ func TestIssue166_LongFencePreservesHeadingsAndLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	usageLine, ok := b.Anchors["usage"]
+	usageLine, ok := b.anchors["usage"]
 	if !ok {
-		t.Errorf("anchors missing usage: %#v", b.Anchors)
+		t.Errorf("anchors missing usage: %#v", b.anchors)
 	} else if usageLine != 10 {
-		t.Errorf("anchors[usage] = %d, want 10 (## Usage); anchors=%#v", usageLine, b.Anchors)
+		t.Errorf("anchors[usage] = %d, want 10 (## Usage); anchors=%#v", usageLine, b.anchors)
 	}
-	if _, ok := b.Anchors["not-a-heading"]; ok {
-		t.Errorf("anchors contain not-a-heading, want it inside the fence: %#v", b.Anchors)
+	if _, ok := b.anchors["not-a-heading"]; ok {
+		t.Errorf("anchors contain not-a-heading, want it inside the fence: %#v", b.anchors)
 	}
 	usagePage := b.PageForAnchor("usage")
 	if usagePage < 0 {
 		t.Errorf("PageForAnchor(usage) = %d, want a displayed heading page", usagePage)
-	} else if !pageContains(b.Pages[usagePage], "## Usage") {
-		t.Errorf("usage page %d does not contain ## Usage: %q", usagePage, b.Pages[usagePage].Lines)
+	} else if !pageContains(b.pages[usagePage], "## Usage") {
+		t.Errorf("usage page %d does not contain ## Usage: %q", usagePage, b.pages[usagePage].Lines)
 	}
 
 	var links []Link
-	for _, page := range b.Pages {
+	for _, page := range b.pages {
 		links = append(links, page.Links...)
 	}
 	if len(links) != 1 || links[0].Label != "usage" || links[0].Target != "usage" {

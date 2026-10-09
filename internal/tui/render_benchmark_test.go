@@ -17,7 +17,7 @@ func BenchmarkModelViewLinkDense(b *testing.B) {
 
 	for _, linkCount := range []int{16, 64, 256} {
 		b.Run(fmt.Sprintf("links=%d", linkCount), func(b *testing.B) {
-			model := linkDenseModel(linkCount)
+			model := linkDenseModel(b, linkCount)
 			b.ReportAllocs()
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
@@ -27,24 +27,26 @@ func BenchmarkModelViewLinkDense(b *testing.B) {
 	}
 }
 
-func linkDenseModel(linkCount int) Model {
+func linkDenseModel(b *testing.B, linkCount int) Model {
 	var line strings.Builder
-	links := make([]book.Link, 0, linkCount)
 	for i := 0; i < linkCount; i++ {
 		if i > 0 {
 			line.WriteByte(' ')
 		}
-		label := fmt.Sprintf("link-%03d", i)
-		target := fmt.Sprintf("target-%03d", i)
-		fmt.Fprintf(&line, "[%s](#%s)", label, target)
-		links = append(links, book.Link{Label: label, Target: target, LineOnPage: 0})
+		fmt.Fprintf(&line, "[link-%03d](#target-%03d)", i, i)
+	}
+
+	// A page as wide as the line keeps every link on one dense line.
+	reader, err := book.Read(strings.NewReader(line.String()), "Benchmark", line.Len(), 3, false)
+	if err != nil {
+		b.Fatal(err)
+	}
+	if got := len(reader.Page(0).Links); got != linkCount {
+		b.Fatalf("page 0 has %d links, want %d", got, linkCount)
 	}
 
 	return Model{
-		book: &book.Book{
-			Title: "Benchmark",
-			Pages: []book.Page{{Lines: []string{line.String()}, Links: links}},
-		},
+		book:          reader,
 		selectedLink:  linkCount / 2,
 		termWidth:     80,
 		termHeight:    10,

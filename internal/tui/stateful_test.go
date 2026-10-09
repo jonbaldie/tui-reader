@@ -55,7 +55,7 @@ func TestStateful_BackHistoryRemainsValidAfterReflow(t *testing.T) {
 }
 
 func chooseStatefulAction(model Model, rng *rand.Rand) statefulAction {
-	page := model.BookRef().Pages[model.CurrentPage()]
+	page := model.BookRef().Page(model.CurrentPage())
 	actions := []statefulAction{
 		actionResize,
 		actionNextPage,
@@ -110,20 +110,20 @@ func assertStatefulInvariants(t *testing.T, model Model, seed int64, step int, t
 	if book == nil {
 		t.Fatalf("seed %d step %d (%s): book is nil", seed, step, strings.Join(trace, ", "))
 	}
-	if len(book.Pages) == 0 {
+	if book.PageCount() == 0 {
 		t.Fatalf("seed %d step %d (%s): book has no pages", seed, step, strings.Join(trace, ", "))
 	}
-	if model.CurrentPage() < 0 || model.CurrentPage() >= len(book.Pages) {
-		t.Fatalf("seed %d step %d (%s): current page %d is outside [0, %d)", seed, step, strings.Join(trace, ", "), model.CurrentPage(), len(book.Pages))
+	if model.CurrentPage() < 0 || model.CurrentPage() >= book.PageCount() {
+		t.Fatalf("seed %d step %d (%s): current page %d is outside [0, %d)", seed, step, strings.Join(trace, ", "), model.CurrentPage(), book.PageCount())
 	}
 
-	page := book.Pages[model.CurrentPage()]
+	page := book.Page(model.CurrentPage())
 	if model.SelectedLink() < -1 || model.SelectedLink() >= len(page.Links) {
 		t.Fatalf("seed %d step %d (%s): selected link %d is invalid for page with %d links", seed, step, strings.Join(trace, ", "), model.SelectedLink(), len(page.Links))
 	}
 	for i, historyPage := range model.History() {
-		if historyPage < 0 || historyPage >= len(book.Pages) {
-			t.Fatalf("seed %d step %d (%s): history entry %d is invalid after reflow: %d outside [0, %d)", seed, step, strings.Join(trace, ", "), i, historyPage, len(book.Pages))
+		if historyPage < 0 || historyPage >= book.PageCount() {
+			t.Fatalf("seed %d step %d (%s): history entry %d is invalid after reflow: %d outside [0, %d)", seed, step, strings.Join(trace, ", "), i, historyPage, book.PageCount())
 		}
 	}
 }

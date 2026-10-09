@@ -11,16 +11,16 @@ func TestIssue161_InlineCodeMatchingLinkMarkupDoesNotStealAttachment(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(b.Pages) < 2 {
-		t.Fatalf("expected at least 2 pages, got %d", len(b.Pages))
+	if len(b.pages) < 2 {
+		t.Fatalf("expected at least 2 pages, got %d", len(b.pages))
 	}
-	if len(b.Pages[0].Links) != 0 {
-		t.Errorf("expected page 0 to have 0 links, got %d", len(b.Pages[0].Links))
+	if len(b.pages[0].Links) != 0 {
+		t.Errorf("expected page 0 to have 0 links, got %d", len(b.pages[0].Links))
 	}
-	if len(b.Pages[1].Links) != 1 {
-		t.Fatalf("expected page 1 to have 1 link, got %d", len(b.Pages[1].Links))
+	if len(b.pages[1].Links) != 1 {
+		t.Fatalf("expected page 1 to have 1 link, got %d", len(b.pages[1].Links))
 	}
-	if link := b.Pages[1].Links[0]; link.Label != "a" || link.Target != "t" || link.LineOnPage != 0 {
+	if link := b.pages[1].Links[0]; link.Label != "a" || link.Target != "t" || link.LineOnPage != 0 {
 		t.Errorf("unexpected link on page 1: %+v", link)
 	}
 	assertLinksLandWhereRendered(t, b, 1)

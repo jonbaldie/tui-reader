@@ -128,7 +128,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case key.Matches(msg, keys.LastPage):
 		if m.book != nil {
-			m.currentPage = len(m.book.Pages) - 1
+			m.currentPage = m.book.PageCount() - 1
 		}
 		m.selectedLink = -1
 		return m, nil
@@ -173,7 +173,7 @@ func (m Model) handleLinkKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // canNextPage reports whether there is a next page to advance to.
 func canNextPage(m Model) bool {
-	return m.book != nil && m.currentPage < len(m.book.Pages)-1
+	return m.book != nil && m.currentPage < m.book.PageCount()-1
 }
 
 // canPrevPage reports whether there is a previous page to go back to.
@@ -184,10 +184,10 @@ func canPrevPage(m Model) bool {
 // currentLinks returns the links on the current page, or nil if there is no
 // valid current page.
 func currentLinks(m Model) []book.Link {
-	if m.book == nil || m.currentPage >= len(m.book.Pages) {
+	if m.book == nil || m.currentPage >= m.book.PageCount() {
 		return nil
 	}
-	return m.book.Pages[m.currentPage].Links
+	return m.book.Page(m.currentPage).Links
 }
 
 // followLink navigates to the anchor target of the selected link, pushing the
@@ -286,11 +286,11 @@ func renderHeader(b *book.Book, contentWidth int) string {
 }
 
 func (m Model) renderContent() string {
-	if m.currentPage >= len(m.book.Pages) {
+	if m.currentPage >= m.book.PageCount() {
 		return ""
 	}
 
-	page := m.book.Pages[m.currentPage]
+	page := m.book.Page(m.currentPage)
 
 	// Build a set of link keys and recording starting link index per line for highlighting
 	var linksByLine map[int]map[linkKey]struct{}
@@ -442,7 +442,7 @@ func renderFooter(b *book.Book, currentPage, contentWidth int) string {
 
 	totalPages := 0
 	if b != nil {
-		totalPages = len(b.Pages)
+		totalPages = b.PageCount()
 	}
 	pageInfo := fmt.Sprintf("Page %d of %d", currentPage+1, totalPages)
 
