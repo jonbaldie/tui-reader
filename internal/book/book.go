@@ -292,6 +292,9 @@ func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) f
 		}
 
 		block := formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
+		if anchors != nil && block.setextTitle != "" {
+			anchors[NormalizeAnchor(block.setextTitle)] = ri
+		}
 		result = append(result, block.lines...)
 		firstParagraph = false
 		prevCode, prevList = block.isCode, block.isList
@@ -306,6 +309,8 @@ type formattedBlock struct {
 	isCode bool
 	isList bool
 	lastRi int
+	// setextTitle is the heading text of a setext heading block, else "".
+	setextTitle string
 }
 
 func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevList bool, width int, result []formattedLine) formattedBlock {
@@ -337,8 +342,52 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 	if needsBlockSeparator(firstParagraph, false, result) {
 		lines = append(lines, formattedLine{text: "", raw: -1})
 	}
+	if level := setextUnderlineAt(rawLines, end); level > 0 {
+		title := setextTitle(rawLines[ri:end])
+		heading := strings.Repeat("#", level) + " " + title
+		lines = append(lines, formatParagraph(heading, ri, true, width)...)
+		return formattedBlock{lines: lines, lastRi: end, setextTitle: title}
+	}
 	lines = append(lines, formatMultiLineParagraph(rawLines[ri:end], ri, firstParagraph, width)...)
 	return formattedBlock{lines: lines, lastRi: end - 1}
+}
+
+// setextLevel returns 1 for a "=" setext heading underline, 2 for a "-" one,
+// or 0 if raw is neither. An underline is one run of the character, indented
+// at most three spaces, with optional trailing spaces.
+func setextLevel(raw string) int {
+	if IsIndentedCodeLine(raw) {
+		return 0
+	}
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" || strings.Trim(trimmed, trimmed[:1]) != "" {
+		return 0
+	}
+	switch trimmed[0] {
+	case '=':
+		return 1
+	case '-':
+		return 2
+	}
+	return 0
+}
+
+// setextUnderlineAt returns the setext heading level of rawLines[i], which
+// must directly follow a prose block, or 0 if there is no underline there.
+func setextUnderlineAt(rawLines []string, i int) int {
+	if i >= len(rawLines) {
+		return 0
+	}
+	return setextLevel(rawLines[i])
+}
+
+// setextTitle joins a setext heading's paragraph lines into its title.
+func setextTitle(lines []string) string {
+	parts := make([]string, len(lines))
+	for i, line := range lines {
+		parts[i] = strings.TrimSpace(line)
+	}
+	return strings.Join(parts, " ")
 }
 
 func codeBlockEnd(rawLines []string, ri int) int {
@@ -369,7 +418,7 @@ func formatCodeRange(rawLines []string, start, end int, firstParagraph, prevCode
 func findProseBlockEnd(rawLines []string, start int) int {
 	n := len(rawLines)
 	end := start + 1
-	for end < n && isProseLine(rawLines[end]) {
+	for end < n && isProseLine(rawLines[end]) && setextLevel(rawLines[end]) == 0 {
 		end++
 	}
 	return end

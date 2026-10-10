@@ -197,10 +197,10 @@ func TestFormatter_IndentedCodeSpacingAndProvenance(t *testing.T) {
 			wantRaw:  []int{0, -1, 1},
 		},
 		{
-			name:     "paragraph before hr",
+			name:     "paragraph before setext underline",
 			raw:      []string{"paragraph", "---"},
-			wantText: []string{"paragraph", "", "---"},
-			wantRaw:  []int{0, -1, 1},
+			wantText: []string{"## paragraph"},
+			wantRaw:  []int{0},
 		},
 	}
 
