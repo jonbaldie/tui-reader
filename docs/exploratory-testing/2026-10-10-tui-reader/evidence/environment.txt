@@ -1,0 +1,6 @@
+commit: 7afda9dbf311c96a88141112fa443ae39ac7cc52
+go version go1.26.3 darwin/arm64
+binary sha256: 2130dceabeb6277ee11e5f95332c7491d90f5f98d48a47bf462ac859e941280c
+tmux 3.7b
+26.6.2
+TERM=screen-256color, NO_COLOR unset, isolated HOME

@@ -1,0 +1,125 @@
+$ tui-reader --dump fixtures/constructs.md
+┌─── Constructs ── Page 1 of 2 ───┐
+│
+│  # Contents
+│  
+│  - [Closed](#closed-heading)
+│  - [Indented](#indented-heading)
+│  - [Not heading](#nothing)
+│  - [Quote](#quoted)
+│  - [Titled](#closed-heading "with a title")
+│  
+│  ## Closed heading ##
+│  
+│  # Indented heading
+│  
+│  #nothing
+│  
+│    > # Quoted > A quoted paragraph that is long enough to
+│  wrap around the reading column so we can see how quote
+│  markers are handled on wrap.
+│  
+│  - A list item that is long enough to wrap around the reading
+│  column so we can see how continuation lines are indented
+│
+└────────────────────────────────┘
+
+┌─── Constructs ── Page 2 of 2 ───┐
+│
+│  here.
+│  - Nested item
+│  1. Ordered item
+│  
+│    | col a | col b | |-------|-------| | 1 | 2 |
+│  
+│    Text before rule.
+│  
+│  ---
+│  
+│    After rule.
+│  
+│
+│
+│
+│
+│
+│
+│
+│
+│
+└────────────────────────────────┘
+$ tui-reader --dump fixtures/crlf.md
+┌─── Crlf ── Page 1 of 1 ───┐
+│
+│  # Contents
+│  
+│  - [Intro](#intro)
+│  - [Usage](#usage)
+│  
+│  # Intro
+│  
+│    Hello from a Windows-edited file. Second line of the same
+│  paragraph.
+│  
+│  # Usage
+│  
+│    Run it.
+│  
+│
+│
+│
+│
+│
+│
+│
+└────────────────────────────────┘
+$ tui-reader --dump fixtures/anchors.md
+┌─── Anchors ── Page 1 of 2 ───┐
+│
+│  # Contents
+│  
+│  - [Snake case](#snake_case_names)
+│  - [Q and A](#q--a)
+│  - [Setext](#setext-title)
+│  - [Tilde](#after-tilde)
+│  - [Emphasis](#emphasis-heading)
+│  
+│  # snake_case_names
+│  
+│    Body.
+│  
+│  # Q & A
+│  
+│    Body.
+│  
+│    Setext Title ============
+│  
+│    Body.
+│  
+│
+└────────────────────────────────┘
+
+┌─── Anchors ── Page 2 of 2 ───┐
+│
+│    ~~~
+│  
+│  # not a heading in tilde fence
+│  
+│    ~~~
+│  
+│  # After Tilde
+│  
+│    Body.
+│  
+│  # *Emphasis* heading
+│  
+│    Body.
+│  
+│
+│
+│
+│
+│
+│
+│
+└────────────────────────────────┘

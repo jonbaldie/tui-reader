@@ -1,0 +1,151 @@
+$ tui-reader --dump fixtures/empty.md
+┌─── Empty ── Page 1 of 1 ───┐
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+└────────────────────────────────┘
+exit=0
+$ tui-reader --dump fixtures   # a directory
+Error: cannot read document: read fixtures: is a directory
+exit=1
+$ tui-reader fixtures   # interactive, 60x14, then q
+--- start (60x14)
+
+
+
+
+
+
+  Error: cannot read document: read fixtures: is a
+  directory
+
+
+
+
+
+
+--- after K:q
+EXIT=1
+
+
+
+
+
+
+
+
+
+
+
+
+
+$ tui-reader fixtures/empty.md   # interactive, 60x14: Right End Tab Enter q
+--- start (60x14)
+
+                           Empty
+  ────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+  ────────────────────────────────────────────────────────
+                        Page 1 of 1
+    ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Right
+
+                           Empty
+  ────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+  ────────────────────────────────────────────────────────
+                        Page 1 of 1
+    ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:End
+
+                           Empty
+  ────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+  ────────────────────────────────────────────────────────
+                        Page 1 of 1
+    ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Tab
+
+                           Empty
+  ────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+  ────────────────────────────────────────────────────────
+                        Page 1 of 1
+    ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Enter
+
+                           Empty
+  ────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+  ────────────────────────────────────────────────────────
+                        Page 1 of 1
+    ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:q
+EXIT=0
+
+
+
+
+
+
+
+
+
+
+
+
+

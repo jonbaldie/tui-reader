@@ -39,3 +39,7 @@ silently ignored when you press Enter.
 
 See the [2026-09-26 live exploratory-testing report](exploratory-testing/2026-09-26-tui-reader/REPORT.md)
 for recent reading, link-navigation, error-screen, and resize observations.
+
+See the [2026-10-10 exploratory-testing report](exploratory-testing/2026-10-10-tui-reader/REPORT.md)
+for Markdown-variant (tilde fences, setext headings, tables), large-book, and
+unusual-input observations.
