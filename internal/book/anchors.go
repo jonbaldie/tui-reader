@@ -209,6 +209,9 @@ func collectSourceLinks(rawLines []string) sourceLinkSet {
 		end := findProseBlockEnd(rawLines, ri)
 		lines := rawLines[ri:end]
 		collectProseBlockLinks(sourceLinks, &sourceOrder, lines, ri)
+		if setextUnderlineAt(rawLines, end) > 0 {
+			end++
+		}
 		ri = end - 1
 	}
 	return sourceLinkSet{links: sourceLinks, order: sourceOrder}
@@ -335,6 +338,9 @@ func proseBlockStarts(rawLines []string) []int {
 	for i, raw := range rawLines {
 		switch {
 		case !isProseLine(raw):
+			blockStart[i] = -1
+		case i > 0 && blockStart[i-1] >= 0 && setextLevel(raw) > 0:
+			// A setext underline closes its block and holds no links.
 			blockStart[i] = -1
 		case i > 0 && blockStart[i-1] >= 0:
 			blockStart[i] = blockStart[i-1]
