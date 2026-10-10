@@ -1,0 +1,200 @@
+--- start (80x24)
+
+                                Heading Variants
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Closed](#closed-heading)
+    - [Indented](#indented-heading)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Tab
+
+                                Heading Variants
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Closed](#closed-heading)
+    - [Indented](#indented-heading)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Enter
+
+                                Heading Variants
+    ────────────────────────────────────────────────────────────────────────
+      Filler paragraph 24.
+
+      Filler paragraph 25.
+
+      Filler paragraph 26.
+
+      Filler paragraph 27.
+
+      Filler paragraph 28.
+
+      Filler paragraph 29.
+
+      Filler paragraph 30.
+
+    ## Closed heading ##
+
+      Closed body.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 4 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:b
+
+                                Heading Variants
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Closed](#closed-heading)
+    - [Indented](#indented-heading)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Tab
+
+                                Heading Variants
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Closed](#closed-heading)
+    - [Indented](#indented-heading)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Tab
+
+                                Heading Variants
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Closed](#closed-heading)
+    - [Indented](#indented-heading)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Enter
+
+                                Heading Variants
+    ────────────────────────────────────────────────────────────────────────
+      Filler paragraph 56.
+
+      Filler paragraph 57.
+
+      Filler paragraph 58.
+
+      Filler paragraph 59.
+
+      Filler paragraph 60.
+
+    # Indented heading
+
+      Indented body.
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 8 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:q
+EXIT=0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

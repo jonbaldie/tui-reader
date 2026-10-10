@@ -1,0 +1,252 @@
+##### run 1
+--- start (80x24)
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Chapter Two](#chapter-two)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Tab
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Chapter Two](#chapter-two)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Enter
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Chapter Two](#chapter-two)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:End
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+      A Section
+
+    ---------
+
+      Section text.
+
+
+
+
+
+
+
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 5 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:q
+EXIT=0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##### run 2
+--- start (80x24)
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Chapter Two](#chapter-two)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Tab
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Chapter Two](#chapter-two)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:Enter
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+    - [Chapter Two](#chapter-two)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:End
+
+                                     Setext
+    ────────────────────────────────────────────────────────────────────────
+      A Section
+
+    ---------
+
+      Section text.
+
+
+
+
+
+
+
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 5 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+--- after K:q
+EXIT=0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
