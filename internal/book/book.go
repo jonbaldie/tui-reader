@@ -211,39 +211,42 @@ func codeIndentLength(raw string) int {
 	return 0
 }
 
-// fenceDelimiterLength returns the length of a Markdown fenced-code opener,
-// or 0 if raw is not an opener. An opener has at least three backticks and may
-// have an info string with no backticks.
-func fenceDelimiterLength(raw string) int {
+// fenceDelimiter returns the delimiter run of a Markdown fenced-code opener,
+// or "" if raw is not an opener. An opener has at least three backticks or
+// tildes; a backtick opener's info string may not contain backticks.
+func fenceDelimiter(raw string) string {
 	trimmed := strings.TrimSpace(raw)
-	runLength := len(trimmed) - len(strings.TrimLeft(trimmed, "`"))
-	if runLength < 3 || strings.Contains(trimmed[runLength:], "`") {
-		return 0
+	if trimmed == "" || (trimmed[0] != '`' && trimmed[0] != '~') {
+		return ""
 	}
-	return runLength
+	run := trimmed[:len(trimmed)-len(strings.TrimLeft(trimmed, trimmed[:1]))]
+	if len(run) < 3 || (run[0] == '`' && strings.Contains(trimmed[len(run):], "`")) {
+		return ""
+	}
+	return run
 }
 
 // isFenceDelimiter reports whether raw is a Markdown fenced-code opener.
 func isFenceDelimiter(raw string) bool {
-	return fenceDelimiterLength(raw) > 0
+	return fenceDelimiter(raw) != ""
 }
 
-// isClosingFence reports whether raw closes a fence opened with fenceLength
-// backticks. A closing fence contains only backticks and is at least as long
+// isClosingFence reports whether raw closes a fence opened with fence. A
+// closing fence contains only the opener's character and is at least as long
 // as its opener.
-func isClosingFence(raw string, fenceLength int) bool {
+func isClosingFence(raw string, fence string) bool {
 	trimmed := strings.TrimSpace(raw)
-	return len(trimmed) >= fenceLength && strings.Trim(trimmed, "`") == ""
+	return len(trimmed) >= len(fence) && strings.Trim(trimmed, fence[:1]) == ""
 }
 
 func findFenceBlockEnd(rawLines []string, start int) int {
 	n := len(rawLines)
-	fenceLength := fenceDelimiterLength(rawLines[start])
+	fence := fenceDelimiter(rawLines[start])
 	for end := start + 1; end < n; end++ {
 		if IsIndentedCodeLine(rawLines[end]) {
 			continue
 		}
-		if isClosingFence(rawLines[end], fenceLength) {
+		if isClosingFence(rawLines[end], fence) {
 			return end + 1
 		}
 	}
