@@ -49,3 +49,57 @@ func TestIssue179_LinkNavigatesToSetextHeading(t *testing.T) {
 		t.Fatalf("PageForAnchor(chapter-two) = %d, want page %d", got, want)
 	}
 }
+
+func TestIssue179_SetextHeadingsDisplayAsATX(t *testing.T) {
+	formatted := FormatParagraphs(setextLines(), 60)
+	for _, want := range []string{"# Chapter Two", "## A Section"} {
+		found := false
+		for _, line := range formatted {
+			found = found || line == want
+		}
+		if !found {
+			t.Fatalf("formatted output lacks %q: %q", want, formatted)
+		}
+	}
+}
+
+func TestIssue179_RuleWithoutPrecedingProseStaysRule(t *testing.T) {
+	for _, raw := range [][]string{
+		{"Para", "", "---"},
+		{"- item", "---"},
+		{"# Heading", "---"},
+		{"---"},
+	} {
+		formatted := FormatParagraphs(raw, 60)
+		if got := formatted[len(formatted)-1]; got != "---" {
+			t.Fatalf("FormatParagraphs(%q) = %q, want trailing rule", raw, formatted)
+		}
+	}
+}
+
+func TestIssue179_EqualsWithoutPrecedingProseStaysProse(t *testing.T) {
+	formatted := FormatParagraphs([]string{"# Heading", "==="}, 60)
+	if got := formatted[len(formatted)-1]; got != "  ===" {
+		t.Fatalf("formatted = %q, want === as a prose paragraph", formatted)
+	}
+}
+
+func TestIssue179_MultiLineSetextHeadingJoinsText(t *testing.T) {
+	anchors := ExtractAnchors([]string{"Part One", "The Beginning", "==="})
+	if got, ok := anchors["part-one-the-beginning"]; !ok || got != 0 {
+		t.Fatalf("anchors = %#v, want part-one-the-beginning at 0", anchors)
+	}
+}
+
+func TestIssue179_PlainTextUnaffected(t *testing.T) {
+	b, err := Read(strings.NewReader("Chapter Two\n===========\n"), "t", 60, 6, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := b.PageForAnchor("chapter-two"); got != -1 {
+		t.Fatalf("plain text PageForAnchor = %d, want -1", got)
+	}
+	if got := b.Page(0).Lines; len(got) < 2 || got[0] != "Chapter Two" || got[1] != "===========" {
+		t.Fatalf("plain text lines = %q, want unchanged", got)
+	}
+}
