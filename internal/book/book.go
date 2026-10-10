@@ -285,15 +285,9 @@ func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) f
 			continue
 		}
 
-		if anchors != nil && !IsIndentedCodeLine(raw) {
-			if m := headingRegex.FindStringSubmatch(strings.TrimSpace(raw)); m != nil {
-				anchors[NormalizeAnchor(m[2])] = ri
-			}
-		}
-
 		block := formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
-		if anchors != nil && block.setextTitle != "" {
-			anchors[NormalizeAnchor(block.setextTitle)] = ri
+		if anchors != nil {
+			recordHeadingAnchor(anchors, raw, ri, block)
 		}
 		result = append(result, block.lines...)
 		firstParagraph = false
@@ -302,6 +296,21 @@ func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) f
 	}
 
 	return formattedDocument{lines: result, anchors: anchors}
+}
+
+// recordHeadingAnchor records the anchor of the block starting at raw line ri
+// when that block is an ATX or setext heading.
+func recordHeadingAnchor(anchors map[string]int, raw string, ri int, block formattedBlock) {
+	if block.setextTitle != "" {
+		anchors[NormalizeAnchor(block.setextTitle)] = ri
+		return
+	}
+	if IsIndentedCodeLine(raw) {
+		return
+	}
+	if m := headingRegex.FindStringSubmatch(strings.TrimSpace(raw)); m != nil {
+		anchors[NormalizeAnchor(m[2])] = ri
+	}
 }
 
 type formattedBlock struct {
