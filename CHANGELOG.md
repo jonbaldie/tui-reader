@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.14 (2026-10-11)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.13...v0.1.14
+
+### Bug Fixes
+
+- **Recognise tilde fenced code blocks (#182, fixes #178).** Code blocks fenced with `~~~` are now treated as code, so lines like `# comment` inside them no longer become headings that hijack internal links.
+- **Recognise setext headings (#183, fixes #179).** Headings underlined with `===` or `---` are now headings, so links to them resolve and the underline is no longer merged into prose.
+
 ## v0.1.13 (2026-10-07)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.12...v0.1.13
