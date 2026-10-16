@@ -1,0 +1,78 @@
+===== Initial screen (no link selected) =====
+
+                                   [1m[38;5;229mLink Tour[0m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+    [1m[38;5;117m# Link Tour[0m
+
+    [1m[38;5;117m# Link Index[0m
+
+    [38;5;252m  The following links form a tour of navigation features:[39m
+
+    [38;5;252m- [[4m[38;5;75mChapter Alpha[0m](#chapter-alpha)
+    [38;5;252m- [[4m[38;5;75mChapter Beta[0m](#chapter-beta)
+    [38;5;252m- [[4m[38;5;75mMissing Chapter[0m](#chapter-missing)
+    [38;5;252m- [[[4m[38;5;75mBracketed Chapter[0m](#chapter-bracketed)]
+
+    [38;5;252m  Inline code links like `[Code Ignored](#chapter-alpha)` are literal[39m
+    [38;5;252mtext.[39m
+
+    [38;5;252m    [Indented Code Ignored](#chapter-alpha)[39m
+
+    [38;5;252m  Multiple links in one paragraph: see [[4m[38;5;75mAlpha Again[0m](#chapter-alpha)
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+                                  [38;5;245mPage 1 of 4[39m
+              [38;5;241m←/→ page • tab link • enter follow • b back • q quit[39m
+
+
+===== Tab 1: Chapter Alpha selected (inverted style) =====
+
+                                   [1m[38;5;229mLink Tour[0m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+    [1m[38;5;117m# Link Tour[0m
+
+    [1m[38;5;117m# Link Index[0m
+
+    [38;5;252m  The following links form a tour of navigation features:[39m
+
+    [38;5;252m- [[1;4m[30m[48;5;117mChapter[0;4m[30m[48;5;117m [1mAlpha[0m](#chapter-alpha)
+    [38;5;252m- [[4m[38;5;75mChapter Beta[0m](#chapter-beta)
+    [38;5;252m- [[4m[38;5;75mMissing Chapter[0m](#chapter-missing)
+    [38;5;252m- [[[4m[38;5;75mBracketed Chapter[0m](#chapter-bracketed)]
+
+    [38;5;252m  Inline code links like `[Code Ignored](#chapter-alpha)` are literal[39m
+    [38;5;252mtext.[39m
+
+    [38;5;252m    [Indented Code Ignored](#chapter-alpha)[39m
+
+    [38;5;252m  Multiple links in one paragraph: see [[4m[38;5;75mAlpha Again[0m](#chapter-alpha)
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+                                  [38;5;245mPage 1 of 4[39m
+              [38;5;241m←/→ page • tab link • enter follow • b back • q quit[39m
+
+
+===== Tab 2: Chapter Beta selected (inverted style) =====
+
+                                   [1m[38;5;229mLink Tour[0m
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+    [1m[38;5;117m# Link Tour[0m
+
+    [1m[38;5;117m# Link Index[0m
+
+    [38;5;252m  The following links form a tour of navigation features:[39m
+
+    [38;5;252m- [[4m[38;5;75mChapter Alpha[0m](#chapter-alpha)
+    [38;5;252m- [[1;4m[30m[48;5;117mChapter[0;4m[30m[48;5;117m [1mBeta[0m](#chapter-beta)
+    [38;5;252m- [[4m[38;5;75mMissing Chapter[0m](#chapter-missing)
+    [38;5;252m- [[[4m[38;5;75mBracketed Chapter[0m](#chapter-bracketed)]
+
+    [38;5;252m  Inline code links like `[Code Ignored](#chapter-alpha)` are literal[39m
+    [38;5;252mtext.[39m
+
+    [38;5;252m    [Indented Code Ignored](#chapter-alpha)[39m
+
+    [38;5;252m  Multiple links in one paragraph: see [[4m[38;5;75mAlpha Again[0m](#chapter-alpha)
+    [38;5;240m────────────────────────────────────────────────────────────────────────[39m
+                                  [38;5;245mPage 1 of 4[39m
+              [38;5;241m←/→ page • tab link • enter follow • b back • q quit[39m
+
+

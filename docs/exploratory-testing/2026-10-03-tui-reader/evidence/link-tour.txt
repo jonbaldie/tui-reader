@@ -1,0 +1,444 @@
+===== 80x24 initial screen (Page 1) =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Tab 1: select Chapter Alpha =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Tab 2: select Chapter Beta =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Tab 3: select Missing Chapter =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Tab 4: select Bracketed Chapter =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Tab 5: select Alpha Again (prose link) =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Tab 6: select Beta Again (prose link) =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Shift+Tab 1: reverse cycle back to Alpha Again =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Shift+Tab 2: reverse cycle back to Bracketed Chapter =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Shift+Tab 3: reverse cycle back to Missing Chapter =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Enter on Missing Chapter: silently ignored, stays on Page 1 =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Shift+Tab to Beta and Enter: opens Chapter Beta on Page 3 =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+        ```
+        alpha filler line 01
+        alpha filler line 02
+        alpha filler line 03
+        alpha filler line 04
+        alpha filler line 05
+        alpha filler line 06
+        alpha filler line 07
+        alpha filler line 08
+        ```
+
+    # Chapter Beta
+
+      Content for Beta. This section is on another page.
+
+        ```
+        beta filler line 01
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'b': pops history and returns to Page 1 =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Tab to Alpha and Enter: opens Chapter Alpha on Page 2 =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    alongside [Beta Again](#chapter-beta) in prose.
+
+        ```
+        filler block line 01
+        filler block line 02
+        filler block line 03
+        filler block line 04
+        filler block line 05
+        filler block line 06
+        filler block line 07
+        filler block line 08
+        ```
+
+    # Chapter Alpha
+
+      Content for Alpha. This section is reached via internal link.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Backspace: pops history and returns to Page 1 =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Select Bracketed Chapter and Enter: opens Chapter Bracketed =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+        beta filler line 02
+        beta filler line 03
+        beta filler line 04
+        beta filler line 05
+        beta filler line 06
+        beta filler line 07
+        beta filler line 08
+        ```
+
+    # Chapter Bracketed
+
+      Content for Bracketed Chapter. Reached via bracketed link syntax.
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 4 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'b': pops history and returns to Page 1 =====
+
+                                   Link Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Link Tour
+
+    # Link Index
+
+      The following links form a tour of navigation features:
+
+    - [Chapter Alpha](#chapter-alpha)
+    - [Chapter Beta](#chapter-beta)
+    - [Missing Chapter](#chapter-missing)
+    - [[Bracketed Chapter](#chapter-bracketed)]
+
+      Inline code links like `[Code Ignored](#chapter-alpha)` are literal
+    text.
+
+        [Indented Code Ignored](#chapter-alpha)
+
+      Multiple links in one paragraph: see [Alpha Again](#chapter-alpha)
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 4
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'q': exit cleanly =====
+Process exited cleanly with status 0

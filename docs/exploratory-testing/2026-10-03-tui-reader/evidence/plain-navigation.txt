@@ -1,0 +1,314 @@
+===== 80x24 initial screen (Page 1) =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 001: Plain text log/prose line without paragraph merging.
+    Marker 002: Plain text log/prose line without paragraph merging.
+    Marker 003: Plain text log/prose line without paragraph merging.
+    Marker 004: Plain text log/prose line without paragraph merging.
+    Marker 005: Plain text log/prose line without paragraph merging.
+    Marker 006: Plain text log/prose line without paragraph merging.
+    Marker 007: Plain text log/prose line without paragraph merging.
+    Marker 008: Plain text log/prose line without paragraph merging.
+    Marker 009: Plain text log/prose line without paragraph merging.
+    Marker 010: Plain text log/prose line without paragraph merging.
+    Marker 011: Plain text log/prose line without paragraph merging.
+    Marker 012: Plain text log/prose line without paragraph merging.
+    Marker 013: Plain text log/prose line without paragraph merging.
+    Marker 014: Plain text log/prose line without paragraph merging.
+    Marker 015: Plain text log/prose line without paragraph merging.
+    Marker 016: Plain text log/prose line without paragraph merging.
+    Marker 017: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Space: advance to Page 2 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 018: Plain text log/prose line without paragraph merging.
+    Marker 019: Plain text log/prose line without paragraph merging.
+    Marker 020: Plain text log/prose line without paragraph merging.
+    Marker 021: Plain text log/prose line without paragraph merging.
+    Marker 022: Plain text log/prose line without paragraph merging.
+    Marker 023: Plain text log/prose line without paragraph merging.
+    Marker 024: Plain text log/prose line without paragraph merging.
+    Marker 025: Plain text log/prose line without paragraph merging.
+    Marker 026: Plain text log/prose line without paragraph merging.
+    Marker 027: Plain text log/prose line without paragraph merging.
+    Marker 028: Plain text log/prose line without paragraph merging.
+    Marker 029: Plain text log/prose line without paragraph merging.
+    Marker 030: Plain text log/prose line without paragraph merging.
+    Marker 031: Plain text log/prose line without paragraph merging.
+    Marker 032: Plain text log/prose line without paragraph merging.
+    Marker 033: Plain text log/prose line without paragraph merging.
+    Marker 034: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Right arrow: advance to Page 3 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 035: Plain text log/prose line without paragraph merging.
+    Marker 036: Plain text log/prose line without paragraph merging.
+    Marker 037: Plain text log/prose line without paragraph merging.
+    Marker 038: Plain text log/prose line without paragraph merging.
+    Marker 039: Plain text log/prose line without paragraph merging.
+    Marker 040: Plain text log/prose line without paragraph merging.
+    Marker 041: Plain text log/prose line without paragraph merging.
+    Marker 042: Plain text log/prose line without paragraph merging.
+    Marker 043: Plain text log/prose line without paragraph merging.
+    Marker 044: Plain text log/prose line without paragraph merging.
+    Marker 045: Plain text log/prose line without paragraph merging.
+    Marker 046: Plain text log/prose line without paragraph merging.
+    Marker 047: Plain text log/prose line without paragraph merging.
+    Marker 048: Plain text log/prose line without paragraph merging.
+    Marker 049: Plain text log/prose line without paragraph merging.
+    Marker 050: Plain text log/prose line without paragraph merging.
+    Marker 051: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'l' key: advance to Page 4 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 052: Plain text log/prose line without paragraph merging.
+    Marker 053: Plain text log/prose line without paragraph merging.
+    Marker 054: Plain text log/prose line without paragraph merging.
+    Marker 055: Plain text log/prose line without paragraph merging.
+    Marker 056: Plain text log/prose line without paragraph merging.
+    Marker 057: Plain text log/prose line without paragraph merging.
+    Marker 058: Plain text log/prose line without paragraph merging.
+    Marker 059: Plain text log/prose line without paragraph merging.
+    Marker 060: Plain text log/prose line without paragraph merging.
+    Marker 061: Plain text log/prose line without paragraph merging.
+    Marker 062: Plain text log/prose line without paragraph merging.
+    Marker 063: Plain text log/prose line without paragraph merging.
+    Marker 064: Plain text log/prose line without paragraph merging.
+    Marker 065: Plain text log/prose line without paragraph merging.
+    Marker 066: Plain text log/prose line without paragraph merging.
+    Marker 067: Plain text log/prose line without paragraph merging.
+    Marker 068: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 4 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== PageDown: advance to Page 5 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 069: Plain text log/prose line without paragraph merging.
+    Marker 070: Plain text log/prose line without paragraph merging.
+    Marker 071: Plain text log/prose line without paragraph merging.
+    Marker 072: Plain text log/prose line without paragraph merging.
+    Marker 073: Plain text log/prose line without paragraph merging.
+    Marker 074: Plain text log/prose line without paragraph merging.
+    Marker 075: Plain text log/prose line without paragraph merging.
+    Marker 076: Plain text log/prose line without paragraph merging.
+    Marker 077: Plain text log/prose line without paragraph merging.
+    Marker 078: Plain text log/prose line without paragraph merging.
+    Marker 079: Plain text log/prose line without paragraph merging.
+    Marker 080: Plain text log/prose line without paragraph merging.
+    Marker 081: Plain text log/prose line without paragraph merging.
+    Marker 082: Plain text log/prose line without paragraph merging.
+    Marker 083: Plain text log/prose line without paragraph merging.
+    Marker 084: Plain text log/prose line without paragraph merging.
+    Marker 085: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 5 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Left arrow: back to Page 4 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 052: Plain text log/prose line without paragraph merging.
+    Marker 053: Plain text log/prose line without paragraph merging.
+    Marker 054: Plain text log/prose line without paragraph merging.
+    Marker 055: Plain text log/prose line without paragraph merging.
+    Marker 056: Plain text log/prose line without paragraph merging.
+    Marker 057: Plain text log/prose line without paragraph merging.
+    Marker 058: Plain text log/prose line without paragraph merging.
+    Marker 059: Plain text log/prose line without paragraph merging.
+    Marker 060: Plain text log/prose line without paragraph merging.
+    Marker 061: Plain text log/prose line without paragraph merging.
+    Marker 062: Plain text log/prose line without paragraph merging.
+    Marker 063: Plain text log/prose line without paragraph merging.
+    Marker 064: Plain text log/prose line without paragraph merging.
+    Marker 065: Plain text log/prose line without paragraph merging.
+    Marker 066: Plain text log/prose line without paragraph merging.
+    Marker 067: Plain text log/prose line without paragraph merging.
+    Marker 068: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 4 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'h' key: back to Page 3 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 035: Plain text log/prose line without paragraph merging.
+    Marker 036: Plain text log/prose line without paragraph merging.
+    Marker 037: Plain text log/prose line without paragraph merging.
+    Marker 038: Plain text log/prose line without paragraph merging.
+    Marker 039: Plain text log/prose line without paragraph merging.
+    Marker 040: Plain text log/prose line without paragraph merging.
+    Marker 041: Plain text log/prose line without paragraph merging.
+    Marker 042: Plain text log/prose line without paragraph merging.
+    Marker 043: Plain text log/prose line without paragraph merging.
+    Marker 044: Plain text log/prose line without paragraph merging.
+    Marker 045: Plain text log/prose line without paragraph merging.
+    Marker 046: Plain text log/prose line without paragraph merging.
+    Marker 047: Plain text log/prose line without paragraph merging.
+    Marker 048: Plain text log/prose line without paragraph merging.
+    Marker 049: Plain text log/prose line without paragraph merging.
+    Marker 050: Plain text log/prose line without paragraph merging.
+    Marker 051: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 3 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== PageUp: back to Page 2 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 018: Plain text log/prose line without paragraph merging.
+    Marker 019: Plain text log/prose line without paragraph merging.
+    Marker 020: Plain text log/prose line without paragraph merging.
+    Marker 021: Plain text log/prose line without paragraph merging.
+    Marker 022: Plain text log/prose line without paragraph merging.
+    Marker 023: Plain text log/prose line without paragraph merging.
+    Marker 024: Plain text log/prose line without paragraph merging.
+    Marker 025: Plain text log/prose line without paragraph merging.
+    Marker 026: Plain text log/prose line without paragraph merging.
+    Marker 027: Plain text log/prose line without paragraph merging.
+    Marker 028: Plain text log/prose line without paragraph merging.
+    Marker 029: Plain text log/prose line without paragraph merging.
+    Marker 030: Plain text log/prose line without paragraph merging.
+    Marker 031: Plain text log/prose line without paragraph merging.
+    Marker 032: Plain text log/prose line without paragraph merging.
+    Marker 033: Plain text log/prose line without paragraph merging.
+    Marker 034: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== Home: jump to Page 1 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 001: Plain text log/prose line without paragraph merging.
+    Marker 002: Plain text log/prose line without paragraph merging.
+    Marker 003: Plain text log/prose line without paragraph merging.
+    Marker 004: Plain text log/prose line without paragraph merging.
+    Marker 005: Plain text log/prose line without paragraph merging.
+    Marker 006: Plain text log/prose line without paragraph merging.
+    Marker 007: Plain text log/prose line without paragraph merging.
+    Marker 008: Plain text log/prose line without paragraph merging.
+    Marker 009: Plain text log/prose line without paragraph merging.
+    Marker 010: Plain text log/prose line without paragraph merging.
+    Marker 011: Plain text log/prose line without paragraph merging.
+    Marker 012: Plain text log/prose line without paragraph merging.
+    Marker 013: Plain text log/prose line without paragraph merging.
+    Marker 014: Plain text log/prose line without paragraph merging.
+    Marker 015: Plain text log/prose line without paragraph merging.
+    Marker 016: Plain text log/prose line without paragraph merging.
+    Marker 017: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== End: jump to Page 8 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 120: Plain text log/prose line without paragraph merging.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 8 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'g': jump to Page 1 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 001: Plain text log/prose line without paragraph merging.
+    Marker 002: Plain text log/prose line without paragraph merging.
+    Marker 003: Plain text log/prose line without paragraph merging.
+    Marker 004: Plain text log/prose line without paragraph merging.
+    Marker 005: Plain text log/prose line without paragraph merging.
+    Marker 006: Plain text log/prose line without paragraph merging.
+    Marker 007: Plain text log/prose line without paragraph merging.
+    Marker 008: Plain text log/prose line without paragraph merging.
+    Marker 009: Plain text log/prose line without paragraph merging.
+    Marker 010: Plain text log/prose line without paragraph merging.
+    Marker 011: Plain text log/prose line without paragraph merging.
+    Marker 012: Plain text log/prose line without paragraph merging.
+    Marker 013: Plain text log/prose line without paragraph merging.
+    Marker 014: Plain text log/prose line without paragraph merging.
+    Marker 015: Plain text log/prose line without paragraph merging.
+    Marker 016: Plain text log/prose line without paragraph merging.
+    Marker 017: Plain text log/prose line without paragraph merging.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'G': jump to Page 8 =====
+
+                                 Plain Reading
+    ────────────────────────────────────────────────────────────────────────
+    Marker 120: Plain text log/prose line without paragraph merging.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 8 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+===== 'q': quit cleanly =====
+Process exited cleanly with status 0

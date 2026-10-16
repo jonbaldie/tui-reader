@@ -1,0 +1,100 @@
+===== Missing file at 80x24 =====
+
+
+
+
+
+
+
+
+
+
+
+  Error: cannot open file: open nonexistent-book.md: no such file or directory
+
+
+
+
+
+
+
+
+
+
+
+
+
+Missing file test exited cleanly with q
+
+===== Missing file at 40x12 (word wrapped) =====
+
+
+
+
+  Error: cannot open file: open
+  nonexistent-book.md: no such file or
+  directory
+
+
+
+
+
+
+Compact error test exited cleanly with q
+
+===== Directory argument at 80x24 =====
+
+
+
+
+
+
+
+
+
+
+
+  Error: cannot read document: read internal: is a directory
+
+
+
+
+
+
+
+
+
+
+
+
+
+Directory argument test exited cleanly with q
+
+===== Invalid UTF-8 binary at 80x24 =====
+
+
+
+
+
+
+
+
+
+
+
+  Error: file is not valid UTF-8
+
+
+
+
+
+
+
+
+
+
+
+
+
+Invalid UTF-8 test exited cleanly with q
+
