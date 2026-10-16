@@ -18,7 +18,14 @@ func TestIssue111_FencedHashCommentIsNotStyledAsHeading(t *testing.T) {
 		"tool --help",
 		"```",
 	}
-	formatted := book.FormatParagraphs(raw, 60)
+	b, err := book.Read(strings.NewReader(strings.Join(raw, "\n")), "", 60, 20, false)
+	if err != nil {
+		t.Fatalf("Read: %v", err)
+	}
+	var formatted []string
+	for i := range b.PageCount() {
+		formatted = append(formatted, b.Page(i).Lines...)
+	}
 	var comment string
 	for _, line := range formatted {
 		if strings.Contains(line, "# usage") && !strings.Contains(line, "##") {

@@ -112,7 +112,7 @@ func checkFuzzBook(t *testing.T, b *Book, headings map[string]string) {
 		t.Fatal("book has no pages")
 	}
 
-	formatted := formatParagraphsWithProvenance(b.rawLines, b.pageWidth)
+	formatted := formatDocument(b.rawLines, b.pageWidth, false).lines
 	previousRaw := -1
 	for index, line := range formatted {
 		if line.raw < 0 {

@@ -22,7 +22,7 @@ func setextLines() []string {
 }
 
 func TestIssue179_SetextHeadingsAreAnchors(t *testing.T) {
-	anchors := ExtractAnchors(setextLines())
+	anchors := readMarkdown(t, setextLines(), DefaultPageWidth, DefaultPageHeight).anchors
 	if got, ok := anchors["chapter-two"]; !ok || got != 4 {
 		t.Fatalf("anchors[chapter-two] = %d (ok=%v), want 4; %#v", got, ok, anchors)
 	}
@@ -32,7 +32,7 @@ func TestIssue179_SetextHeadingsAreAnchors(t *testing.T) {
 }
 
 func TestIssue179_SetextUnderlineNotMergedIntoProse(t *testing.T) {
-	for i, line := range FormatParagraphs(setextLines(), 60) {
+	for i, line := range readDisplayLines(t, setextLines(), 60) {
 		if strings.Contains(line, "===") || strings.Contains(line, "---") {
 			t.Fatalf("formatted line %d still contains setext underline: %q", i, line)
 		}
@@ -51,7 +51,7 @@ func TestIssue179_LinkNavigatesToSetextHeading(t *testing.T) {
 }
 
 func TestIssue179_SetextHeadingsDisplayAsATX(t *testing.T) {
-	formatted := FormatParagraphs(setextLines(), 60)
+	formatted := readDisplayLines(t, setextLines(), 60)
 	for _, want := range []string{"# Chapter Two", "## A Section"} {
 		found := false
 		for _, line := range formatted {
@@ -70,22 +70,22 @@ func TestIssue179_RuleWithoutPrecedingProseStaysRule(t *testing.T) {
 		{"# Heading", "---"},
 		{"---"},
 	} {
-		formatted := FormatParagraphs(raw, 60)
+		formatted := readDisplayLines(t, raw, 60)
 		if got := formatted[len(formatted)-1]; got != "---" {
-			t.Fatalf("FormatParagraphs(%q) = %q, want trailing rule", raw, formatted)
+			t.Fatalf("display lines of %q = %q, want trailing rule", raw, formatted)
 		}
 	}
 }
 
 func TestIssue179_EqualsWithoutPrecedingProseStaysProse(t *testing.T) {
-	formatted := FormatParagraphs([]string{"# Heading", "==="}, 60)
+	formatted := readDisplayLines(t, []string{"# Heading", "==="}, 60)
 	if got := formatted[len(formatted)-1]; got != "  ===" {
 		t.Fatalf("formatted = %q, want === as a prose paragraph", formatted)
 	}
 }
 
 func TestIssue179_MultiLineSetextHeadingJoinsText(t *testing.T) {
-	anchors := ExtractAnchors([]string{"Part One", "The Beginning", "==="})
+	anchors := readMarkdown(t, []string{"Part One", "The Beginning", "==="}, DefaultPageWidth, DefaultPageHeight).anchors
 	if got, ok := anchors["part-one-the-beginning"]; !ok || got != 0 {
 		t.Fatalf("anchors = %#v, want part-one-the-beginning at 0", anchors)
 	}
