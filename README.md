@@ -48,3 +48,4 @@ Render pages to stdout without a terminal (useful for scripts and previews):
 ## Docs
 
 See `docs/` for architecture, controls reference, and common questions.
+Exploratory testing reports, with reproducers for bugs found, are in `docs/exploratory-testing/`.

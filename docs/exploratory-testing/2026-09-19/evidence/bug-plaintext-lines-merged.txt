@@ -1,0 +1,41 @@
+# fixture: app.log  binary: /tmp/tr-et0919 (origin/main 41668ab)
+$ cat app.log
+2026-09-19 10:00:01 INFO server started
+2026-09-19 10:00:02 WARN disk 91%
+2026-09-19 10:00:03 ERROR request failed
+=== run 1: interactive 80x10, fresh process
+----- [t] after:  -----
+                                      App
+    ────────────────────────────────────────────────────────────────────────
+    2026-09-19 10:00:01 INFO server started 2026-09-19 10:00:02 WARN disk
+    91% 2026-09-19 10:00:03 ERROR request failed
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 1
+              ←/→ page • tab link • enter follow • b back • q quit
+=== run 2: interactive 80x10, fresh process
+----- [t] after:  -----
+                                      App
+    ────────────────────────────────────────────────────────────────────────
+    2026-09-19 10:00:01 INFO server started 2026-09-19 10:00:02 WARN disk
+    91% 2026-09-19 10:00:03 ERROR request failed
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 1
+              ←/→ page • tab link • enter follow • b back • q quit
+=== $ tui-reader --dump app.log
+┌─── App ── Page 1 of 1 ───┐
+│
+│  2026-09-19 10:00:01 INFO server started 2026-09-19 10:00:02
+│  WARN disk 91% 2026-09-19 10:00:03 ERROR request failed
+│  
+│
+=== $ tui-reader --dump tabs.txt  (source: "col1<TAB>col2<TAB>col3", "<TAB>indented with tab", "normal")
+┌─── Tabs ── Page 1 of 1 ───┐
+│
+│  col1 col2 col3 indented with tab normal
+│  

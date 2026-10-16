@@ -1,0 +1,107 @@
+# fixture: min-cjk.md  terminal: 60x14  binary: /tmp/tr-et0919 (origin/main 41668ab)
+# Guide
+
+[Chapter](#第一章) and [Control](#chapter-two)
+
+Para 0.
+
+Para 1.
+
+Para 2.
+
+Para 3.
+
+## 第一章
+
+Body.
+
+Para 0.
+
+Para 1.
+
+Para 2.
+
+Para 3.
+
+## Chapter Two
+
+Body.
+----- [c] after:  -----
+
+                          Min Cjk
+  ────────────────────────────────────────────────────────
+  # Guide
+
+    [Chapter](#第一章) and [Control](#chapter-two)
+
+    Para 0.
+
+    Para 1.
+  ────────────────────────────────────────────────────────
+                        Page 1 of 4
+    ←/→ page • tab link • enter follow • b back • q quit
+
+----- [c] after: Tab -----
+
+                          Min Cjk
+  ────────────────────────────────────────────────────────
+  # Guide
+
+    [Chapter](#第一章) and [Control](#chapter-two)
+
+    Para 0.
+
+    Para 1.
+  ────────────────────────────────────────────────────────
+                        Page 1 of 4
+    ←/→ page • tab link • enter follow • b back • q quit
+
+(selected link, ANSI):
+    [Chapter](#第一章) and [Control](#chapter-two)
+----- [c] after: Enter -----
+
+                          Min Cjk
+  ────────────────────────────────────────────────────────
+  # Guide
+
+    [Chapter](#第一章) and [Control](#chapter-two)
+
+    Para 0.
+
+    Para 1.
+  ────────────────────────────────────────────────────────
+                        Page 1 of 4
+    ←/→ page • tab link • enter follow • b back • q quit
+
+=== control: fresh process, Tab Tab Enter
+----- [c] after: Tab Tab Enter -----
+
+                          Min Cjk
+  ────────────────────────────────────────────────────────
+
+    Para 3.
+
+  ## Chapter Two
+
+    Body.
+
+  ────────────────────────────────────────────────────────
+                        Page 4 of 4
+    ←/→ page • tab link • enter follow • b back • q quit
+
+=== where the heading is: fresh process, Right
+----- [c] after: Right -----
+
+                          Min Cjk
+  ────────────────────────────────────────────────────────
+
+    Para 2.
+
+    Para 3.
+
+  ## 第一章
+
+  ────────────────────────────────────────────────────────
+                        Page 2 of 4
+    ←/→ page • tab link • enter follow • b back • q quit
+

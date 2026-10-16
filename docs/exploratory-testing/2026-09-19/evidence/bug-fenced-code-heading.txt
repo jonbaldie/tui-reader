@@ -1,0 +1,61 @@
+# fixture: min-fence.md  terminal: 60x14  binary: /tmp/tr-et0919 (origin/main 41668ab)
+$ cat -v fixture
+# Guide
+
+[Usage](#usage)
+
+## Usage
+
+Real section.
+
+## Example
+
+```sh
+# usage
+tool --help
+```
+----- [c] after:  -----
+
+                         Min Fence
+  ────────────────────────────────────────────────────────
+  # Guide
+
+    [Usage](#usage)
+
+  ## Usage
+
+    Real section.
+  ────────────────────────────────────────────────────────
+                        Page 1 of 3
+    ←/→ page • tab link • enter follow • b back • q quit
+
+----- [c] after: Tab -----
+
+                         Min Fence
+  ────────────────────────────────────────────────────────
+  # Guide
+
+    [Usage](#usage)
+
+  ## Usage
+
+    Real section.
+  ────────────────────────────────────────────────────────
+                        Page 1 of 3
+    ←/→ page • tab link • enter follow • b back • q quit
+
+----- [c] after: Enter -----
+
+                         Min Fence
+  ────────────────────────────────────────────────────────
+
+  ## Example
+
+    ```sh
+
+  # usage
+
+  ────────────────────────────────────────────────────────
+                        Page 2 of 3
+    ←/→ page • tab link • enter follow • b back • q quit
+
