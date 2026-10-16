@@ -232,7 +232,7 @@ func TestWrapLines_UnicodeContent(t *testing.T) {
 
 // ==================== Pagination ====================
 
-func TestPaginate_Basic(t *testing.T) {
+func TestPagination_Basic(t *testing.T) {
 	// 50 paragraphs separated by blank lines = 50 content + 49 blanks = 99 lines
 	// At height 10 = 10 pages
 	lines := make([]string, 99)
@@ -247,7 +247,7 @@ func TestPaginate_Basic(t *testing.T) {
 	}
 }
 
-func TestPaginate_PartialLastPage(t *testing.T) {
+func TestPagination_PartialLastPage(t *testing.T) {
 	// 15 paragraphs separated by blank lines = 15 content + 14 blanks = 29 formatted lines
 	// at height 10 = 3 pages (10, 10, 9)
 	lines := make([]string, 29)
@@ -266,14 +266,14 @@ func TestPaginate_PartialLastPage(t *testing.T) {
 	}
 }
 
-func TestPaginate_EmptyContent(t *testing.T) {
+func TestPagination_EmptyContent(t *testing.T) {
 	pages := readMarkdown(t, []string{}, 80, 10).pages
 	if len(pages) != 1 {
 		t.Errorf("expected 1 empty page, got %d", len(pages))
 	}
 }
 
-func TestPaginate_SingleLine(t *testing.T) {
+func TestPagination_SingleLine(t *testing.T) {
 	pages := readMarkdown(t, []string{"hello"}, 80, 10).pages
 	if len(pages) != 1 {
 		t.Errorf("expected 1 page, got %d", len(pages))
@@ -283,7 +283,7 @@ func TestPaginate_SingleLine(t *testing.T) {
 	}
 }
 
-func TestPaginate_InvalidDimensions(t *testing.T) {
+func TestPagination_InvalidDimensions(t *testing.T) {
 	lines := []string{"test"}
 	// Should fall back to defaults
 	pages := readMarkdown(t, lines, 0, 0).pages
@@ -292,7 +292,7 @@ func TestPaginate_InvalidDimensions(t *testing.T) {
 	}
 }
 
-func TestPaginate_ExactFit(t *testing.T) {
+func TestPagination_ExactFit(t *testing.T) {
 	// A single raw line should produce exactly 1 page if it fits
 	pages := readMarkdown(t, []string{"single paragraph"}, 80, 10).pages
 	if len(pages) != 1 {

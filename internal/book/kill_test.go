@@ -54,7 +54,7 @@ func TestNewBookLoad_MissingFileWrapsOSError(t *testing.T) {
 
 // ==================== Paragraph formatting width guard ====================
 
-func TestFormatParagraphs_WidthZeroResetsTo80(t *testing.T) {
+func TestParagraphFormatting_WidthZeroResetsTo80(t *testing.T) {
 	word := strings.Repeat("a", 81)
 	out := readDisplayLines(t, []string{word}, 0)
 	if len(out) != 2 {
@@ -65,7 +65,7 @@ func TestFormatParagraphs_WidthZeroResetsTo80(t *testing.T) {
 	}
 }
 
-func TestFormatParagraphs_WidthOneIsHonored(t *testing.T) {
+func TestParagraphFormatting_WidthOneIsHonored(t *testing.T) {
 	// width 1 is valid (>= 1) and must NOT be reset to 80.
 	word := strings.Repeat("a", 81)
 	out := readDisplayLines(t, []string{word}, 1)
@@ -76,14 +76,14 @@ func TestFormatParagraphs_WidthOneIsHonored(t *testing.T) {
 
 // ==================== Paragraph formatting blank handling ====================
 
-func TestFormatParagraphs_TrailingBlankPreserved(t *testing.T) {
+func TestParagraphFormatting_TrailingBlankPreserved(t *testing.T) {
 	out := readDisplayLines(t, []string{"text", ""}, 60)
 	if len(out) != 2 || out[len(out)-1] != "" {
 		t.Errorf("trailing blank source line must be preserved: got %q", out)
 	}
 }
 
-func TestFormatParagraphs_NoConsecutiveBlanks(t *testing.T) {
+func TestParagraphFormatting_NoConsecutiveBlanks(t *testing.T) {
 	out := readDisplayLines(t, []string{"a", "", "", "b"}, 60)
 	for i := 1; i < len(out); i++ {
 		if out[i] == "" && out[i-1] == "" {
@@ -92,7 +92,7 @@ func TestFormatParagraphs_NoConsecutiveBlanks(t *testing.T) {
 	}
 }
 
-func TestFormatParagraphs_SecondParagraphIndented(t *testing.T) {
+func TestParagraphFormatting_SecondParagraphIndented(t *testing.T) {
 	out := readDisplayLines(t, []string{"First paragraph.", "", "Second paragraph."}, 60)
 	var second string
 	for _, l := range out {
@@ -111,7 +111,7 @@ func TestFormatParagraphs_SecondParagraphIndented(t *testing.T) {
 
 // ==================== Page structure ====================
 
-func TestPaginate_EmptyPageHasNonNilLines(t *testing.T) {
+func TestPagination_EmptyPageHasNonNilLines(t *testing.T) {
 	pages := readMarkdown(t, nil, 60, 20).pages
 	if len(pages) != 1 {
 		t.Fatalf("empty content must yield 1 page, got %d", len(pages))
@@ -121,7 +121,7 @@ func TestPaginate_EmptyPageHasNonNilLines(t *testing.T) {
 	}
 }
 
-func TestPaginate_HeightZeroResetsTo20(t *testing.T) {
+func TestPagination_HeightZeroResetsTo20(t *testing.T) {
 	// Each full page must hold exactly 20 lines; a reset to 19 would shrink them.
 	var raw []string
 	for i := 0; i < 40; i++ {

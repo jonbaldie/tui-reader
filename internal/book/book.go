@@ -1121,9 +1121,7 @@ func (b *Book) PageForPosition(pos Position) int {
 	if !ok || pos.Offset <= 0 {
 		return b.PageForRawLine(pos.Raw)
 	}
-	// lineSources is empty when rawLinePages was built lazily by
-	// PageForAnchor on a Book that was never laid out.
-	start := min(first*b.pageHeight, len(b.lineSources))
+	start := first * b.pageHeight
 	best := -1
 	for i, src := range b.lineSources[start:] {
 		if src.Raw > pos.Raw {

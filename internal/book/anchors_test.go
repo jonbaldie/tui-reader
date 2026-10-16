@@ -34,7 +34,7 @@ func TestNormalizeAnchor(t *testing.T) {
 
 // ==================== Heading anchors ====================
 
-func TestExtractAnchors_MarkdownHeadings(t *testing.T) {
+func TestHeadingAnchors_MarkdownHeadings(t *testing.T) {
 	lines := []string{
 		"# Chapter 1",
 		"Some text",
@@ -62,7 +62,7 @@ func TestExtractAnchors_MarkdownHeadings(t *testing.T) {
 	}
 }
 
-func TestExtractAnchors_NoHeadings(t *testing.T) {
+func TestHeadingAnchors_NoHeadings(t *testing.T) {
 	lines := []string{"plain text", "more text", "no headings here"}
 	anchors := readMarkdown(t, lines, DefaultPageWidth, DefaultPageHeight).anchors
 	if len(anchors) != 0 {
@@ -70,7 +70,7 @@ func TestExtractAnchors_NoHeadings(t *testing.T) {
 	}
 }
 
-func TestExtractAnchors_HashInMiddle(t *testing.T) {
+func TestHeadingAnchors_HashInMiddle(t *testing.T) {
 	// "#" must be at the start of the line
 	lines := []string{"text with # in middle", "also not ## a heading"}
 	anchors := readMarkdown(t, lines, DefaultPageWidth, DefaultPageHeight).anchors
@@ -79,7 +79,7 @@ func TestExtractAnchors_HashInMiddle(t *testing.T) {
 	}
 }
 
-func TestExtractAnchors_HeadingLevels(t *testing.T) {
+func TestHeadingAnchors_HeadingLevels(t *testing.T) {
 	lines := []string{
 		"# H1",
 		"## H2",
@@ -146,7 +146,7 @@ func TestExtractLinks_NestedBrackets(t *testing.T) {
 
 // ==================== Link attachment ====================
 
-func TestAttachLinks_LinksOnCorrectPage(t *testing.T) {
+func TestLinkAttachment_LinksOnCorrectPage(t *testing.T) {
 	rawLines := []string{
 		"# Introduction",
 		"",
@@ -169,7 +169,7 @@ func TestAttachLinks_LinksOnCorrectPage(t *testing.T) {
 	}
 }
 
-func TestAttachLinks_NoLinks(t *testing.T) {
+func TestLinkAttachment_NoLinks(t *testing.T) {
 	rawLines := []string{"plain text", "no links"}
 	pages := readMarkdown(t, rawLines, 80, 10).pages
 	if len(pages[0].Links) != 0 {
