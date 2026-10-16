@@ -10,26 +10,6 @@ import (
 
 func BenchmarkCallerVisibleOperations(b *testing.B) {
 	for _, lines := range []int{64, 256, 1024} {
-		b.Run(fmt.Sprintf("Load/lines=%d", lines), func(b *testing.B) {
-			path := complexityBookFile(b, complexityDocument(lines))
-			b.ReportAllocs()
-			b.ResetTimer()
-			for range b.N {
-				if _, _, err := Load(path); err != nil {
-					b.Fatal(err)
-				}
-			}
-		})
-
-		b.Run(fmt.Sprintf("Paginate/lines=%d", lines), func(b *testing.B) {
-			rawLines := strings.Split(complexityDocument(lines), "\n")
-			b.ReportAllocs()
-			b.ResetTimer()
-			for range b.N {
-				_ = Paginate(rawLines, 60, 20)
-			}
-		})
-
 		b.Run(fmt.Sprintf("NewBook/lines=%d", lines), func(b *testing.B) {
 			path := complexityBookFile(b, complexityDocument(lines))
 			b.ReportAllocs()
@@ -54,21 +34,7 @@ func BenchmarkCallerVisibleOperations(b *testing.B) {
 			}
 		})
 
-		b.Run(fmt.Sprintf("PageForAnchor/uncached-lines=%d", lines), func(b *testing.B) {
-			path := complexityBookFile(b, complexityDocument(lines))
-			book, err := NewBook(path, 60, 20)
-			if err != nil {
-				b.Fatal(err)
-			}
-			b.ReportAllocs()
-			b.ResetTimer()
-			for range b.N {
-				book.rawLinePages = nil
-				_ = book.PageForAnchor("section-0")
-			}
-		})
-
-		b.Run(fmt.Sprintf("PageForAnchor/cached-lines=%d", lines), func(b *testing.B) {
+		b.Run(fmt.Sprintf("PageForAnchor/lines=%d", lines), func(b *testing.B) {
 			path := complexityBookFile(b, complexityDocument(lines))
 			book, err := NewBook(path, 60, 20)
 			if err != nil {

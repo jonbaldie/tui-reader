@@ -40,10 +40,10 @@ func TestNormalizeAnchor_KeepsBoundaryAlphanumerics(t *testing.T) {
 	}
 }
 
-// ==================== Load error wrapping ====================
+// ==================== NewBook error wrapping ====================
 
-func TestLoad_MissingFileWrapsOSError(t *testing.T) {
-	_, _, err := Load("/no/such/file/at/all.md")
+func TestNewBookLoad_MissingFileWrapsOSError(t *testing.T) {
+	_, err := NewBook("/no/such/file/at/all.md", DefaultPageWidth, DefaultPageHeight)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -52,11 +52,11 @@ func TestLoad_MissingFileWrapsOSError(t *testing.T) {
 	}
 }
 
-// ==================== FormatParagraphs width guard ====================
+// ==================== Paragraph formatting width guard ====================
 
 func TestFormatParagraphs_WidthZeroResetsTo80(t *testing.T) {
 	word := strings.Repeat("a", 81)
-	out := FormatParagraphs([]string{word}, 0)
+	out := readDisplayLines(t, []string{word}, 0)
 	if len(out) != 2 {
 		t.Fatalf("width 0 must reset to 80: got %d lines, want 2 (%q)", len(out), out)
 	}
@@ -68,23 +68,23 @@ func TestFormatParagraphs_WidthZeroResetsTo80(t *testing.T) {
 func TestFormatParagraphs_WidthOneIsHonored(t *testing.T) {
 	// width 1 is valid (>= 1) and must NOT be reset to 80.
 	word := strings.Repeat("a", 81)
-	out := FormatParagraphs([]string{word}, 1)
+	out := readDisplayLines(t, []string{word}, 1)
 	if len(out) != 81 {
 		t.Fatalf("width 1 must wrap to 81 single-rune lines, got %d", len(out))
 	}
 }
 
-// ==================== FormatParagraphs blank handling ====================
+// ==================== Paragraph formatting blank handling ====================
 
 func TestFormatParagraphs_TrailingBlankPreserved(t *testing.T) {
-	out := FormatParagraphs([]string{"text", ""}, 60)
+	out := readDisplayLines(t, []string{"text", ""}, 60)
 	if len(out) != 2 || out[len(out)-1] != "" {
 		t.Errorf("trailing blank source line must be preserved: got %q", out)
 	}
 }
 
 func TestFormatParagraphs_NoConsecutiveBlanks(t *testing.T) {
-	out := FormatParagraphs([]string{"a", "", "", "b"}, 60)
+	out := readDisplayLines(t, []string{"a", "", "", "b"}, 60)
 	for i := 1; i < len(out); i++ {
 		if out[i] == "" && out[i-1] == "" {
 			t.Errorf("consecutive blank lines at %d in %q (blanks must collapse)", i, out)
@@ -93,7 +93,7 @@ func TestFormatParagraphs_NoConsecutiveBlanks(t *testing.T) {
 }
 
 func TestFormatParagraphs_SecondParagraphIndented(t *testing.T) {
-	out := FormatParagraphs([]string{"First paragraph.", "", "Second paragraph."}, 60)
+	out := readDisplayLines(t, []string{"First paragraph.", "", "Second paragraph."}, 60)
 	var second string
 	for _, l := range out {
 		if strings.Contains(l, "Second") {
@@ -109,34 +109,15 @@ func TestFormatParagraphs_SecondParagraphIndented(t *testing.T) {
 	}
 }
 
-// ==================== Paginate page structure ====================
+// ==================== Page structure ====================
 
-func TestPaginate_EmptyPageHasNonNilSlices(t *testing.T) {
-	pages := Paginate(nil, 60, 20)
+func TestPaginate_EmptyPageHasNonNilLines(t *testing.T) {
+	pages := readMarkdown(t, nil, 60, 20).pages
 	if len(pages) != 1 {
 		t.Fatalf("empty content must yield 1 page, got %d", len(pages))
 	}
 	if pages[0].Lines == nil {
 		t.Error("empty page must have non-nil Lines slice")
-	}
-	if pages[0].Links == nil {
-		t.Error("empty page must have non-nil Links slice")
-	}
-}
-
-func TestPaginate_EveryPageHasNonNilLinks(t *testing.T) {
-	var raw []string
-	for i := 0; i < 30; i++ {
-		raw = append(raw, "line of content here", "")
-	}
-	pages := Paginate(raw, 80, 20)
-	if len(pages) < 2 {
-		t.Fatalf("expected multiple pages, got %d", len(pages))
-	}
-	for pi, p := range pages {
-		if p.Links == nil {
-			t.Errorf("page %d has nil Links slice", pi)
-		}
 	}
 }
 
@@ -146,7 +127,7 @@ func TestPaginate_HeightZeroResetsTo20(t *testing.T) {
 	for i := 0; i < 40; i++ {
 		raw = append(raw, "content line", "")
 	}
-	pages := Paginate(raw, 80, 0)
+	pages := readMarkdown(t, raw, 80, 0).pages
 	if len(pages) < 2 {
 		t.Fatalf("expected >=2 pages, got %d", len(pages))
 	}
@@ -263,28 +244,9 @@ func TestPageForAnchor_HeightOneGivesNonZeroPage(t *testing.T) {
 }
 
 func TestPageForAnchor_ZeroHeightReturnsZero(t *testing.T) {
-	b := &Book{
-		anchors:    map[string]int{"intro": 0},
-		rawLines:   []string{"# Intro"},
-		pageWidth:  60,
-		pageHeight: 0,
-	}
+	b := readMarkdown(t, []string{"# Intro"}, 60, 0)
 	if got := b.PageForAnchor("intro"); got != 0 {
 		t.Errorf("PageForAnchor with height 0 = %d, want 0", got)
-	}
-}
-
-func TestPageForAnchor_AnchorLineMissingFromMapReturnsNeg1(t *testing.T) {
-	// Anchor exists in the map but points at a raw line that never appears in
-	// the formatted output: the loop falls through to the final return -1.
-	b := &Book{
-		anchors:    map[string]int{"ghost": 999},
-		rawLines:   []string{"# Real Heading"},
-		pageWidth:  60,
-		pageHeight: 20,
-	}
-	if got := b.PageForAnchor("ghost"); got != -1 {
-		t.Errorf("PageForAnchor for unreachable anchor line = %d, want -1", got)
 	}
 }
 

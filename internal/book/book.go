@@ -69,21 +69,6 @@ type Position struct {
 	Offset int
 }
 
-// Load reads a file from disk and returns its raw content lines.
-func Load(path string) (title string, lines []string, err error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", nil, fmt.Errorf("cannot open file: %w", err)
-	}
-	defer f.Close()
-
-	lines, err = readLines(f)
-	if err != nil {
-		return "", nil, err
-	}
-	return deriveTitle(path), lines, nil
-}
-
 func readLines(r io.Reader) ([]string, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
@@ -253,23 +238,11 @@ func findFenceBlockEnd(rawLines []string, start int) int {
 	return n
 }
 
-// formatParagraphsWithProvenance is the single owner of the paragraph
-// formatting rules. In one pass it produces each display line together with the
-// raw source line it came from, so callers never re-derive the formatting
-// algorithm to recover provenance. FormatParagraphs is a thin projection over
-// it.
-func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLine {
-	return formatMarkdownDocument(rawLines, width, false).lines
-}
-
-func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) formattedDocument {
+func formatMarkdownDocument(rawLines []string, width int) formattedDocument {
 	width = normalizePageWidth(width)
 
 	var result []formattedLine
-	var anchors map[string]int
-	if captureAnchors {
-		anchors = make(map[string]int)
-	}
+	anchors := make(map[string]int)
 	firstParagraph := true
 	prevCode := false
 	prevList := false
@@ -286,9 +259,7 @@ func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) f
 		}
 
 		block := formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
-		if anchors != nil {
-			recordHeadingAnchor(anchors, raw, ri, block)
-		}
+		recordHeadingAnchor(anchors, raw, ri, block)
 		result = append(result, block.lines...)
 		firstParagraph = false
 		prevCode, prevList = block.isCode, block.isList
@@ -648,7 +619,7 @@ func formatDocument(rawLines []string, width int, plainText bool) formattedDocum
 			anchors: make(map[string]int),
 		}
 	}
-	return formatMarkdownDocument(rawLines, width, true)
+	return formatMarkdownDocument(rawLines, width)
 }
 
 func isMarkdownPath(path string) bool {
@@ -658,28 +629,6 @@ func isMarkdownPath(path string) bool {
 	default:
 		return false
 	}
-}
-
-// FormatParagraphs takes raw lines and produces display-ready lines with
-// paragraph indentation and spacing. Each non-empty raw line is treated as
-// a paragraph. Non-first paragraphs get a 2-space indent on their first
-// wrapped line, and a blank line is inserted between paragraphs.
-func FormatParagraphs(rawLines []string, width int) []string {
-	formatted := formatParagraphsWithProvenance(rawLines, width)
-	result := make([]string, len(formatted))
-	for i, fl := range formatted {
-		result[i] = fl.text
-	}
-	return result
-}
-
-// Paginate splits raw lines into pages of the given dimensions, wrapping long lines.
-func Paginate(rawLines []string, width, height int) []Page {
-	return buildBookLayout(rawLines, width, height).pages
-}
-
-func buildBookLayout(rawLines []string, width, height int) bookLayout {
-	return layoutFromFormatted(formatParagraphsWithProvenance(rawLines, width), height)
 }
 
 func layoutFromFormatted(formatted []formattedLine, height int) bookLayout {
@@ -717,7 +666,7 @@ func normalizePageWidth(width int) int {
 func paginateFormatted(formatted []formattedLine, height int) []Page {
 	if len(formatted) == 0 {
 		// Return a single empty page for empty content
-		return []Page{{Lines: []string{}, Links: []Link{}}}
+		return []Page{{Lines: []string{}}}
 	}
 
 	var pages []Page
@@ -731,7 +680,7 @@ func paginateFormatted(formatted []formattedLine, height int) []Page {
 		for j, fl := range formatted[i:end] {
 			pageLines[j] = fl.text
 		}
-		pages = append(pages, Page{Lines: pageLines, Links: []Link{}})
+		pages = append(pages, Page{Lines: pageLines})
 	}
 	return pages
 }
@@ -1130,15 +1079,6 @@ func (b *Book) PageForAnchor(anchor string) int {
 	lineIdx, ok := b.anchors[NormalizeAnchor(anchor)]
 	if !ok {
 		return -1
-	}
-
-	if b.rawLinePages == nil {
-		// formatParagraphsWithProvenance normalizes width, and normalizePageHeight
-		// normalizes a non-positive height to DefaultPageHeight, so a Book built
-		// (or mutated) with pageHeight <= 0 is still mapped to its true pages.
-		height := normalizePageHeight(b.pageHeight)
-		document := formatDocument(b.rawLines, b.pageWidth, b.plainText)
-		b.rawLinePages = rawLinePages(document.lines, height)
 	}
 
 	if page, ok := b.rawLinePages[lineIdx]; ok {

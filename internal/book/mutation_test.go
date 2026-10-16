@@ -22,7 +22,7 @@ func TestMutation_PaginationContinuity(t *testing.T) {
 			lines[i] = "line"
 		}
 	}
-	pages := Paginate(lines, 80, 10)
+	pages := readMarkdown(t, lines, 80, 10).pages
 
 	// All formatted lines must appear exactly once across all pages
 	// 25 paragraphs separated by blanks -> 25 content + 24 blanks = 49 formatted lines
@@ -53,7 +53,7 @@ func TestMutation_LastPageInclusion(t *testing.T) {
 			lines[i] = "x"
 		}
 	}
-	pages := Paginate(lines, 80, 10)
+	pages := readMarkdown(t, lines, 80, 10).pages
 	if len(pages) < 2 {
 		t.Fatalf("expected at least 2 pages, got %d", len(pages))
 	}
@@ -247,15 +247,16 @@ func TestMutation_ReflowUpdatesDimensions(t *testing.T) {
 	}
 }
 
-// ==================== Load mutations ====================
+// ==================== NewBook loading mutations ====================
 
 // Mutation: not normalizing \r\n to \n.
 func TestMutation_LoadNormalizesCRLF(t *testing.T) {
 	path := writeTempFileMut(t, "crlf.txt", "A\r\nB\r\nC")
-	_, lines, err := Load(path)
+	b, err := NewBook(path, DefaultPageWidth, DefaultPageHeight)
 	if err != nil {
 		t.Fatal(err)
 	}
+	lines := b.rawLines
 	for i, line := range lines {
 		if strings.ContainsRune(line, '\r') {
 			t.Errorf("line %d still contains \\r: %q", i, line)
@@ -268,7 +269,7 @@ func TestMutation_LoadRejectsInvalidUTF8(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "bad.bin")
 	os.WriteFile(path, []byte{0xff, 0xfe, 0x80}, 0644)
-	_, _, err := Load(path)
+	_, err := NewBook(path, DefaultPageWidth, DefaultPageHeight)
 	if err == nil {
 		t.Error("expected error for invalid UTF-8")
 	}
