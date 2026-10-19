@@ -75,11 +75,11 @@ func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 
 	// At width 4, code block wrapping does not apply 4-space indent (width < 5).
 	// Content must not be dropped (non-empty output), and provenance must be preserved.
-	layout := buildBookLayout([]string{"    ab"}, 4, 10)
-	if len(layout.formatted) == 0 {
+	formattedNarrow := formatDocument([]string{"    ab"}, 4, false).lines
+	if len(formattedNarrow) == 0 {
 		t.Fatal("at width 4, formatted lines must not be empty")
 	}
-	for _, fl := range layout.formatted {
+	for _, fl := range formattedNarrow {
 		if fl.raw != 0 {
 			t.Errorf("expected provenance raw=0, got %d", fl.raw)
 		}
@@ -87,7 +87,7 @@ func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 			t.Errorf("at width 4, line %q exceeds width 4", fl.text)
 		}
 	}
-	if len(layout.pages[0].Lines) == 0 {
+	if len(readBook(t, "    ab", true, 4, 10).Page(0).Lines) == 0 {
 		t.Fatal("at width 4, pages must not be empty")
 	}
 }

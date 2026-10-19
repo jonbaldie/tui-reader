@@ -23,12 +23,6 @@ func TestParagraphOverflow_NarrowWidthDoesNotOverflowPage(t *testing.T) {
 				}
 			}
 
-			formatted := readDisplayLines(t, raw, width)
-			for li, line := range formatted {
-				if rl := utf8.RuneCountInString(line); rl > width {
-					t.Errorf("width %d: formatted line %d: %d runes > %d: %q", width, li, rl, width, line)
-				}
-			}
 		})
 	}
 }

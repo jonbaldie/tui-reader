@@ -645,10 +645,6 @@ func isMarkdownPath(path string) bool {
 	}
 }
 
-func buildBookLayout(rawLines []string, width, height int) bookLayout {
-	return layoutFromFormatted(formatParagraphsWithProvenance(rawLines, width), height)
-}
-
 func layoutFromFormatted(formatted []formattedLine, height int) bookLayout {
 	height = normalizePageHeight(height)
 	return bookLayout{
