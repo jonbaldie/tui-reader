@@ -6,8 +6,7 @@ import (
 	"testing"
 )
 
-// projectText extracts just the display text from the formatter output, which
-// is exactly what FormatParagraphs must return.
+// projectText extracts just the display text from the formatter output.
 func projectText(lines []formattedLine) []string {
 	out := make([]string, len(lines))
 	for i, fl := range lines {
@@ -34,12 +33,12 @@ var formatterInputs = []struct {
 	{"whitespace-only", []string{"   ", "\t"}, 60},
 }
 
-// TestFormatter_TextMatchesFormatParagraphs is the tracer: the formatter's text
-// projection must be byte-for-byte identical to FormatParagraphs today.
-func TestFormatter_TextMatchesFormatParagraphs(t *testing.T) {
+// TestFormatter_TextMatchesRead checks that book construction preserves the
+// formatter's display text.
+func TestFormatter_TextMatchesRead(t *testing.T) {
 	for _, tc := range formatterInputs {
 		t.Run(tc.name, func(t *testing.T) {
-			want := FormatParagraphs(tc.raw, tc.width)
+			want := readBook(t, strings.Join(tc.raw, "\n"), true, tc.width, 1<<30).Page(0).Lines
 			got := projectText(formatParagraphsWithProvenance(tc.raw, tc.width))
 			if len(got) != len(want) {
 				t.Fatalf("len = %d, want %d\ngot  %q\nwant %q", len(got), len(want), got, want)
@@ -62,7 +61,7 @@ func checkFormatterInvariants(t *testing.T, rawLines []string, width int) []form
 
 	// INV1: exactly one provenance entry per formatted line (the projection has
 	// the same length as the formatter output).
-	if len(lines) != len(FormatParagraphs(rawLines, width)) {
+	if len(lines) != len(readBook(t, strings.Join(rawLines, "\n"), true, width, 1<<30).Page(0).Lines) {
 		t.Fatalf("formatter produced %d lines, want one per formatted line", len(lines))
 	}
 
@@ -206,8 +205,8 @@ func TestFormatter_IndentedCodeSpacingAndProvenance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FormatParagraphs(tt.raw, 80); !reflect.DeepEqual(got, tt.wantText) {
-				t.Fatalf("FormatParagraphs = %q, want %q", got, tt.wantText)
+			if got := readBook(t, strings.Join(tt.raw, "\n"), true, 80, 1<<30).Page(0).Lines; !reflect.DeepEqual(got, tt.wantText) {
+				t.Fatalf("display lines = %q, want %q", got, tt.wantText)
 			}
 			lines := formatParagraphsWithProvenance(tt.raw, 80)
 			if got := projectText(lines); !reflect.DeepEqual(got, tt.wantText) {

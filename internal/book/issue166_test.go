@@ -59,7 +59,7 @@ func TestIssue166_LongFencePreservesHeadingsAndLinks(t *testing.T) {
 		t.Errorf("PageForAnchor(%q) = %d, want usage page %d", links[0].Target, page, usagePage)
 	}
 
-	formatted := FormatParagraphs(rawLines, 80)
+	formatted := readBook(t, strings.Join(rawLines, "\n"), true, 80, 1<<30).Page(0).Lines
 	for _, want := range []string{"    ````", "    ```", "    # not a heading", "## Usage"} {
 		if !containsFormattedLine(formatted, want) {
 			t.Errorf("formatted output missing %q: %q", want, formatted)

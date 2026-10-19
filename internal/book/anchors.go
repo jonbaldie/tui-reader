@@ -14,11 +14,6 @@ var (
 	linkRegex = regexp.MustCompile(`\[([^\[\]]+)\]\(#([^)]+)\)`)
 )
 
-// ExtractAnchors returns the heading anchors produced by Markdown layout.
-func ExtractAnchors(lines []string) map[string]int {
-	return formatDocument(lines, fallbackPageWidth, false).anchors
-}
-
 // NormalizeAnchor converts heading text to a URL-fragment style anchor.
 // "Chapter 1: Introduction" -> "chapter-1-introduction"
 func NormalizeAnchor(text string) string {
@@ -154,11 +149,6 @@ func overlapsCodeSpan(start, end int, spans [][2]int) bool {
 		}
 	}
 	return false
-}
-
-func AttachLinks(pages []Page, rawLines []string, width, height int) []Page {
-	formatted := formatParagraphsWithProvenance(rawLines, width)
-	return attachLinks(pages, rawLines, formatted, height, sourceLinkSet{})
 }
 
 // linkLocation tracks where a source line's links appear in the formatted

@@ -48,7 +48,7 @@ func TestIssue165_InfoStringLineDoesNotCloseFence(t *testing.T) {
 		t.Errorf("PageForAnchor(%q) = %d, want the usage heading", links[0].Target, got)
 	}
 
-	formatted := FormatParagraphs(rawLines, 80)
+	formatted := readBook(t, strings.Join(rawLines, "\n"), true, 80, 1<<30).Page(0).Lines
 	if !containsFormattedLine(formatted, "    # Fake Heading") || containsFormattedLine(formatted, "# Fake Heading") {
 		t.Errorf("# Fake Heading rendered as a heading, want code: %q", formatted)
 	}

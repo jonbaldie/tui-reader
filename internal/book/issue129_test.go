@@ -21,10 +21,10 @@ func TestIssue129_IndentedFenceDelimiterKeepsAnchorsAndLinksInSync(t *testing.T)
 		"swallowed-heading": 1,
 		"final-heading":     5,
 	}
-	if got := ExtractAnchors(lines); !reflect.DeepEqual(got, wantAnchors) {
-		t.Errorf("ExtractAnchors = %#v, want %#v", got, wantAnchors)
+	if got := readBook(t, strings.Join(lines, "\n"), true, 80, 20).anchors; !reflect.DeepEqual(got, wantAnchors) {
+		t.Errorf("anchors = %#v, want %#v", got, wantAnchors)
 	}
-	formatted := FormatParagraphs(lines, 80)
+	formatted := readBook(t, strings.Join(lines, "\n"), true, 80, 1<<30).Page(0).Lines
 	for _, want := range []string{"# Swallowed Heading", "# Final Heading"} {
 		if !containsFormattedLine(formatted, want) {
 			t.Errorf("formatted output is missing displayed heading %q: %q", want, formatted)

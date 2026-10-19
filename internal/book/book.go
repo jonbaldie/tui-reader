@@ -69,21 +69,6 @@ type Position struct {
 	Offset int
 }
 
-// Load reads a file from disk and returns its raw content lines.
-func Load(path string) (title string, lines []string, err error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", nil, fmt.Errorf("cannot open file: %w", err)
-	}
-	defer f.Close()
-
-	lines, err = readLines(f)
-	if err != nil {
-		return "", nil, err
-	}
-	return deriveTitle(path), lines, nil
-}
-
 func readLines(r io.Reader) ([]string, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
@@ -660,24 +645,6 @@ func isMarkdownPath(path string) bool {
 	}
 }
 
-// FormatParagraphs takes raw lines and produces display-ready lines with
-// paragraph indentation and spacing. Each non-empty raw line is treated as
-// a paragraph. Non-first paragraphs get a 2-space indent on their first
-// wrapped line, and a blank line is inserted between paragraphs.
-func FormatParagraphs(rawLines []string, width int) []string {
-	formatted := formatParagraphsWithProvenance(rawLines, width)
-	result := make([]string, len(formatted))
-	for i, fl := range formatted {
-		result[i] = fl.text
-	}
-	return result
-}
-
-// Paginate splits raw lines into pages of the given dimensions, wrapping long lines.
-func Paginate(rawLines []string, width, height int) []Page {
-	return buildBookLayout(rawLines, width, height).pages
-}
-
 func buildBookLayout(rawLines []string, width, height int) bookLayout {
 	return layoutFromFormatted(formatParagraphsWithProvenance(rawLines, width), height)
 }
@@ -1132,15 +1099,6 @@ func (b *Book) PageForAnchor(anchor string) int {
 		return -1
 	}
 
-	if b.rawLinePages == nil {
-		// formatParagraphsWithProvenance normalizes width, and normalizePageHeight
-		// normalizes a non-positive height to DefaultPageHeight, so a Book built
-		// (or mutated) with pageHeight <= 0 is still mapped to its true pages.
-		height := normalizePageHeight(b.pageHeight)
-		document := formatDocument(b.rawLines, b.pageWidth, b.plainText)
-		b.rawLinePages = rawLinePages(document.lines, height)
-	}
-
 	if page, ok := b.rawLinePages[lineIdx]; ok {
 		return page
 	}
@@ -1181,8 +1139,6 @@ func (b *Book) PageForPosition(pos Position) int {
 	if !ok || pos.Offset <= 0 {
 		return b.PageForRawLine(pos.Raw)
 	}
-	// lineSources is empty when rawLinePages was built lazily by
-	// PageForAnchor on a Book that was never laid out.
 	start := min(first*b.pageHeight, len(b.lineSources))
 	best := -1
 	for i, src := range b.lineSources[start:] {
