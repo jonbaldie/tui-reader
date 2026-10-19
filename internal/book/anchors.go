@@ -235,13 +235,8 @@ func collectProseBlockLinks(sourceLinks map[int][]Link, sourceOrder *[]int, line
 	}
 }
 
+// attachLinks consumes the normalized height and cached source links from layout.
 func attachLinks(pages []Page, rawLines []string, formatted []formattedLine, height int, source sourceLinkSet) []Page {
-	height = normalizePageHeight(height)
-
-	if source.links == nil {
-		source = collectSourceLinks(rawLines)
-	}
-
 	locations := buildLocations(formatted, rawLines, source.links)
 	assignLinksToPages(pages, source.order, source.links, locations, height)
 	return pages
