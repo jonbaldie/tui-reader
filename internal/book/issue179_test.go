@@ -32,7 +32,7 @@ func TestIssue179_SetextHeadingsAreAnchors(t *testing.T) {
 }
 
 func TestIssue179_SetextUnderlineNotMergedIntoProse(t *testing.T) {
-	for i, line := range readBook(t, strings.Join(setextLines(), "\n"), true, 60, 1<<30).Page(0).Lines {
+	for i, line := range readDisplayLines(t, setextLines(), 60) {
 		if strings.Contains(line, "===") || strings.Contains(line, "---") {
 			t.Fatalf("formatted line %d still contains setext underline: %q", i, line)
 		}
@@ -51,7 +51,7 @@ func TestIssue179_LinkNavigatesToSetextHeading(t *testing.T) {
 }
 
 func TestIssue179_SetextHeadingsDisplayAsATX(t *testing.T) {
-	formatted := readBook(t, strings.Join(setextLines(), "\n"), true, 60, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, setextLines(), 60)
 	for _, want := range []string{"# Chapter Two", "## A Section"} {
 		found := false
 		for _, line := range formatted {
@@ -70,7 +70,7 @@ func TestIssue179_RuleWithoutPrecedingProseStaysRule(t *testing.T) {
 		{"# Heading", "---"},
 		{"---"},
 	} {
-		formatted := readBook(t, strings.Join(raw, "\n"), true, 60, 1<<30).Page(0).Lines
+		formatted := readDisplayLines(t, raw, 60)
 		if got := formatted[len(formatted)-1]; got != "---" {
 			t.Fatalf("display lines for %q = %q, want trailing rule", raw, formatted)
 		}
@@ -78,7 +78,7 @@ func TestIssue179_RuleWithoutPrecedingProseStaysRule(t *testing.T) {
 }
 
 func TestIssue179_EqualsWithoutPrecedingProseStaysProse(t *testing.T) {
-	formatted := readBook(t, strings.Join([]string{"# Heading", "==="}, "\n"), true, 60, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, []string{"# Heading", "==="}, 60)
 	if got := formatted[len(formatted)-1]; got != "  ===" {
 		t.Fatalf("formatted = %q, want === as a prose paragraph", formatted)
 	}

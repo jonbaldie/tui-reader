@@ -38,7 +38,7 @@ var formatterInputs = []struct {
 func TestFormatter_TextMatchesRead(t *testing.T) {
 	for _, tc := range formatterInputs {
 		t.Run(tc.name, func(t *testing.T) {
-			want := readBook(t, strings.Join(tc.raw, "\n"), true, tc.width, 1<<30).Page(0).Lines
+			want := readDisplayLines(t, tc.raw, tc.width)
 			got := projectText(formatParagraphsWithProvenance(tc.raw, tc.width))
 			if len(got) != len(want) {
 				t.Fatalf("len = %d, want %d\ngot  %q\nwant %q", len(got), len(want), got, want)
@@ -61,7 +61,7 @@ func checkFormatterInvariants(t *testing.T, rawLines []string, width int) []form
 
 	// INV1: exactly one provenance entry per formatted line (the projection has
 	// the same length as the formatter output).
-	if len(lines) != len(readBook(t, strings.Join(rawLines, "\n"), true, width, 1<<30).Page(0).Lines) {
+	if len(lines) != len(readDisplayLines(t, rawLines, width)) {
 		t.Fatalf("formatter produced %d lines, want one per formatted line", len(lines))
 	}
 
@@ -205,7 +205,7 @@ func TestFormatter_IndentedCodeSpacingAndProvenance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := readBook(t, strings.Join(tt.raw, "\n"), true, 80, 1<<30).Page(0).Lines; !reflect.DeepEqual(got, tt.wantText) {
+			if got := readDisplayLines(t, tt.raw, 80); !reflect.DeepEqual(got, tt.wantText) {
 				t.Fatalf("display lines = %q, want %q", got, tt.wantText)
 			}
 			lines := formatParagraphsWithProvenance(tt.raw, 80)

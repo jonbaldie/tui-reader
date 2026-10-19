@@ -35,7 +35,7 @@ func TestIssue135_IndentedFenceInsideFencedCodeBlock(t *testing.T) {
 	}, "\n")
 
 	rawLines := strings.Split(content, "\n")
-	formatted := readBook(t, strings.Join(rawLines, "\n"), true, 80, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, rawLines, 80)
 	anchors := readBook(t, strings.Join(rawLines, "\n"), true, 80, 20).anchors
 
 	path := writeTempFile(t, "repro.md", content)

@@ -28,7 +28,7 @@ func TestIssue178_TildeFenceDoesNotHijackAnchors(t *testing.T) {
 }
 
 func TestIssue178_TildeFenceLinesAreNotMerged(t *testing.T) {
-	formatted := readBook(t, strings.Join(tildeFenceLines(), "\n"), true, 60, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, tildeFenceLines(), 60)
 	for i, line := range formatted {
 		if strings.Contains(line, "~~~") && (strings.Contains(line, "# install") || strings.Contains(line, "make install")) {
 			t.Fatalf("line %d joins code with tilde fence: %q", i, line)

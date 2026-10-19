@@ -37,7 +37,7 @@ func TestIssue111_FencedCodeDoesNotHijackAnchors(t *testing.T) {
 }
 
 func TestIssue111_FencedCodeLinesAreNotMerged(t *testing.T) {
-	formatted := readBook(t, strings.Join(minFenceLines(), "\n"), true, 60, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, minFenceLines(), 60)
 	for i, line := range formatted {
 		if strings.Contains(line, "tool --help") && strings.Contains(line, "```") {
 			t.Fatalf("line %d joins code with fence: %q", i, line)
@@ -123,7 +123,7 @@ func TestIssue111_MultipleFencesDoNotAffectProse(t *testing.T) {
 		t.Fatalf("anchors[real] = %d (ok=%v), want 4; %#v", got, ok, anchors)
 	}
 
-	formatted := readBook(t, strings.Join(lines, "\n"), true, 60, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, lines, 60)
 	if !formattedContains(formatted, "After fences.") {
 		t.Fatalf("prose after fences missing: %q", formatted)
 	}

@@ -13,7 +13,7 @@ func TestIssue77_SoftWrapParagraph(t *testing.T) {
 	}
 
 	// At width 120, both source lines reflow into a single display line.
-	out := readBook(t, strings.Join(raw, "\n"), true, 120, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, raw, 120)
 	want := []string{
 		"This is one Markdown paragraph deliberately split across physical source lines without a blank line.",
 	}
@@ -64,7 +64,7 @@ func TestIssue77_AdjacentListItemsNoBlankLines(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := readBook(t, strings.Join(tt.raw, "\n"), true, 80, 1<<30).Page(0).Lines
+			got := readDisplayLines(t, tt.raw, 80)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Fatalf("display lines =\n%q\nwant:\n%q", got, tt.want)
 			}
@@ -85,7 +85,7 @@ func TestIssue77_SoftWrapFixture(t *testing.T) {
 		"- second list item",
 	}
 
-	out := readBook(t, strings.Join(raw, "\n"), true, 62, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, raw, 62)
 
 	// Check that the two list items appear consecutively without a blank row.
 	foundItem1 := -1
@@ -142,7 +142,7 @@ func TestIssue77_SecondMultiLineParagraphIndented(t *testing.T) {
 		"Second paragraph line one",
 		"and line two.",
 	}
-	out := readBook(t, strings.Join(raw, "\n"), true, 80, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, raw, 80)
 	if len(out) != 3 {
 		t.Fatalf("expected 3 lines, got %d: %q", len(out), out)
 	}

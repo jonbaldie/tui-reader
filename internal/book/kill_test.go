@@ -56,7 +56,7 @@ func TestNewBookRead_MissingFileWrapsOSError(t *testing.T) {
 
 func TestReadFormatting_WidthZeroResetsTo80(t *testing.T) {
 	word := strings.Repeat("a", 81)
-	out := readBook(t, strings.Join([]string{word}, "\n"), true, 0, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, []string{word}, 0)
 	if len(out) != 2 {
 		t.Fatalf("width 0 must reset to 80: got %d lines, want 2 (%q)", len(out), out)
 	}
@@ -68,7 +68,7 @@ func TestReadFormatting_WidthZeroResetsTo80(t *testing.T) {
 func TestReadFormatting_WidthOneIsHonored(t *testing.T) {
 	// width 1 is valid (>= 1) and must NOT be reset to 80.
 	word := strings.Repeat("a", 81)
-	out := readBook(t, strings.Join([]string{word}, "\n"), true, 1, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, []string{word}, 1)
 	if len(out) != 81 {
 		t.Fatalf("width 1 must wrap to 81 single-rune lines, got %d", len(out))
 	}
@@ -77,14 +77,14 @@ func TestReadFormatting_WidthOneIsHonored(t *testing.T) {
 // ==================== Read formatting blank handling ====================
 
 func TestReadFormatting_TrailingBlankPreserved(t *testing.T) {
-	out := readBook(t, strings.Join([]string{"text", ""}, "\n"), true, 60, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, []string{"text", ""}, 60)
 	if len(out) != 2 || out[len(out)-1] != "" {
 		t.Errorf("trailing blank source line must be preserved: got %q", out)
 	}
 }
 
 func TestReadFormatting_NoConsecutiveBlanks(t *testing.T) {
-	out := readBook(t, strings.Join([]string{"a", "", "", "b"}, "\n"), true, 60, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, []string{"a", "", "", "b"}, 60)
 	for i := 1; i < len(out); i++ {
 		if out[i] == "" && out[i-1] == "" {
 			t.Errorf("consecutive blank lines at %d in %q (blanks must collapse)", i, out)
@@ -93,7 +93,7 @@ func TestReadFormatting_NoConsecutiveBlanks(t *testing.T) {
 }
 
 func TestReadFormatting_SecondParagraphIndented(t *testing.T) {
-	out := readBook(t, strings.Join([]string{"First paragraph.", "", "Second paragraph."}, "\n"), true, 60, 1<<30).Page(0).Lines
+	out := readDisplayLines(t, []string{"First paragraph.", "", "Second paragraph."}, 60)
 	var second string
 	for _, l := range out {
 		if strings.Contains(l, "Second") {

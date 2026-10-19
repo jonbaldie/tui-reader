@@ -12,7 +12,7 @@ func TestIndentedCodeBlock_WrappingPreservesIndentation(t *testing.T) {
 	raw := []string{"    this is a long indented code line that wraps past width"}
 
 	// At width 20, lines should wrap and every line must start with "    ".
-	formatted := readBook(t, strings.Join(raw, "\n"), true, 20, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, raw, 20)
 	if len(formatted) < 2 {
 		t.Fatalf("expected multiple wrapped lines, got %v", formatted)
 	}
@@ -29,7 +29,7 @@ func TestIndentedCodeBlock_WrappingPreservesIndentation(t *testing.T) {
 
 func TestIndentedCodeBlock_ShortLinePreservesIndentation(t *testing.T) {
 	raw := []string{"    short code"}
-	formatted := readBook(t, strings.Join(raw, "\n"), true, 20, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, raw, 20)
 	want := []string{"    short code"}
 	if !reflect.DeepEqual(formatted, want) {
 		t.Errorf("got %v, want %v", formatted, want)
@@ -39,7 +39,7 @@ func TestIndentedCodeBlock_ShortLinePreservesIndentation(t *testing.T) {
 func TestIndentedCodeBlock_NotGivenParagraphIndent(t *testing.T) {
 	// A code block following a paragraph must NOT receive a 2-space paragraph indent.
 	raw := []string{"First paragraph", "", "    code line"}
-	formatted := readBook(t, strings.Join(raw, "\n"), true, 40, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, raw, 40)
 	if len(formatted) != 3 {
 		t.Fatalf("expected 3 lines, got %v", formatted)
 	}
@@ -50,7 +50,7 @@ func TestIndentedCodeBlock_NotGivenParagraphIndent(t *testing.T) {
 
 func TestIndentedCodeBlock_SpecialLinesNoParagraphIndent(t *testing.T) {
 	lines := []string{"para 1", "", "# Heading", "", "---", "", "para 2"}
-	formatted := readBook(t, strings.Join(lines, "\n"), true, 40, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, lines, 40)
 	if len(formatted) != 7 {
 		t.Fatalf("expected 7 lines, got %v", formatted)
 	}
@@ -67,7 +67,7 @@ func TestIndentedCodeBlock_SpecialLinesNoParagraphIndent(t *testing.T) {
 
 func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 	// At exact boundary width 5, width - 4 = 1. "ab" wraps to "a", "b", each prefixed by 4 spaces.
-	formatted := readBook(t, "    ab", true, 5, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, []string{"    ab"}, 5)
 	want := []string{"    a", "    b"}
 	if !reflect.DeepEqual(formatted, want) {
 		t.Errorf("at width 5: got %v, want %v", formatted, want)
@@ -95,7 +95,7 @@ func TestIndentedCodeBlock_BoundaryWidth5(t *testing.T) {
 func TestIndentedCodeBlock_ExactWidthMinus4(t *testing.T) {
 	// At width 6, available width for code is 6 - 4 = 2.
 	// "abc" must wrap into "ab" and "c", resulting in "    ab" and "    c".
-	formatted := readBook(t, "    abc", true, 6, 1<<30).Page(0).Lines
+	formatted := readDisplayLines(t, []string{"    abc"}, 6)
 	want := []string{"    ab", "    c"}
 	if !reflect.DeepEqual(formatted, want) {
 		t.Errorf("at width 6: got %v, want %v", formatted, want)
