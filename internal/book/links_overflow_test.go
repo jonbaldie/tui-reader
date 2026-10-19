@@ -13,7 +13,7 @@ import (
 // tab, followable via enter) through its raw-source-line provenance.
 func TestLinkOverflow_WideMarkupWrapsToWidth(t *testing.T) {
 	raw := []string{"# target", "", "[This is a long link label](#target)"}
-	pages := Paginate(raw, 20, 20)
+	pages := readBook(t, strings.Join(raw, "\n"), true, 20, 20).pages
 
 	for pi, page := range pages {
 		for li, line := range page.Lines {
@@ -23,8 +23,7 @@ func TestLinkOverflow_WideMarkupWrapsToWidth(t *testing.T) {
 		}
 	}
 
-	// The link stays attached and resolvable through NewBook (Paginate alone
-	// does not attach links; NewBook is the entry point that does).
+	// The path adapter also keeps the link attached and resolvable.
 	content := strings.Join(raw, "\n") + "\n"
 	path := writeTempFile(t, "wide.md", content)
 	b, err := NewBook(path, 20, 20)
@@ -51,7 +50,7 @@ func TestLinkOverflow_WideMarkupWrapsToWidth(t *testing.T) {
 // their label is fully visible and stylable (the #23 behaviour).
 func TestLinkOverflow_ShortLinkStaysWhole(t *testing.T) {
 	raw := []string{"# target", "", "[go](#target)"}
-	pages := Paginate(raw, 20, 20)
+	pages := readBook(t, strings.Join(raw, "\n"), true, 20, 20).pages
 
 	var whole bool
 	for _, page := range pages {
@@ -68,7 +67,7 @@ func TestLinkOverflow_ShortLinkStaysWhole(t *testing.T) {
 
 func TestLinkOverflow_PrefixedMarkupUsesLinkStartLine(t *testing.T) {
 	raw := []string{"before([abcdefghijk](#target)"}
-	pages := AttachLinks(Paginate(raw, 5, 20), raw, 5, 20)
+	pages := readBook(t, strings.Join(raw, "\n"), true, 5, 20).pages
 
 	if len(pages[0].Links) != 1 {
 		t.Fatalf("attached links = %d, want 1: %+v", len(pages[0].Links), pages[0].Links)

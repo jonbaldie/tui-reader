@@ -40,7 +40,7 @@ func TestAdversarial_LargeFile(t *testing.T) {
 	for i := range lines {
 		lines[i] = fmt.Sprintf("Line number %d of the document.", i)
 	}
-	pages := Paginate(lines, 80, 25)
+	pages := readBook(t, strings.Join(lines, "\n"), true, 80, 25).pages
 	// 100k lines of prose reflow into ~45k wrapped lines = ~1800 pages at height 25
 	if len(pages) < 1500 {
 		t.Errorf("expected 1500+ pages for 100k lines at height 25, got %d", len(pages))
@@ -62,11 +62,11 @@ func TestAdversarial_OnlyHeadings(t *testing.T) {
 		"## Heading 2",
 		"### Heading 3",
 	}
-	anchors := ExtractAnchors(lines)
+	anchors := readBook(t, strings.Join(lines, "\n"), true, 80, 20).anchors
 	if len(anchors) != 3 {
 		t.Errorf("expected 3 anchors, got %d", len(anchors))
 	}
-	pages := Paginate(lines, 80, 10)
+	pages := readBook(t, strings.Join(lines, "\n"), true, 80, 10).pages
 	if len(pages) != 1 {
 		t.Errorf("expected 1 page, got %d", len(pages))
 	}
@@ -81,7 +81,7 @@ func TestAdversarial_DuplicateHeadings(t *testing.T) {
 		"# Chapter",
 		"Second chapter text",
 	}
-	anchors := ExtractAnchors(lines)
+	anchors := readBook(t, strings.Join(lines, "\n"), true, 80, 20).anchors
 	// Duplicate heading: second overwrites first
 	// This is a KNOWN BEHAVIOR - the last occurrence wins
 	idx, ok := anchors["chapter"]
@@ -147,7 +147,7 @@ func TestAdversarial_SingleNewline(t *testing.T) {
 func TestAdversarial_HeadingNoSpace(t *testing.T) {
 	// "#NoSpace" should NOT be treated as a heading (markdown spec requires space)
 	lines := []string{"#NoSpace", "# With Space"}
-	anchors := ExtractAnchors(lines)
+	anchors := readBook(t, strings.Join(lines, "\n"), true, 80, 20).anchors
 	if _, ok := anchors["nospace"]; ok {
 		t.Error("#NoSpace without space should not be an anchor")
 	}
@@ -165,8 +165,7 @@ func TestAdversarial_LinkTextWrapped(t *testing.T) {
 	longLine := strings.Repeat("padding ", 10) + "[Very Important Link](#target) " + strings.Repeat("more ", 10)
 	rawLines := []string{"# Target", "", longLine}
 
-	pages := Paginate(rawLines, 40, 10) // narrow enough to force wrapping
-	pages = AttachLinks(pages, rawLines, 40, 10)
+	pages := readBook(t, strings.Join(rawLines, "\n"), true, 40, 10).pages // narrow enough to force wrapping
 
 	// The link should still be found (from the raw line, not the wrapped version)
 	found := false
@@ -207,13 +206,13 @@ func TestAdversarial_WrapWidth0(t *testing.T) {
 	}
 }
 
-// ==================== BUG HUNT: Paginate with height=1 ====================
+// ==================== BUG HUNT: Read with height=1 ====================
 
-func TestAdversarial_PaginateHeight1(t *testing.T) {
+func TestAdversarial_ReadHeight1(t *testing.T) {
 	// 3 paragraphs separated by blanks -> "a", "", "  b", "", "  c" = 5 formatted lines
 	// At height 1: 5 pages, each with 1 line
 	lines := []string{"a", "", "b", "", "c"}
-	pages := Paginate(lines, 80, 1)
+	pages := readBook(t, strings.Join(lines, "\n"), true, 80, 1).pages
 	if len(pages) != 5 {
 		t.Errorf("expected 5 pages at height 1 (3 content + 2 blanks), got %d", len(pages))
 	}
@@ -268,7 +267,7 @@ func TestAdversarial_MarkdownInLinkLabel(t *testing.T) {
 	}
 }
 
-// ==================== BUG HUNT: PageForAnchor with zero PageHeight ====================
+// ==================== PageForAnchor after reflow to zero height ====================
 
 func TestAdversarial_PageForAnchorZeroHeight(t *testing.T) {
 	content := "# Heading\ntext\n"
@@ -277,11 +276,10 @@ func TestAdversarial_PageForAnchorZeroHeight(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Manually set PageHeight to 0 (shouldn't happen normally but let's be safe)
-	b.pageHeight = 0
-	// This should not panic (division by zero)
-	page := b.PageForAnchor("heading")
-	_ = page // just checking it doesn't panic
+	b.Reflow(80, 0)
+	if got := b.PageForAnchor("heading"); got != 0 {
+		t.Errorf("PageForAnchor after zero-height reflow = %d, want 0", got)
+	}
 }
 
 // ==================== BUG HUNT: Reflow to very small dimensions ====================

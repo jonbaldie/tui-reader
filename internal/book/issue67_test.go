@@ -40,12 +40,9 @@ func TestIndentedCodeDoesNotCreateAnchorsOrLinks(t *testing.T) {
 }
 
 func TestIndentedCodeDoesNotAnchorPagePositionAsHeading(t *testing.T) {
-	layout := buildBookLayout([]string{
-		"Body text",
-		"    # Not a heading",
-	}, 80, 3)
+	b := readBook(t, "Body text\n    # Not a heading", true, 80, 3)
 
-	if got, want := layout.pagePositions[0].Raw, 0; got != want {
+	if got, want := b.RawLineForPage(0), 0; got != want {
 		t.Fatalf("page raw anchor = %d, want %d for the body line", got, want)
 	}
 }
