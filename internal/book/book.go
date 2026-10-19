@@ -238,11 +238,11 @@ func findFenceBlockEnd(rawLines []string, start int) int {
 	return n
 }
 
-// formatParagraphsWithProvenance is the single owner of the paragraph
-// formatting rules. In one pass it produces each display line together with the
-// raw source line it came from, so callers never re-derive the formatting
-// algorithm to recover provenance. FormatParagraphs is a thin projection over
-// it.
+// formatParagraphsWithProvenance exposes Markdown display lines and their raw
+// source-line provenance to in-package formatting tests. Book construction uses
+// formatDocument, which also captures anchors and supports plain text.
+// Both paths share formatMarkdownDocument rather than re-deriving formatting
+// to recover provenance.
 func formatParagraphsWithProvenance(rawLines []string, width int) []formattedLine {
 	return formatMarkdownDocument(rawLines, width, false).lines
 }
