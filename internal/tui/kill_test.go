@@ -186,9 +186,9 @@ func TestFollowLink_TargetOnFirstPageFollowsAndResets(t *testing.T) {
 	}
 }
 
-// ==================== isHeading ====================
+// ==================== heading styling ====================
 
-func TestIsHeading(t *testing.T) {
+func TestHeadingStyling(t *testing.T) {
 	cases := []struct {
 		line string
 		want bool
@@ -203,8 +203,14 @@ func TestIsHeading(t *testing.T) {
 		{"a # not heading", false},
 	}
 	for _, c := range cases {
-		if got := isHeading(c.line); got != c.want {
-			t.Errorf("isHeading(%q) = %v, want %v", c.line, got, c.want)
+		m := newTestModel(t, "heading.md", c.line)
+		page := m.BookRef().Page(0)
+		got := false
+		for _, heading := range page.Headings {
+			got = got || heading
+		}
+		if got != c.want {
+			t.Errorf("heading classification for %q = %v, want %v", c.line, got, c.want)
 		}
 	}
 }

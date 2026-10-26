@@ -319,7 +319,7 @@ func (m Model) renderContent() string {
 	rendered := make([]string, 0, m.contentHeight)
 	for i, line := range page.Lines {
 		linkIndex := lineLinkStartIndex[i]
-		styledLine, _ := styleLine(line, i, linksByLine, m.selectedLink, linkIndex)
+		styledLine, _ := styleLine(line, page.Headings[i], i, linksByLine, m.selectedLink, linkIndex)
 		rendered = append(rendered, styledLine)
 	}
 
@@ -352,20 +352,18 @@ var (
 				Underline(true)
 )
 
-func styleLine(line string, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedIndex, linkIndex int) (string, int) {
-	// Check if this line has links
+func styleLine(line string, heading bool, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedIndex, linkIndex int) (string, int) {
+	style := textStyle
+	if heading {
+		style = headingStyle
+	}
 	links, hasLinks := linksByLine[lineIdx]
-
 	if !hasLinks {
-		// Check for heading styling
-		if isHeading(line) {
-			return headingStyle.Render(line), linkIndex
-		}
-		return textStyle.Render(line), linkIndex
+		return style.Render(line), linkIndex
 	}
 
 	result, linkIndex := styleLinkMarkup(line, links, selectedIndex, linkIndex)
-	return textStyle.Render(result), linkIndex
+	return style.Render(result), linkIndex
 }
 
 type linkKey struct {
@@ -422,14 +420,6 @@ func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedIndex, lin
 	}
 	sb.WriteString(line[lastIdx:])
 	return sb.String(), linkIndex
-}
-
-func isHeading(line string) bool {
-	if book.IsIndentedCodeLine(line) {
-		return false
-	}
-	trimmed := strings.TrimSpace(line)
-	return len(trimmed) > 0 && trimmed[0] == '#'
 }
 
 const helpText = "←/→ page • tab link • enter follow • b back • q quit"

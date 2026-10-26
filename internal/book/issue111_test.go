@@ -151,7 +151,7 @@ func TestIssue111_FencedHashCommentIsNotAHeadingLine(t *testing.T) {
 	if !found {
 		t.Fatalf("missing # usage display line: %v", projectText(formatted))
 	}
-	if isHeadingLine(comment.text) {
+	if comment.heading {
 		t.Fatalf("fenced comment %q treated as a heading", comment.text)
 	}
 }

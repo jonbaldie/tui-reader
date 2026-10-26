@@ -38,8 +38,9 @@ type Link struct {
 
 // Page represents a single screen of content.
 type Page struct {
-	Lines []string // lines of text to display
-	Links []Link   // clickable links on this page
+	Lines    []string // lines of text to display
+	Links    []Link   // clickable links on this page
+	Headings []bool   // parallel to Lines; true for every display line of a heading block
 }
 
 // Book is a loaded and paginated document. Its source and layout are
@@ -143,11 +144,12 @@ func titleCase(s string) string {
 // 0-based index of the source line it came from, or -1 for a blank line that
 // formatting inserted as a paragraph spacer. Across a document the raw indices
 // are non-decreasing. The links field records link tokens whose markup starts
-// on the display line.
+// on the display line; heading marks all content lines of a heading block.
 type formattedLine struct {
-	text  string
-	raw   int
-	links []Link
+	text    string
+	raw     int
+	links   []Link
+	heading bool
 }
 
 type formattedDocument struct {
@@ -271,8 +273,13 @@ func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) f
 		}
 
 		block := formatNextBlock(rawLines, ri, firstParagraph, prevCode, prevList, width, result)
-		if anchors != nil {
-			recordHeadingAnchor(anchors, raw, ri, block)
+		if title := headingTitle(raw, block); title != "" {
+			for i := range block.lines {
+				block.lines[i].heading = block.lines[i].text != ""
+			}
+			if anchors != nil {
+				anchors[NormalizeAnchor(title)] = ri
+			}
 		}
 		result = append(result, block.lines...)
 		firstParagraph = false
@@ -283,19 +290,18 @@ func formatMarkdownDocument(rawLines []string, width int, captureAnchors bool) f
 	return formattedDocument{lines: result, anchors: anchors}
 }
 
-// recordHeadingAnchor records the anchor of the block starting at raw line ri
-// when that block is an ATX or setext heading.
-func recordHeadingAnchor(anchors map[string]int, raw string, ri int, block formattedBlock) {
+// headingTitle classifies a Markdown block for both anchors and display lines.
+func headingTitle(raw string, block formattedBlock) string {
 	if block.setextTitle != "" {
-		anchors[NormalizeAnchor(block.setextTitle)] = ri
-		return
+		return block.setextTitle
 	}
-	if IsIndentedCodeLine(raw) {
-		return
+	if block.isCode {
+		return ""
 	}
 	if m := headingRegex.FindStringSubmatch(strings.TrimSpace(raw)); m != nil {
-		anchors[NormalizeAnchor(m[2])] = ri
+		return m[2]
 	}
+	return ""
 }
 
 type formattedBlock struct {
@@ -691,10 +697,12 @@ func paginateFormatted(formatted []formattedLine, height int) []Page {
 			end = len(formatted)
 		}
 		pageLines := make([]string, end-i)
+		headings := make([]bool, end-i)
 		for j, fl := range formatted[i:end] {
 			pageLines[j] = fl.text
+			headings[j] = fl.heading
 		}
-		pages = append(pages, Page{Lines: pageLines, Links: []Link{}})
+		pages = append(pages, Page{Lines: pageLines, Links: []Link{}, Headings: headings})
 	}
 	return pages
 }
@@ -780,7 +788,7 @@ func pageAnchor(pageLines []formattedLine, sources []Position, last Position) (P
 		if content < 0 {
 			content = i
 		}
-		if heading < 0 && isHeadingLine(fl.text) {
+		if heading < 0 && fl.heading {
 			heading = i
 		}
 	}
@@ -791,14 +799,6 @@ func pageAnchor(pageLines []formattedLine, sources []Position, last Position) (P
 		return sources[content], last
 	}
 	return last, last
-}
-
-// isHeadingLine reports whether a display line is a markdown heading.
-func isHeadingLine(text string) bool {
-	if IsIndentedCodeLine(text) {
-		return false
-	}
-	return strings.HasPrefix(strings.TrimSpace(text), "#")
 }
 
 // WrapLines wraps each line to fit within the given width.
@@ -1076,8 +1076,9 @@ func (b *Book) PageCount() int {
 func (b *Book) Page(i int) Page {
 	p := b.pages[i]
 	return Page{
-		Lines: slices.Clone(p.Lines),
-		Links: slices.Clone(p.Links),
+		Lines:    slices.Clone(p.Lines),
+		Links:    slices.Clone(p.Links),
+		Headings: slices.Clone(p.Headings),
 	}
 }
 
