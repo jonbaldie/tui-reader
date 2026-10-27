@@ -373,7 +373,8 @@ func formatLineBlock(rawLines []string, start, width int, firstParagraph bool, r
 		block.lines = append(block.lines, formattedLine{text: "", raw: -1})
 	}
 	marker := lineBlockMarker(rawLines[start])
-	for ri := start; ri < len(rawLines) && lineBlockMarker(rawLines[ri]) == marker; ri++ {
+	n := len(rawLines)
+	for ri := start; ri < n && lineBlockMarker(rawLines[ri]) == marker; ri++ {
 		raw := strings.TrimSpace(rawLines[ri])
 		var wrapped []wrappedLine
 		if marker == '|' {
@@ -398,10 +399,11 @@ func wrapTableRow(raw string, width int) []wrappedLine {
 	matches := extractLinkMatches(raw)
 	wrapped := make([]wrappedLine, len(texts))
 	offset, next := 0, 0
+	nMatches := len(matches)
 	for i, text := range texts {
 		wrapped[i].text = text
 		offset += len(text)
-		for next < len(matches) && matches[next].start < offset {
+		for next < nMatches && matches[next].start < offset {
 			wrapped[i].links = append(wrapped[i].links, matches[next].link)
 			next++
 		}
