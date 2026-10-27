@@ -157,7 +157,6 @@ func titleCase(s string) string {
 type formattedLine struct {
 	text    string
 	raw     int
-	links   []Link
 	placed  []placedLink
 	heading bool
 }
@@ -169,7 +168,6 @@ type formattedDocument struct {
 
 type wrappedLine struct {
 	text   string
-	links  []Link
 	placed []placedLink
 }
 
@@ -426,7 +424,6 @@ func wrapTableRow(raw string, width int) []wrappedLine {
 		offset += len(text)
 		for next < nMatches && matches[next].start < offset {
 			match := matches[next]
-			wrapped[i].links = append(wrapped[i].links, match.link)
 			placed := placedLink{link: match.link, opener: labelPiece{line: i, start: match.start - (offset - len(text)), end: match.start - (offset - len(text)) + 1}}
 			labelStart, labelEnd := match.start+1, match.start+1+len(match.link.Label)
 			pieceOffset := offset - len(text)
@@ -630,14 +627,14 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 		idx := strings.Index(joined[searchFrom:], trimmed)
 		if idx < 0 {
 			// Without a position, the line may render any later raw line.
-			result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links, placed: wrapped[i].placed}
+			result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
 			continue
 		}
 		matchPos := searchFrom + idx
 		searchFrom = matchPos + len(trimmed)
 		currentLine = advanceLine(offsets, currentLine, matchPos)
 		lastRaw = startRi + currentLine
-		result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links, placed: wrapped[i].placed}
+		result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
 	}
 	return result
 }
@@ -710,7 +707,7 @@ func wrapFormattedLines(wrapped []string, ri int, prefix string) []formattedLine
 func formatWrappedLines(wrapped []wrappedLine, ri int, prefix string) []formattedLine {
 	lines := make([]formattedLine, len(wrapped))
 	for i, w := range wrapped {
-		lines[i] = formattedLine{text: prefix + w.text, raw: ri, links: w.links, placed: w.placed}
+		lines[i] = formattedLine{text: prefix + w.text, raw: ri, placed: w.placed}
 	}
 	return lines
 }
@@ -929,7 +926,6 @@ func wrapLineWithLinks(line string, width int) []wrappedLine {
 	}
 
 	lines := make([]string, 0, len(line)/width+1)
-	var linkStarts map[int][]Link
 	var placements []placedLink
 	current := make([]rune, 0, width)
 	currentWidth := 0
@@ -947,13 +943,13 @@ func wrapLineWithLinks(line string, width int) []wrappedLine {
 		if shouldFlush(currentWidth, len(current) > 0, token.spaceBefore, wordLength, width) {
 			flush()
 		}
-		linkStarts = appendPlacedWrapToken(token, &current, &currentWidth, width, &lines, linkStarts, &placements)
+		appendPlacedWrapToken(token, &current, &currentWidth, width, &lines, &placements)
 	})
 	flush()
 
 	result := make([]wrappedLine, len(lines))
 	for i, text := range lines {
-		result[i] = wrappedLine{text: text, links: linkStarts[i]}
+		result[i] = wrappedLine{text: text}
 	}
 	for _, placed := range placements {
 		result[placed.opener.line].placed = append(result[placed.opener.line].placed, placed)
@@ -961,17 +957,18 @@ func wrapLineWithLinks(line string, width int) []wrappedLine {
 	return result
 }
 
-func appendPlacedWrapToken(token wrapToken, current *[]rune, currentWidth *int, width int, lines *[]string, starts map[int][]Link, placements *[]placedLink) map[int][]Link {
+func appendPlacedWrapToken(token wrapToken, current *[]rune, currentWidth *int, width int, lines *[]string, placements *[]placedLink) {
+	if len(*current) > 0 && token.spaceBefore {
+		*current = append(*current, ' ')
+		(*currentWidth)++
+	}
 	if !token.link {
-		return appendWrapToken(token, current, currentWidth, width, lines, starts)
+		appendWordRunes(current, currentWidth, token.text, width, lines)
+		return
 	}
 	startLine, startByte := len(*lines), len(string(*current))
-	if len(*current) > 0 && token.spaceBefore {
-		startByte++
-	}
-	starts = appendWrapToken(token, current, currentWidth, width, lines, starts)
-	placeTokenLinks(token.text, startLine, startByte, *lines, *current, placements)
-	return starts
+	appendLinkRunes(current, currentWidth, token.text, width, lines)
+	placeTokenLinks(token, startLine, startByte, *lines, *current, placements)
 }
 
 func shiftPlaced(placed []placedLink, indent int) {
@@ -989,13 +986,14 @@ func shiftPlaced(placed []placedLink, indent int) {
 	}
 }
 
-func placeTokenLinks(token string, startLine, startByte int, lines []string, current []rune, placements *[]placedLink) {
-	match := extractLinkMatches(token)[0]
+func placeTokenLinks(token wrapToken, startLine, startByte int, lines []string, current []rune, placements *[]placedLink) {
+	match := extractLinkMatches(token.text[token.linkStart:])[0]
+	match.start += token.linkStart
 	placed := placedLink{link: match.link}
 	labelStart, labelEnd := match.start+1, match.start+1+len(match.link.Label)
 	line, pos := startLine, startByte
 	currentBytes := len(string(current))
-	for offset, r := range token {
+	for offset, r := range token.text {
 		if pos >= tokenLineLength(lines, currentBytes, line) {
 			line++
 			pos = 0
@@ -1022,50 +1020,6 @@ func tokenLineLength(lines []string, currentBytes, line int) int {
 		return len(lines[line])
 	}
 	return currentBytes
-}
-
-func appendWrapToken(token wrapToken, current *[]rune, currentWidth *int, width int, lines *[]string, linkStarts map[int][]Link) map[int][]Link {
-	if len(*current) > 0 && token.spaceBefore {
-		*current = append(*current, ' ')
-		(*currentWidth)++
-	}
-	if token.link {
-		linkStarts = recordLinkStart(linkStarts, *lines, *current, *currentWidth, width, token.text)
-		appendLinkRunes(current, currentWidth, token.text, width, lines)
-		return linkStarts
-	}
-	appendWordRunes(current, currentWidth, token.text, width, lines)
-	return linkStarts
-}
-
-func recordLinkStart(starts map[int][]Link, lines []string, current []rune, currentWidth, width int, token string) map[int][]Link {
-	links := ExtractLinks(token)
-	if len(links) == 0 {
-		return starts
-	}
-	if starts == nil {
-		starts = make(map[int][]Link)
-	}
-	lineIndex := len(lines)
-	if stringWidth(token) > width {
-		lineIndex = linkStartLine(lines, current, currentWidth, width, token, links[0])
-	}
-	starts[lineIndex] = append(starts[lineIndex], links...)
-	return starts
-}
-
-func linkStartLine(lines []string, current []rune, currentWidth, width int, token string, link Link) int {
-	linkMarkup := "[" + link.Label + "](#" + link.Target + ")"
-	linkStart := strings.Index(token, linkMarkup)
-	if linkStart <= 0 {
-		return len(lines)
-	}
-
-	previewCurrent := append([]rune(nil), current...)
-	previewWidth := currentWidth
-	previewLines := make([]string, 0, 1)
-	appendWordRunes(&previewCurrent, &previewWidth, token[:linkStart], width, &previewLines)
-	return len(lines) + len(previewLines)
 }
 
 // shouldFlush reports whether the current line should be flushed before adding
@@ -1103,8 +1057,7 @@ func appendWordRunes(current *[]rune, currentWidth *int, word string, width int,
 // appendLinkRunes appends a link token to current. A link that fits within the
 // width is kept whole so its markup stays on one display line. A link wider
 // than the page is hard-broken at the character level via appendWordRunes, so
-// no display line exceeds width. Link-start provenance is recorded by
-// wrapLineWithLinks before the broken token is appended.
+// no display line exceeds width.
 func appendLinkRunes(current *[]rune, currentWidth *int, text string, width int, lines *[]string) {
 	if stringWidth(text) > width {
 		appendWordRunes(current, currentWidth, text, width, lines)
@@ -1118,6 +1071,7 @@ type wrapToken struct {
 	text        string
 	spaceBefore bool
 	link        bool
+	linkStart   int
 }
 
 func matchLinkToken(line string, i int, spans [][2]int) int {
@@ -1155,7 +1109,7 @@ func eachWrapToken(line string, consume func(wrapToken)) {
 				break
 			}
 			if matchLen := matchLinkToken(line, i, spans); matchLen > 0 {
-				consume(wrapToken{text: line[start : i+matchLen], spaceBefore: spaceBefore, link: true})
+				consume(wrapToken{text: line[start : i+matchLen], spaceBefore: spaceBefore, link: true, linkStart: i - start})
 				i += matchLen
 				link = true
 				break
