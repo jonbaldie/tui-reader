@@ -152,10 +152,15 @@ func overlapsCodeSpan(start, end int, spans [][2]int) bool {
 }
 
 // linkLocation tracks where a source line's links appear in the formatted
-// output: the first formatted line index, and per-link candidate indices.
+// output: the first formatted line index and occurrence-resolved candidates.
 type linkLocation struct {
 	first int
-	links map[Link][]int
+	links map[Link][]linkCandidate
+}
+
+type linkCandidate struct {
+	line   int
+	placed placedLink
 }
 
 // sourceLinkSet holds pre-extracted links from raw document lines and the order
@@ -262,7 +267,8 @@ func recordFormattedLine(locations map[int]*linkLocation, fi int, line formatted
 	if block < 0 {
 		block = line.raw
 	}
-	for _, link := range line.links {
+	for _, placed := range line.placed {
+		link := placed.link
 		key := reflowKey{block: block, markup: linkMarkup(link)}
 		candidates := reflowed.lines[key]
 		next := reflowed.next[key]
@@ -274,9 +280,9 @@ func recordFormattedLine(locations map[int]*linkLocation, fi int, line formatted
 
 		entry := locationFor(locations, rawIndex, fi)
 		if entry.links == nil {
-			entry.links = make(map[Link][]int)
+			entry.links = make(map[Link][]linkCandidate)
 		}
-		entry.links[link] = append(entry.links[link], fi)
+		entry.links[link] = append(entry.links[link], linkCandidate{line: fi, placed: placed})
 	}
 }
 
@@ -364,8 +370,12 @@ func assignLinksToPages(pages []Page, sourceOrder []int, sourceLinks map[int][]L
 		}
 		for _, link := range links {
 			formattedIndex := entry.first
+			var candidate linkCandidate
+			found := false
 			if candidates := entry.links[link]; len(candidates) > 0 {
-				formattedIndex = candidates[0]
+				candidate = candidates[0]
+				formattedIndex = candidate.line
+				found = true
 				entry.links[link] = candidates[1:]
 			}
 			pageIndex := formattedIndex / height
@@ -373,7 +383,34 @@ func assignLinksToPages(pages []Page, sourceOrder []int, sourceLinks map[int][]L
 				continue
 			}
 			link.LineOnPage = formattedIndex % height
-			pages[pageIndex].Links = append(pages[pageIndex].Links, link)
+			owner := &pages[pageIndex]
+			linkIndex := len(owner.Links)
+			owner.Links = append(owner.Links, link)
+			if !found {
+				continue
+			}
+			assignLabelSpans(pages, candidate, formattedIndex, pageIndex, linkIndex, height)
 		}
+	}
+}
+
+func assignLabelSpans(pages []Page, candidate linkCandidate, formattedIndex, pageIndex, linkIndex, height int) {
+	visibleOnOwner := false
+	for _, piece := range candidate.placed.pieces {
+		fi := formattedIndex + piece.line - candidate.placed.opener.line
+		pi := fi / height
+		if pi >= len(pages) {
+			continue
+		}
+		index := -1
+		if pi == pageIndex {
+			index = linkIndex
+			visibleOnOwner = true
+		}
+		pages[pi].LabelSpans = append(pages[pi].LabelSpans, LabelSpan{Line: fi % height, Start: piece.start, End: piece.end, LinkIndex: index})
+	}
+	if !visibleOnOwner {
+		piece := candidate.placed.opener
+		pages[pageIndex].LabelSpans = append(pages[pageIndex].LabelSpans, LabelSpan{Line: formattedIndex % height, Start: piece.start, End: piece.end, LinkIndex: linkIndex, Opener: true})
 	}
 }

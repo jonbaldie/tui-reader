@@ -38,9 +38,18 @@ type Link struct {
 
 // Page represents a single screen of content.
 type Page struct {
-	Lines    []string // lines of text to display
-	Links    []Link   // clickable links on this page
-	Headings []bool   // parallel to Lines; true for every display line of a heading block
+	Lines      []string    // lines of text to display
+	Links      []Link      // clickable links on this page
+	Headings   []bool      // parallel to Lines; true for every display line of a heading block
+	LabelSpans []LabelSpan // link label ranges and selected-only openers
+}
+
+// LabelSpan identifies a half-open UTF-8 byte range on a page line. LinkIndex
+// indexes Links, or is -1 when the link starts on another page. Opener spans
+// are rendered only when selected and no label text fits on the owning page.
+type LabelSpan struct {
+	Line, Start, End, LinkIndex int
+	Opener                      bool
 }
 
 // Book is a loaded and paginated document. Its source and layout are
@@ -148,7 +157,7 @@ func titleCase(s string) string {
 type formattedLine struct {
 	text    string
 	raw     int
-	links   []Link
+	placed  []placedLink
 	heading bool
 }
 
@@ -158,8 +167,18 @@ type formattedDocument struct {
 }
 
 type wrappedLine struct {
-	text  string
-	links []Link
+	text   string
+	placed []placedLink
+}
+
+type labelPiece struct {
+	line, start, end int
+}
+
+type placedLink struct {
+	link   Link
+	pieces []labelPiece
+	opener labelPiece
 }
 
 type bookLayout struct {
@@ -404,7 +423,21 @@ func wrapTableRow(raw string, width int) []wrappedLine {
 		wrapped[i].text = text
 		offset += len(text)
 		for next < nMatches && matches[next].start < offset {
-			wrapped[i].links = append(wrapped[i].links, matches[next].link)
+			match := matches[next]
+			placed := placedLink{link: match.link, opener: labelPiece{line: i, start: match.start - (offset - len(text)), end: match.start - (offset - len(text)) + 1}}
+			labelStart, labelEnd := match.start+1, match.start+1+len(match.link.Label)
+			pieceOffset := offset - len(text)
+			nTexts := len(texts)
+			for j := i; j < nTexts && pieceOffset < labelEnd; j++ {
+				row := texts[j]
+				start := max(labelStart, pieceOffset)
+				end := min(labelEnd, pieceOffset+len(row))
+				if start < end {
+					placed.pieces = append(placed.pieces, labelPiece{line: j, start: start - pieceOffset, end: end - pieceOffset})
+				}
+				pieceOffset += len(row)
+			}
+			wrapped[i].placed = append(wrapped[i].placed, placed)
 			next++
 		}
 	}
@@ -588,19 +621,20 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 		text := wrapped[i].text
 		if i == 0 && shouldIndent {
 			text = paragraphIndent + text
+			shiftPlaced(wrapped[i].placed, len(paragraphIndent))
 		}
 		trimmed := strings.TrimLeft(wrapped[i].text, " ")
 		idx := strings.Index(joined[searchFrom:], trimmed)
 		if idx < 0 {
 			// Without a position, the line may render any later raw line.
-			result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
+			result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
 			continue
 		}
 		matchPos := searchFrom + idx
 		searchFrom = matchPos + len(trimmed)
 		currentLine = advanceLine(offsets, currentLine, matchPos)
 		lastRaw = startRi + currentLine
-		result[i] = formattedLine{text: text, raw: lastRaw, links: wrapped[i].links}
+		result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
 	}
 	return result
 }
@@ -626,6 +660,7 @@ func formatParagraph(raw string, ri int, firstParagraph bool, width int) []forma
 	wrapped, shouldIndent := wrapParagraphWithIndent(raw, width, !firstParagraph && !isSpecial)
 	if shouldIndent && len(wrapped) > 0 {
 		wrapped[0].text = paragraphIndent + wrapped[0].text
+		shiftPlaced(wrapped[0].placed, len(paragraphIndent))
 	}
 
 	return formatWrappedLines(wrapped, ri, "")
@@ -672,7 +707,7 @@ func wrapFormattedLines(wrapped []string, ri int, prefix string) []formattedLine
 func formatWrappedLines(wrapped []wrappedLine, ri int, prefix string) []formattedLine {
 	lines := make([]formattedLine, len(wrapped))
 	for i, w := range wrapped {
-		lines[i] = formattedLine{text: prefix + w.text, raw: ri, links: w.links}
+		lines[i] = formattedLine{text: prefix + w.text, raw: ri, placed: w.placed}
 	}
 	return lines
 }
@@ -891,7 +926,7 @@ func wrapLineWithLinks(line string, width int) []wrappedLine {
 	}
 
 	lines := make([]string, 0, len(line)/width+1)
-	var linkStarts map[int][]Link
+	var placements []placedLink
 	current := make([]rune, 0, width)
 	currentWidth := 0
 
@@ -908,59 +943,83 @@ func wrapLineWithLinks(line string, width int) []wrappedLine {
 		if shouldFlush(currentWidth, len(current) > 0, token.spaceBefore, wordLength, width) {
 			flush()
 		}
-		linkStarts = appendWrapToken(token, &current, &currentWidth, width, &lines, linkStarts)
+		appendPlacedWrapToken(token, &current, &currentWidth, width, &lines, &placements)
 	})
 	flush()
 
 	result := make([]wrappedLine, len(lines))
 	for i, text := range lines {
-		result[i] = wrappedLine{text: text, links: linkStarts[i]}
+		result[i] = wrappedLine{text: text}
+	}
+	for _, placed := range placements {
+		result[placed.opener.line].placed = append(result[placed.opener.line].placed, placed)
 	}
 	return result
 }
 
-func appendWrapToken(token wrapToken, current *[]rune, currentWidth *int, width int, lines *[]string, linkStarts map[int][]Link) map[int][]Link {
+func appendPlacedWrapToken(token wrapToken, current *[]rune, currentWidth *int, width int, lines *[]string, placements *[]placedLink) {
 	if len(*current) > 0 && token.spaceBefore {
 		*current = append(*current, ' ')
 		(*currentWidth)++
 	}
-	if token.link {
-		linkStarts = recordLinkStart(linkStarts, *lines, *current, *currentWidth, width, token.text)
-		appendLinkRunes(current, currentWidth, token.text, width, lines)
-		return linkStarts
+	if !token.link {
+		appendWordRunes(current, currentWidth, token.text, width, lines)
+		return
 	}
-	appendWordRunes(current, currentWidth, token.text, width, lines)
-	return linkStarts
+	startLine, startByte := len(*lines), len(string(*current))
+	appendLinkRunes(current, currentWidth, token.text, width, lines)
+	placeTokenLinks(token, startLine, startByte, *lines, *current, placements)
 }
 
-func recordLinkStart(starts map[int][]Link, lines []string, current []rune, currentWidth, width int, token string) map[int][]Link {
-	links := ExtractLinks(token)
-	if len(links) == 0 {
-		return starts
+func shiftPlaced(placed []placedLink, indent int) {
+	for i := range placed {
+		if placed[i].opener.line == 0 {
+			placed[i].opener.start += indent
+			placed[i].opener.end += indent
+		}
+		for j := range placed[i].pieces {
+			if placed[i].pieces[j].line == 0 {
+				placed[i].pieces[j].start += indent
+				placed[i].pieces[j].end += indent
+			}
+		}
 	}
-	if starts == nil {
-		starts = make(map[int][]Link)
-	}
-	lineIndex := len(lines)
-	if stringWidth(token) > width {
-		lineIndex = linkStartLine(lines, current, currentWidth, width, token, links[0])
-	}
-	starts[lineIndex] = append(starts[lineIndex], links...)
-	return starts
 }
 
-func linkStartLine(lines []string, current []rune, currentWidth, width int, token string, link Link) int {
-	linkMarkup := "[" + link.Label + "](#" + link.Target + ")"
-	linkStart := strings.Index(token, linkMarkup)
-	if linkStart <= 0 {
-		return len(lines)
+func placeTokenLinks(token wrapToken, startLine, startByte int, lines []string, current []rune, placements *[]placedLink) {
+	match := extractLinkMatches(token.text[token.linkStart:])[0]
+	match.start += token.linkStart
+	placed := placedLink{link: match.link}
+	labelStart, labelEnd := match.start+1, match.start+1+len(match.link.Label)
+	line, pos := startLine, startByte
+	currentBytes := len(string(current))
+	for offset, r := range token.text {
+		if pos >= tokenLineLength(lines, currentBytes, line) {
+			line++
+			pos = 0
+		}
+		size := utf8.RuneLen(r)
+		if offset == match.start {
+			placed.opener = labelPiece{line: line, start: pos, end: pos + size}
+		}
+		if offset >= labelStart && offset < labelEnd {
+			n := len(placed.pieces)
+			if n > 0 && placed.pieces[n-1].line == line && placed.pieces[n-1].end == pos {
+				placed.pieces[n-1].end += size
+			} else {
+				placed.pieces = append(placed.pieces, labelPiece{line: line, start: pos, end: pos + size})
+			}
+		}
+		pos += size
 	}
+	*placements = append(*placements, placed)
+}
 
-	previewCurrent := append([]rune(nil), current...)
-	previewWidth := currentWidth
-	previewLines := make([]string, 0, 1)
-	appendWordRunes(&previewCurrent, &previewWidth, token[:linkStart], width, &previewLines)
-	return len(lines) + len(previewLines)
+func tokenLineLength(lines []string, currentBytes, line int) int {
+	if line < len(lines) {
+		return len(lines[line])
+	}
+	return currentBytes
 }
 
 // shouldFlush reports whether the current line should be flushed before adding
@@ -998,8 +1057,7 @@ func appendWordRunes(current *[]rune, currentWidth *int, word string, width int,
 // appendLinkRunes appends a link token to current. A link that fits within the
 // width is kept whole so its markup stays on one display line. A link wider
 // than the page is hard-broken at the character level via appendWordRunes, so
-// no display line exceeds width. Link-start provenance is recorded by
-// wrapLineWithLinks before the broken token is appended.
+// no display line exceeds width.
 func appendLinkRunes(current *[]rune, currentWidth *int, text string, width int, lines *[]string) {
 	if stringWidth(text) > width {
 		appendWordRunes(current, currentWidth, text, width, lines)
@@ -1013,6 +1071,7 @@ type wrapToken struct {
 	text        string
 	spaceBefore bool
 	link        bool
+	linkStart   int
 }
 
 func matchLinkToken(line string, i int, spans [][2]int) int {
@@ -1050,7 +1109,7 @@ func eachWrapToken(line string, consume func(wrapToken)) {
 				break
 			}
 			if matchLen := matchLinkToken(line, i, spans); matchLen > 0 {
-				consume(wrapToken{text: line[start : i+matchLen], spaceBefore: spaceBefore, link: true})
+				consume(wrapToken{text: line[start : i+matchLen], spaceBefore: spaceBefore, link: true, linkStart: i - start})
 				i += matchLen
 				link = true
 				break
@@ -1132,9 +1191,10 @@ func (b *Book) PageCount() int {
 func (b *Book) Page(i int) Page {
 	p := b.pages[i]
 	return Page{
-		Lines:    slices.Clone(p.Lines),
-		Links:    slices.Clone(p.Links),
-		Headings: slices.Clone(p.Headings),
+		Lines:      slices.Clone(p.Lines),
+		Links:      slices.Clone(p.Links),
+		Headings:   slices.Clone(p.Headings),
+		LabelSpans: slices.Clone(p.LabelSpans),
 	}
 }
 

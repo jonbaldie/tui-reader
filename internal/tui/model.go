@@ -3,7 +3,6 @@ package tui
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -292,25 +291,6 @@ func (m Model) renderContent() string {
 
 	page := m.book.Page(m.currentPage)
 
-	// Build a set of link keys and recording starting link index per line for highlighting
-	var linksByLine map[int]map[linkKey]struct{}
-	var lineLinkStartIndex map[int]int
-	if len(page.Links) > 0 {
-		linksByLine = make(map[int]map[linkKey]struct{})
-		lineLinkStartIndex = make(map[int]int)
-		for idx, lnk := range page.Links {
-			set := linksByLine[lnk.LineOnPage]
-			if set == nil {
-				set = make(map[linkKey]struct{})
-				linksByLine[lnk.LineOnPage] = set
-			}
-			set[linkKey{label: lnk.Label, target: lnk.Target}] = struct{}{}
-			if _, ok := lineLinkStartIndex[lnk.LineOnPage]; !ok {
-				lineLinkStartIndex[lnk.LineOnPage] = idx
-			}
-		}
-	}
-
 	contentStyle := lipgloss.NewStyle().
 		Width(m.contentWidth).
 		Height(m.contentHeight)
@@ -318,9 +298,7 @@ func (m Model) renderContent() string {
 	// Render each line
 	rendered := make([]string, 0, m.contentHeight)
 	for i, line := range page.Lines {
-		linkIndex := lineLinkStartIndex[i]
-		styledLine, _ := styleLine(line, page.Headings[i], i, linksByLine, m.selectedLink, linkIndex)
-		rendered = append(rendered, styledLine)
+		rendered = append(rendered, styleLine(line, page.Headings[i], i, page.LabelSpans, m.selectedLink))
 	}
 
 	// Pad to full height
@@ -352,74 +330,31 @@ var (
 				Underline(true)
 )
 
-func styleLine(line string, heading bool, lineIdx int, linksByLine map[int]map[linkKey]struct{}, selectedIndex, linkIndex int) (string, int) {
+func styleLine(line string, heading bool, lineIdx int, spans []book.LabelSpan, selectedIndex int) string {
 	style := textStyle
 	if heading {
 		style = headingStyle
 	}
-	links, hasLinks := linksByLine[lineIdx]
-	if !hasLinks {
-		return style.Render(line), linkIndex
-	}
-
-	result, linkIndex := styleLinkMarkup(line, links, selectedIndex, linkIndex)
-	return style.Render(result), linkIndex
-}
-
-type linkKey struct {
-	label  string
-	target string
-}
-
-var internalLinkMarkup = regexp.MustCompile(`\[([^\[\]]+)\]\(#([^)]+)\)`)
-
-// styleLinkMarkup scans Markdown link markup once from left to right. It keeps
-// link syntax intact and styles only labels that are attached to this page
-// line, so repeated labels do not cause ANSI-decorated text to be revisited.
-func styleLinkMarkup(line string, links map[linkKey]struct{}, selectedIndex, linkIndex int) (string, int) {
-	matches := internalLinkMarkup.FindAllStringSubmatchIndex(line, -1)
-	if len(matches) == 0 {
-		return line, linkIndex
-	}
-
 	var sb strings.Builder
-	sb.Grow(len(line) + len(matches)*32)
-	lastIdx := 0
-	codeSpans := book.InlineCodeSpans(line)
-
-	for _, loc := range matches {
-		matchStart, matchEnd := loc[0], loc[1]
-		labelStart, labelEnd := loc[2], loc[3]
-		targetStart, targetEnd := loc[4], loc[5]
-
-		sb.WriteString(line[lastIdx:matchStart])
-		lastIdx = matchEnd
-
-		label := line[labelStart:labelEnd]
-		target := line[targetStart:targetEnd]
-
-		if book.IsInlineCodeRange(codeSpans, matchStart, matchEnd) {
-			sb.WriteString(line[matchStart:matchEnd])
+	last := 0
+	for _, span := range spans {
+		if span.Line != lineIdx || span.Start < last {
 			continue
 		}
-
-		if _, ok := links[linkKey{label: label, target: target}]; ok {
-			sb.WriteByte('[')
-			if linkIndex == selectedIndex {
-				sb.WriteString(selectedLinkStyle.Render(label))
-			} else {
-				sb.WriteString(unselectedLinkStyle.Render(label))
-			}
-			sb.WriteString("](#")
-			sb.WriteString(target)
-			sb.WriteByte(')')
-			linkIndex++
-		} else {
-			sb.WriteString(line[matchStart:matchEnd])
+		if span.Opener && span.LinkIndex != selectedIndex {
+			continue
 		}
+		sb.WriteString(line[last:span.Start])
+		label := line[span.Start:span.End]
+		if span.LinkIndex == selectedIndex && selectedIndex >= 0 {
+			sb.WriteString(selectedLinkStyle.Render(label))
+		} else {
+			sb.WriteString(unselectedLinkStyle.Render(label))
+		}
+		last = span.End
 	}
-	sb.WriteString(line[lastIdx:])
-	return sb.String(), linkIndex
+	sb.WriteString(line[last:])
+	return style.Render(sb.String())
 }
 
 const helpText = "←/→ page • tab link • enter follow • b back • q quit"
