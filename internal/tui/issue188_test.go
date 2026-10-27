@@ -9,6 +9,21 @@ import (
 	"github.com/muesli/termenv"
 )
 
+func TestIssue188_LinkAfterMultiwordInlineCode(t *testing.T) {
+	profile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.ANSI256)
+	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
+
+	m := applyWindowSize(newTestModel(t, "inline.md", "`some [fake](#fake)`[real](#real)\n\n# Real\n"), 80, 24)
+	m = pressKey(m, "tab")
+	if !strings.Contains(m.View(), selectedLinkStyle.Render("real")) {
+		t.Fatal("active link after multiword inline code has no selection")
+	}
+	if !strings.Contains(m.View(), "`some [fake](#fake)`[") {
+		t.Fatal("inline code did not remain literal")
+	}
+}
+
 func TestIssue188_OpenerOnlyOwnerPage(t *testing.T) {
 	profile := lipgloss.ColorProfile()
 	lipgloss.SetColorProfile(termenv.ANSI256)
