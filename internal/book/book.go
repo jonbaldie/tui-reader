@@ -319,6 +319,10 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 		return formatCodeRange(rawLines, ri, end, firstParagraph, prevCode, width, result)
 	}
 
+	if lineBlockMarker(raw) != 0 {
+		return formatLineBlock(rawLines, ri, width, firstParagraph, result)
+	}
+
 	if isListItem(raw) {
 		var lines []formattedLine
 		if needsBlockSeparator(firstParagraph, prevList, result) {
@@ -350,6 +354,59 @@ func formatNextBlock(rawLines []string, ri int, firstParagraph, prevCode, prevLi
 	}
 	lines = append(lines, formatMultiLineParagraph(rawLines[ri:end], ri, firstParagraph, width)...)
 	return formattedBlock{lines: lines, lastRi: end - 1}
+}
+
+func lineBlockMarker(raw string) byte {
+	if IsIndentedCodeLine(raw) {
+		return 0
+	}
+	trimmed := strings.TrimSpace(raw)
+	if strings.HasPrefix(trimmed, "|") || strings.HasPrefix(trimmed, ">") {
+		return trimmed[0]
+	}
+	return 0
+}
+
+func formatLineBlock(rawLines []string, start, width int, firstParagraph bool, result []formattedLine) formattedBlock {
+	block := formattedBlock{lastRi: start - 1}
+	if needsBlockSeparator(firstParagraph, false, result) {
+		block.lines = append(block.lines, formattedLine{text: "", raw: -1})
+	}
+	marker := lineBlockMarker(rawLines[start])
+	for ri := start; ri < len(rawLines) && lineBlockMarker(rawLines[ri]) == marker; ri++ {
+		raw := strings.TrimSpace(rawLines[ri])
+		var wrapped []wrappedLine
+		if marker == '|' {
+			wrapped = wrapTableRow(raw, width)
+		} else {
+			wrapped = wrapLineWithLinks(raw, width)
+		}
+		block.lines = append(block.lines, formatWrappedLines(wrapped, ri, "")...)
+		block.lastRi = ri
+	}
+	return block
+}
+
+func wrapTableRow(raw string, width int) []wrappedLine {
+	var texts []string
+	var current []rune
+	currentWidth := 0
+	appendWordRunes(&current, &currentWidth, raw, width, &texts)
+	if len(current) > 0 {
+		texts = append(texts, string(current))
+	}
+	matches := extractLinkMatches(raw)
+	wrapped := make([]wrappedLine, len(texts))
+	offset, next := 0, 0
+	for i, text := range texts {
+		wrapped[i].text = text
+		offset += len(text)
+		for next < len(matches) && matches[next].start < offset {
+			wrapped[i].links = append(wrapped[i].links, matches[next].link)
+			next++
+		}
+	}
+	return wrapped
 }
 
 // setextLevel returns 1 for a "=" setext heading underline, 2 for a "-" one,
@@ -469,11 +526,8 @@ func isSpecialLine(raw string) bool {
 	return strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---")
 }
 
-// isProseLine reports whether raw is a regular prose paragraph line (not blank,
-// not indented code, and not a special line such as a heading, horizontal rule,
-// or list item).
 func isProseLine(raw string) bool {
-	return strings.TrimSpace(raw) != "" && !IsIndentedCodeLine(raw) && !isFenceDelimiter(raw) && !isSpecialLine(raw)
+	return strings.TrimSpace(raw) != "" && !IsIndentedCodeLine(raw) && !isFenceDelimiter(raw) && !isSpecialLine(raw) && lineBlockMarker(raw) == 0
 }
 
 func formatMultiLineParagraph(lines []string, startRi int, firstParagraph bool, width int) []formattedLine {
