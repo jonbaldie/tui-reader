@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.15 (2026-10-29)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.14...v0.1.15
+
+### Bug Fixes
+
+- **Keep heading styling and resize positions consistent (#186, fixes #144).** Wrapped headings keep their styling, and hash-prefixed prose and plain text no longer appear as headings. Resize anchoring uses the same heading classification.
+- **Preserve table rows and blockquote lines (#187, fixes #180).** Markdown tables retain their spacing and separate rows, and blockquote lines no longer join into prose.
+- **Highlight hard-wrapped link selections (#189, fixes #188).** Links split across display lines show their selection highlight while remaining navigable.
+- **Recognise ATX headings consistently (#190, fixes #125).** Hash-prefixed lines that are not headings remain prose, matching heading navigation and styling.
+
 ## v0.1.14 (2026-10-11)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.13...v0.1.14
