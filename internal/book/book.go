@@ -317,6 +317,13 @@ func headingTitle(raw string, block formattedBlock) string {
 	if block.isCode {
 		return ""
 	}
+	return atxHeadingTitle(raw)
+}
+
+func atxHeadingTitle(raw string) string {
+	if IsIndentedCodeLine(raw) {
+		return ""
+	}
 	if m := headingRegex.FindStringSubmatch(strings.TrimSpace(raw)); m != nil {
 		return m[2]
 	}
@@ -558,7 +565,7 @@ func isSpecialLine(raw string) bool {
 		return true
 	}
 	trimmed := strings.TrimSpace(raw)
-	return strings.HasPrefix(trimmed, "#") || strings.HasPrefix(trimmed, "---")
+	return atxHeadingTitle(raw) != "" || strings.HasPrefix(trimmed, "---")
 }
 
 func isProseLine(raw string) bool {
