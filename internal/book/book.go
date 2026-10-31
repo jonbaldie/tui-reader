@@ -620,9 +620,8 @@ func lineOffsets(lines []string) []int {
 func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, startRi int, shouldIndent bool) []formattedLine {
 	nWrapped := len(wrapped)
 	result := make([]formattedLine, nWrapped)
-	searchFrom := 0
+	pos := 0
 	currentLine := 0
-	lastRaw := startRi
 
 	for i := 0; i < nWrapped; i++ {
 		text := wrapped[i].text
@@ -630,18 +629,34 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 			text = paragraphIndent + text
 			shiftPlaced(wrapped[i].placed, len(paragraphIndent))
 		}
-		trimmed := strings.TrimLeft(wrapped[i].text, " ")
-		idx := strings.Index(joined[searchFrom:], trimmed)
-		if idx < 0 {
-			// Without a position, the line may render any later raw line.
-			result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
-			continue
+		linePos := -1
+		for _, r := range wrapped[i].text {
+			if unicode.IsSpace(r) {
+				if pos < len(joined) {
+					source, size := utf8.DecodeRuneInString(joined[pos:])
+					if unicode.IsSpace(source) {
+						pos += size
+					}
+				}
+				continue
+			}
+			for pos < len(joined) {
+				source, size := utf8.DecodeRuneInString(joined[pos:])
+				if !unicode.IsSpace(source) {
+					if linePos < 0 {
+						linePos = pos
+					}
+					pos += size
+					break
+				}
+				pos += size
+			}
 		}
-		matchPos := searchFrom + idx
-		searchFrom = matchPos + len(trimmed)
-		currentLine = advanceLine(offsets, currentLine, matchPos)
-		lastRaw = startRi + currentLine
-		result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
+		if linePos < 0 {
+			linePos = pos
+		}
+		currentLine = advanceLine(offsets, currentLine, linePos)
+		result[i] = formattedLine{text: text, raw: startRi + currentLine, placed: wrapped[i].placed}
 	}
 	return result
 }
