@@ -37,24 +37,28 @@ func TestIssue194_ReflowPositionAndLinks(t *testing.T) {
 		t.Fatalf("page 1 position = %+v, want raw 1", got)
 	}
 	pos := b.PositionForPage(1)
+	if got := b.pages[2].Links; len(got) != 1 || got[0] != (Link{Label: "long link label", Target: "target", LineOnPage: 0}) {
+		t.Fatalf("width 12 link = %+v", got)
+	}
+	if got := b.pages[3].LabelSpans; len(got) != 1 || got[0] != (LabelSpan{Line: 0, Start: 0, End: 4, LinkIndex: -1}) {
+		t.Fatalf("width 12 continuation = %+v", got)
+	}
 	b.Reflow(20, 1)
 	page := b.PageForPosition(pos)
 	if got := strings.Join(b.pages[page].Lines, " "); !strings.Contains(got, "gamma") {
 		t.Errorf("reflow page %d = %q, want gamma", page, got)
 	}
-	if len(b.sourceLinks.links) != 1 {
-		t.Fatalf("source links = %+v", b.sourceLinks.links)
+	if got := b.PositionForPage(1); got != (Position{Raw: 1, Offset: 5}) {
+		t.Errorf("width 20 page 1 position = %+v, want raw 1 offset 5", got)
 	}
-	found := 0
-	for _, p := range b.pages {
-		for _, link := range p.Links {
-			if link.Target == "target" {
-				found++
-			}
-		}
+	if got := b.PageForPosition(Position{Raw: 1, Offset: 4}); got != 0 {
+		t.Errorf("width 20 raw 1 offset 4 page = %d, want 0", got)
 	}
-	if found != 1 {
-		t.Errorf("found %d target links after reflow, want 1", found)
+	if got := b.pages[2].Links; len(got) != 1 || got[0] != (Link{Label: "long link label", Target: "target", LineOnPage: 0}) {
+		t.Fatalf("width 20 link = %+v", got)
+	}
+	if got := b.pages[2].LabelSpans; len(got) != 1 || got[0] != (LabelSpan{Line: 0, Start: 1, End: 16, LinkIndex: 0}) {
+		t.Errorf("width 20 link span = %+v", got)
 	}
 }
 

@@ -155,10 +155,13 @@ func titleCase(s string) string {
 // are non-decreasing. The links field records link tokens whose markup starts
 // on the display line; heading marks all content lines of a heading block.
 type formattedLine struct {
-	text    string
-	raw     int
-	placed  []placedLink
-	heading bool
+	text         string
+	raw          int
+	endRaw       int
+	sourceOffset int
+	hasOffset    bool
+	placed       []placedLink
+	heading      bool
 }
 
 type formattedDocument struct {
@@ -622,6 +625,7 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 	result := make([]formattedLine, nWrapped)
 	pos := 0
 	currentLine := 0
+	currentOffset := 0
 
 	for i := 0; i < nWrapped; i++ {
 		text := wrapped[i].text
@@ -629,7 +633,7 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 			text = paragraphIndent + text
 			shiftPlaced(wrapped[i].placed, len(paragraphIndent))
 		}
-		linePos := -1
+		lineRaw, lineOffset, endRaw := -1, 0, currentLine
 		for _, r := range wrapped[i].text {
 			if unicode.IsSpace(r) {
 				if pos < len(joined) {
@@ -643,20 +647,25 @@ func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, s
 			for pos < len(joined) {
 				source, size := utf8.DecodeRuneInString(joined[pos:])
 				if !unicode.IsSpace(source) {
-					if linePos < 0 {
-						linePos = pos
+					nextLine := advanceLine(offsets, currentLine, pos)
+					if nextLine != currentLine {
+						currentLine, currentOffset = nextLine, 0
 					}
+					if lineRaw < 0 {
+						lineRaw, lineOffset = currentLine, currentOffset
+					}
+					endRaw = currentLine
+					currentOffset++
 					pos += size
 					break
 				}
 				pos += size
 			}
 		}
-		if linePos < 0 {
-			linePos = pos
+		if lineRaw < 0 {
+			lineRaw, lineOffset = currentLine, currentOffset
 		}
-		currentLine = advanceLine(offsets, currentLine, linePos)
-		result[i] = formattedLine{text: text, raw: startRi + currentLine, placed: wrapped[i].placed}
+		result[i] = formattedLine{text: text, raw: startRi + lineRaw, endRaw: startRi + endRaw, sourceOffset: lineOffset, hasOffset: true, placed: wrapped[i].placed}
 	}
 	return result
 }
@@ -826,8 +835,10 @@ func rawLinePages(formatted []formattedLine, height int) map[int]int {
 		if fl.raw < 0 {
 			continue
 		}
-		if _, ok := pages[fl.raw]; !ok {
-			pages[fl.raw] = fi / height
+		for raw := fl.raw; raw <= max(fl.raw, fl.endRaw); raw++ {
+			if _, ok := pages[raw]; !ok {
+				pages[raw] = fi / height
+			}
 		}
 	}
 	return pages
@@ -858,14 +869,15 @@ func pagePositions(formatted []formattedLine, height int) []Position {
 	return anchors
 }
 
-// lineSources returns the source position of each formatted line. The offset
-// counts non-space runes, which wrapping and indentation do not change, of the
-// earlier display lines from the same raw line.
+// lineSources returns the source position of each formatted line. Offsets count
+// non-space runes in the source line before the displayed content.
 func lineSources(formatted []formattedLine) []Position {
 	sources := make([]Position, len(formatted))
 	for i, fl := range formatted {
 		sources[i] = Position{Raw: fl.raw}
-		if i > 0 && fl.raw >= 0 && fl.raw == formatted[i-1].raw {
+		if fl.hasOffset {
+			sources[i].Offset = fl.sourceOffset
+		} else if i > 0 && fl.raw >= 0 && fl.raw == formatted[i-1].raw {
 			sources[i].Offset = sources[i-1].Offset + nonSpaceRunes(formatted[i-1].text)
 		}
 	}
