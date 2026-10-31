@@ -37,7 +37,7 @@ func TestIssue194_ReflowPositionAndLinks(t *testing.T) {
 		t.Fatalf("page 1 position = %+v, want raw 1", got)
 	}
 	pos := b.PositionForPage(1)
-	b.Reflow(14, 1)
+	b.Reflow(20, 1)
 	page := b.PageForPosition(pos)
 	if got := strings.Join(b.pages[page].Lines, " "); !strings.Contains(got, "gamma") {
 		t.Errorf("reflow page %d = %q, want gamma", page, got)
