@@ -1,0 +1,113 @@
+===== 1. Normal --dump=1 on plain-reading.txt =====
+┌─── Plain Reading ── Page 1 of 13 ───┐
+│
+│  Marker 001: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 002: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 003: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 004: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 005: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 006: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 007: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 008: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 009: Plain text log/prose line without paragraph
+│  merging.
+│  Marker 010: Plain text log/prose line without paragraph
+│  merging.
+│
+└────────────────────────────────┘
+exit: 0
+
+===== 2. Normal --dump=2 on link-tour.md =====
+┌─── Link Tour ── Page 1 of 4 ───┐
+│
+│  # Link Tour
+│  
+│  # Link Index
+│  
+│    The following links form a tour of navigation features:
+│  
+│  - [Chapter Alpha](#chapter-alpha)
+│  - [Chapter Beta](#chapter-beta)
+│  - [Missing Chapter](#chapter-missing)
+│  - [[Bracketed Chapter](#chapter-bracketed)]
+│  
+│    Inline code links like `[Code Ignored](#chapter-alpha)`
+│  are literal text.
+│  
+│      [Indented Code Ignored](#chapter-alpha)
+│  
+│    Multiple links in one paragraph: see
+│  [Alpha Again](#chapter-alpha) alongside
+│  [Beta Again](#chapter-beta) in prose.
+│  
+│
+└────────────────────────────────┘
+
+┌─── Link Tour ── Page 2 of 4 ───┐
+│
+│      ```
+│      filler block line 01
+│      filler block line 02
+│      filler block line 03
+│      filler block line 04
+│      filler block line 05
+│      filler block line 06
+│      filler block line 07
+│      filler block line 08
+│      ```
+│  
+│  # Chapter Alpha
+│  
+│    Content for Alpha. This section is reached via internal
+│  link.
+│  
+│      ```
+│      alpha filler line 01
+│      alpha filler line 02
+│      alpha filler line 03
+│
+└────────────────────────────────┘
+exit: 0
+
+===== 3. --dump=99999 on link-tour.md (caps to page count) =====
+┌─── Link Tour ── Page 1 of 4 ───┐
+┌─── Link Tour ── Page 2 of 4 ───┐
+┌─── Link Tour ── Page 3 of 4 ───┐
+┌─── Link Tour ── Page 4 of 4 ───┐
+exit: 0
+
+===== 4. Missing file error =====
+Error: cannot open file: open nonexistent-file.txt: no such file or directory
+exit: 1
+
+===== 5. Directory argument error =====
+Error: cannot read document: read internal: is a directory
+exit: 1
+
+===== 6. Invalid UTF-8 binary error =====
+Error: file is not valid UTF-8
+exit: 1
+
+===== 7. Missing arguments =====
+Usage: tui-reader [--dump[=N]] <file>
+exit: 1
+
+===== 8. Malformed --dump=invalid option =====
+Usage: tui-reader [--dump[=N]] <file>
+exit: 1
+
+===== 9. Malformed --dump=0 option =====
+Usage: tui-reader [--dump[=N]] <file>
+exit: 1
+
+===== 10. Malformed --dump=-1 option =====
+Usage: tui-reader [--dump[=N]] <file>
+exit: 1
