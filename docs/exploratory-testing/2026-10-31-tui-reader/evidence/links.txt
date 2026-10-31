@@ -1,0 +1,211 @@
+--- start 80x24
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Go to Alpha](#alpha) [Go to Beta](#beta)
+
+      Intro line 01.
+
+      Intro line 02.
+
+      Intro line 03.
+
+      Intro line 04.
+
+      Intro line 05.
+
+      Intro line 06.
+
+      Intro line 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Tab
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Go to Alpha](#alpha) [Go to Beta](#beta)
+
+      Intro line 01.
+
+      Intro line 02.
+
+      Intro line 03.
+
+      Intro line 04.
+
+      Intro line 05.
+
+      Intro line 06.
+
+      Intro line 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Enter
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+
+      Intro line 25.
+
+      Intro line 26.
+
+      Intro line 27.
+
+      Intro line 28.
+
+      Intro line 29.
+
+      Intro line 30.
+
+      Intro line 31.
+
+    # Alpha
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 4 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Right
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+      [Go to Beta](#beta)
+
+      Alpha line 01.
+
+      Alpha line 02.
+
+      Alpha line 03.
+
+      Alpha line 04.
+
+      Alpha line 05.
+
+      Alpha line 06.
+
+      Alpha line 07.
+
+      Alpha line 08.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 5 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Tab
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+      [Go to Beta](#beta)
+
+      Alpha line 01.
+
+      Alpha line 02.
+
+      Alpha line 03.
+
+      Alpha line 04.
+
+      Alpha line 05.
+
+      Alpha line 06.
+
+      Alpha line 07.
+
+      Alpha line 08.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 5 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Enter
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+
+      Alpha line 26.
+
+      Alpha line 27.
+
+      Alpha line 28.
+
+      Alpha line 29.
+
+      Alpha line 30.
+
+      Alpha line 31.
+
+    # Beta
+
+      Beta destination.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 8 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- b
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+      [Go to Beta](#beta)
+
+      Alpha line 01.
+
+      Alpha line 02.
+
+      Alpha line 03.
+
+      Alpha line 04.
+
+      Alpha line 05.
+
+      Alpha line 06.
+
+      Alpha line 07.
+
+      Alpha line 08.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 5 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- b
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Go to Alpha](#alpha) [Go to Beta](#beta)
+
+      Intro line 01.
+
+      Intro line 02.
+
+      Intro line 03.
+
+      Intro line 04.
+
+      Intro line 05.
+
+      Intro line 06.
+
+      Intro line 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 8
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- q
+
+EXIT=0
