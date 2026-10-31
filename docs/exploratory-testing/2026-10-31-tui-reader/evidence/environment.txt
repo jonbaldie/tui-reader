@@ -1,0 +1,6 @@
+go version go1.26.8 linux/amd64
+Linux x86_64
+0fdbb582fa09d16abe4841b2af5f01b6636f1bfa
+0844078f4f255de2c7e2e7a34c407c3267ff75969adb69ea5091270de80de8fc  .run/tui-reader
+terminal=tmux 80x24 TERM=screen-256color
+tmux 3.6

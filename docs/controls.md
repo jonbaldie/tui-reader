@@ -43,3 +43,6 @@ for recent reading, link-navigation, error-screen, and resize observations.
 See the [2026-10-10 exploratory-testing report](exploratory-testing/2026-10-10-tui-reader/REPORT.md)
 for Markdown-variant (tilde fences, setext headings, tables), large-book, and
 unusual-input observations.
+
+See the [2026-10-31 exploratory-testing report](exploratory-testing/2026-10-31-tui-reader/REPORT.md)
+for reading, link-history, resize, and dump-mode observations.
