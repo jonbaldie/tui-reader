@@ -155,10 +155,13 @@ func titleCase(s string) string {
 // are non-decreasing. The links field records link tokens whose markup starts
 // on the display line; heading marks all content lines of a heading block.
 type formattedLine struct {
-	text    string
-	raw     int
-	placed  []placedLink
-	heading bool
+	text         string
+	raw          int
+	endRaw       int
+	sourceOffset int
+	hasOffset    bool
+	placed       []placedLink
+	heading      bool
 }
 
 type formattedDocument struct {
@@ -617,31 +620,75 @@ func lineOffsets(lines []string) []int {
 	return offsets
 }
 
-func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, startRi int, shouldIndent bool) []formattedLine {
-	nWrapped := len(wrapped)
-	result := make([]formattedLine, nWrapped)
-	searchFrom := 0
-	currentLine := 0
-	lastRaw := startRi
+type provenanceCursor struct {
+	source  string
+	offsets []int
+	pos     int
+	raw     int
+	offset  int
+}
 
-	for i := 0; i < nWrapped; i++ {
-		text := wrapped[i].text
-		if i == 0 && shouldIndent {
-			text = paragraphIndent + text
-			shiftPlaced(wrapped[i].placed, len(paragraphIndent))
-		}
-		trimmed := strings.TrimLeft(wrapped[i].text, " ")
-		idx := strings.Index(joined[searchFrom:], trimmed)
-		if idx < 0 {
-			// Without a position, the line may render any later raw line.
-			result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
+func (c *provenanceCursor) skipSpace() {
+	if c.pos >= len(c.source) {
+		return
+	}
+	r, size := utf8.DecodeRuneInString(c.source[c.pos:])
+	if unicode.IsSpace(r) {
+		c.pos += size
+	}
+}
+
+func (c *provenanceCursor) nextContent() Position {
+	n := len(c.source)
+	for c.pos < n {
+		r, size := utf8.DecodeRuneInString(c.source[c.pos:])
+		if unicode.IsSpace(r) {
+			c.pos += size
 			continue
 		}
-		matchPos := searchFrom + idx
-		searchFrom = matchPos + len(trimmed)
-		currentLine = advanceLine(offsets, currentLine, matchPos)
-		lastRaw = startRi + currentLine
-		result[i] = formattedLine{text: text, raw: lastRaw, placed: wrapped[i].placed}
+		nextLine := advanceLine(c.offsets, c.raw, c.pos)
+		if nextLine != c.raw {
+			c.raw, c.offset = nextLine, 0
+		}
+		position := Position{Raw: c.raw, Offset: c.offset}
+		c.pos += size
+		c.offset++
+		return position
+	}
+	return Position{Raw: c.raw, Offset: c.offset}
+}
+
+func (c *provenanceCursor) line(text string) (Position, int) {
+	start := Position{Raw: -1}
+	end := c.raw
+	for _, r := range text {
+		if unicode.IsSpace(r) {
+			c.skipSpace()
+			continue
+		}
+		position := c.nextContent()
+		if start.Raw < 0 {
+			start = position
+		}
+		end = position.Raw
+	}
+	if start.Raw < 0 {
+		start = Position{Raw: c.raw, Offset: c.offset}
+	}
+	return start, end
+}
+
+func mapWrappedProvenance(wrapped []wrappedLine, joined string, offsets []int, startRi int, shouldIndent bool) []formattedLine {
+	result := make([]formattedLine, len(wrapped))
+	cursor := provenanceCursor{source: joined, offsets: offsets}
+	for i, line := range wrapped {
+		position, end := cursor.line(line.text)
+		text := line.text
+		if i == 0 && shouldIndent {
+			text = paragraphIndent + text
+			shiftPlaced(line.placed, len(paragraphIndent))
+		}
+		result[i] = formattedLine{text: text, raw: startRi + position.Raw, endRaw: startRi + end, sourceOffset: position.Offset, hasOffset: true, placed: line.placed}
 	}
 	return result
 }
@@ -811,8 +858,10 @@ func rawLinePages(formatted []formattedLine, height int) map[int]int {
 		if fl.raw < 0 {
 			continue
 		}
-		if _, ok := pages[fl.raw]; !ok {
-			pages[fl.raw] = fi / height
+		for raw := fl.raw; raw <= max(fl.raw, fl.endRaw); raw++ {
+			if _, ok := pages[raw]; !ok {
+				pages[raw] = fi / height
+			}
 		}
 	}
 	return pages
@@ -843,14 +892,13 @@ func pagePositions(formatted []formattedLine, height int) []Position {
 	return anchors
 }
 
-// lineSources returns the source position of each formatted line. The offset
-// counts non-space runes, which wrapping and indentation do not change, of the
-// earlier display lines from the same raw line.
 func lineSources(formatted []formattedLine) []Position {
 	sources := make([]Position, len(formatted))
 	for i, fl := range formatted {
 		sources[i] = Position{Raw: fl.raw}
-		if i > 0 && fl.raw >= 0 && fl.raw == formatted[i-1].raw {
+		if fl.hasOffset {
+			sources[i].Offset = fl.sourceOffset
+		} else if i > 0 && fl.raw >= 0 && fl.raw == formatted[i-1].raw {
 			sources[i].Offset = sources[i-1].Offset + nonSpaceRunes(formatted[i-1].text)
 		}
 	}
