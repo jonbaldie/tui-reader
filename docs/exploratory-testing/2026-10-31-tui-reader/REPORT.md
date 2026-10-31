@@ -4,7 +4,7 @@
 
 The pass exercised reading, internal links, and dump mode on Linux amd64. The build came from [`0fdbb58`](https://github.com/jonbaldie/tui-reader/commit/0fdbb582fa09d16abe4841b2af5f01b6636f1bfa), the fetched `origin/main` tip. Go 1.26.8 built the binary with `-mod=readonly` after `go mod download` and `go mod verify`. The full `go test -mod=readonly ./...` suite passed. Module and build caches, the binary, the home directory, and fixtures were isolated in a worktree.
 
-The interactive runs used a private tmux server, a PTY at 80 columns by 24 rows, `TERM=screen-256color`, and the documented keys. Each run started a fresh reader process. Captures show terminal text, not the selection colors. The driver strips trailing spaces and blank lines from captures. The fixture files and [driver](evidence/drive.sh) are in `evidence`. The driver expects a built binary at `.run/tui-reader` and creates an isolated `.run/home`.
+The interactive runs used a private tmux server, a PTY at 80 columns by 24 rows, `TERM=screen-256color`, and the documented keys. Each run started a fresh reader process. Captures show terminal text, not the selection colors. The driver strips trailing spaces and blank lines from captures. The fixture files and [driver](evidence/drive.sh) are in `evidence`. The driver expects a built binary at `.run/tui-reader` and creates an isolated `.run/home`. Run it with `bash docs/exploratory-testing/2026-10-31-tui-reader/evidence/drive.sh`. It overwrites the fixtures and captures.
 
 ## Journeys
 
@@ -16,7 +16,7 @@ A separate [plain-text run](evidence/plain.txt) retained the two source lines, s
 
 ### Follow links and return
 
-The goal was to follow a contents link and return through link history. In [`links.txt`](evidence/links.txt), Tab and Enter moved from page 1 to Alpha on page 4. Alpha was the last line on that page, after seven lines from the preceding section. The link under Alpha appeared on page 5. After Right, Tab, and Enter, the reader showed Beta on page 8. Two presses of `b` returned to page 5 and then page 1. The page boundary explains why pressing Enter immediately after arriving at Alpha did not follow the next link. The [common questions](../../common-questions.md) document this behavior.
+The goal was to follow a contents link and return through link history. In [`links.txt`](evidence/links.txt), Tab and Enter moved from page 1 to Alpha on page 4. Alpha was the last line on that page, after seven lines from the preceding section. The link under Alpha appeared on page 5. After Right, Tab, and Enter, the reader showed Beta on page 8. Two presses of `b` returned to page 5 and then page 1. An initial run pressed Tab and Enter immediately after arriving at Alpha and stayed on page 4. That first capture was overwritten when the driver was revised to page forward. A [fresh replay](evidence/links-initial-replay.txt) produced the same result. The [common questions](../../common-questions.md) document that a link below a heading may be on the next page.
 
 In a fresh process, Tab twice followed the second contents link to Beta. After `b`, Shift+Tab and Enter also followed Beta, and `b` returned to page 1. See [`links-variation.txt`](evidence/links-variation.txt).
 

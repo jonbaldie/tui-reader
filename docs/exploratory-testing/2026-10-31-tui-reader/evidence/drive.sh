@@ -29,6 +29,7 @@ run() {
   tmux -S "$sock" kill-session -t "$name"
 }
 run navigation "$out/fixtures/tour.md" Right Left End Home Right resize:60x20 resize:80x24 q
+run links-initial-replay "$out/fixtures/tour.md" Tab Enter Tab Enter b b q
 run links "$out/fixtures/tour.md" Tab Enter Right Tab Enter b b q
 run links-variation "$out/fixtures/tour.md" Tab Tab Enter b BTab Enter b q
 run structures "$out/fixtures/structures.md" Tab Enter b q
@@ -46,5 +47,3 @@ for path in pathlib.Path(sys.argv[1]).glob('*.txt'):
         lines = path.read_text().splitlines()
         path.write_text('\n'.join(line.rstrip() for line in lines).rstrip() + '\n')
 PY
-printf 'Teardown owner: %s\n' "$root/.run/cleanup.sh" > .run/resources.txt
-printf 'tmux socket: %s\n' "$sock" >> .run/resources.txt
