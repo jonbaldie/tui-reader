@@ -869,8 +869,6 @@ func pagePositions(formatted []formattedLine, height int) []Position {
 	return anchors
 }
 
-// lineSources returns the source position of each formatted line. Offsets count
-// non-space runes in the source line before the displayed content.
 func lineSources(formatted []formattedLine) []Position {
 	sources := make([]Position, len(formatted))
 	for i, fl := range formatted {
