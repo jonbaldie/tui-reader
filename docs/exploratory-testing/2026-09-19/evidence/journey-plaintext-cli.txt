@@ -1,0 +1,53 @@
+# readme.md (fenced code) at 80x30
+----- [j] after:  -----
+
+                                     Readme
+    ────────────────────────────────────────────────────────────────────────
+    # Widget Tool
+
+    ## Contents
+
+    - [Install](#install)
+    - [Configuration](#configuration)
+    - [FAQ](#faq)
+
+    ## Install
+
+      Run the installer:
+
+      ```bash
+
+    # Install dependencies first
+
+      brew install widget
+
+    # Configuration
+
+      widget init ```
+
+    ## Configuration
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 2
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+# CLI probes (dump mode)
+$ tui-reader --dump crlf.md
+Error: could not open a new TTY: open /dev/tty: device not configured
+exit=
+$ tui-reader --dump bom.md
+Error: could not open a new TTY: open /dev/tty: device not configured
+exit=
+$ tui-reader --dump=0 bom.md
+Usage: tui-reader [--dump[=N]] <file>
+exit=
+$ tui-reader --dump --help
+Error: could not open a new TTY: open /dev/tty: device not configured
+exit=
+$ tui-reader --dump bom.md crlf.md
+Error: could not open a new TTY: open /dev/tty: device not configured
+exit=
+# interactive: tui-reader --help, then q
+----- [j] after:  -----
+  Error: cannot open file: open --help: no such file or directory
+EXIT=0
