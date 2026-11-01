@@ -1129,11 +1129,40 @@ type wrapToken struct {
 	linkStart   int
 }
 
+type wrapLinkScanner struct {
+	line      string
+	spans     [][2]int
+	next      []int
+	exhausted bool
+}
+
+func (s *wrapLinkScanner) matchAt(i int) int {
+	if s.line[i] != '[' || s.exhausted {
+		return 0
+	}
+	if s.next == nil {
+		s.next = linkRegex.FindStringIndex(s.line[i:])
+		if s.next == nil {
+			s.exhausted = true
+			return 0
+		}
+		s.next[0] += i
+		s.next[1] += i
+	}
+	if s.next[0] != i {
+		return 0
+	}
+	end := s.next[1]
+	s.next = nil
+	if IsInlineCodeRange(s.spans, i, end) {
+		return 0
+	}
+	return end - i
+}
+
 // eachWrapToken consumes words as they are scanned, without retaining a token slice.
 func eachWrapToken(line string, consume func(wrapToken)) {
-	spans := InlineCodeSpans(line)
-	var nextMatch []int
-	noMoreMatches := false
+	links := wrapLinkScanner{line: line, spans: InlineCodeSpans(line)}
 	spaceBefore := false
 	n := len(line)
 	for i := 0; i < n; {
@@ -1154,26 +1183,11 @@ func eachWrapToken(line string, consume func(wrapToken)) {
 			if unicode.IsSpace(r) {
 				break
 			}
-			if line[i] == '[' && !noMoreMatches {
-				if nextMatch == nil {
-					nextMatch = linkRegex.FindStringIndex(line[i:])
-					if nextMatch == nil {
-						noMoreMatches = true
-					} else {
-						nextMatch[0] += i
-						nextMatch[1] += i
-					}
-				}
-				if nextMatch != nil && nextMatch[0] == i {
-					end := nextMatch[1]
-					nextMatch = nil
-					if !IsInlineCodeRange(spans, i, end) {
-						consume(wrapToken{text: line[start:end], spaceBefore: spaceBefore, link: true, linkStart: i - start})
-						i = end
-						link = true
-						break
-					}
-				}
+			if matchLen := links.matchAt(i); matchLen > 0 {
+				consume(wrapToken{text: line[start : i+matchLen], spaceBefore: spaceBefore, link: true, linkStart: i - start})
+				i += matchLen
+				link = true
+				break
 			}
 			i += size
 		}
