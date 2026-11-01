@@ -10,6 +10,7 @@ growth across sizes rather than impose machine-specific time thresholds.
 | `d` | path bytes used to derive a title |
 | `x` | bytes in one line |
 | `k` | links found in one line |
+| `M`, `S` | candidate link ranges and inline-code spans |
 | `V` | formatted display lines after wrapping |
 | `P` | pages returned |
 | `a` | raw lines when an anchor lookup must build its page map |
@@ -21,7 +22,8 @@ growth across sizes rather than impose machine-specific time thresholds.
 | --- | --- | --- | --- |
 | `Load` | `O(B)` | `O(B + N)` returned | reads, validates, normalizes, and splits input |
 | title derivation | `O(d)` | `O(d)` | path and title transformations |
-| `ExtractLinks` | `O(x)` | `O(k)` returned | link parsing for one line |
+| link/code overlap classification | `O(M + S)` | `O(S)` span metadata | two advancing cursors over ordered ranges, shared by extraction and wrapping |
+| `ExtractLinks` | regex and code-span discovery, plus `O(M + S)` | `O(M + S + k)` | link parsing for one line |
 | pagination | `O(V)` | `O(V + P)` returned | formatting precedes page slicing |
 | raw-line page map | expected `O(V)` | `O(N)` | one insertion per source line |
 | argument parsing | `O(C)` | `O(1)` | last non-flag argument wins |
@@ -32,10 +34,10 @@ growth across sizes rather than impose machine-specific time thresholds.
 | follow link | expected `O(a)` | amortized `O(1)` | cached anchor lookup plus history append |
 | terminal resize | inherits `Book.Reflow` | inherits `Book.Reflow` | recalculates layout |
 | `NormalizeAnchor` | `O(t)` | `O(t)` output | one pass over heading bytes/runes |
-| wrapping | `O(x)` per line | `O(x)` output | see wrapping benchmark |
+| wrapping | candidate and code-span discovery plus output | `O(x)` output | overlap checks do not restart the span scan |
 | link attachment | `O(B + V + L)` | `O(N + L)` metadata | indexes source link occurrences, then pairs wrapped link starts to them in order |
-| `NewBook` | `O(B + V + L)` | `O(B + V + P + L)` returned | composes load, anchors, layout, and links |
-| `Reflow` | `O(B + V + L)` | `O(V + P + L)` replaced layout | reuses raw lines and anchors |
+| `NewBook` | includes token discovery plus `O(B + V + L)` | `O(B + V + P + L)` returned | composes load, anchors, layout, and links |
+| `Reflow` | includes token discovery plus `O(B + V + L)` | `O(V + P + L)` replaced layout | reuses raw lines and anchors |
 | `View` | `O(T)` | `O(T)` returned | renders the current screen |
 
 `a` is deliberately distinct from the number of anchor entries: the cached
@@ -54,3 +56,9 @@ go test -run '^$' -bench '^(BenchmarkCallerVisibleOperations|BenchmarkExtractLin
 
 The dedicated wrapping, link-dense reflow, rendering, and anchor benchmarks
 cover their adversarial shapes alongside this suite.
+
+`BenchmarkIssue193_CodeOverlap` compares mixed inline-code/link paragraphs with
+link-only controls at 2,000, 4,000 and 8,000 repetitions, for extraction,
+wrapping and reflow. Each cursor crosses each code span at most once. This
+bounds overlap classification only. Unmatched backtick discovery is separate
+work, so this is not a claim that all layout is linear.

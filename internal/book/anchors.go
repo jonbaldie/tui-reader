@@ -52,10 +52,10 @@ func extractLinkMatches(text string) []linkMatch {
 	if matches == nil {
 		return nil
 	}
-	spans := InlineCodeSpans(text)
+	spans := codeSpanCursor{spans: InlineCodeSpans(text)}
 	var links []linkMatch
 	for _, m := range matches {
-		if IsInlineCodeRange(spans, m[0], m[1]) {
+		if spans.overlaps(m[0], m[1]) {
 			continue
 		}
 		links = append(links, linkMatch{
@@ -93,6 +93,27 @@ func InlineCodeSpans(line string) [][2]int {
 // from active markup using the same rules as ExtractLinks.
 func IsInlineCodeRange(spans [][2]int, start, end int) bool {
 	return overlapsCodeSpan(start, end, spans)
+}
+
+// codeSpanCursor classifies ranges with nondecreasing starts and ends. Link
+// candidates from linkRegex have that order, including rejected nested targets.
+type codeSpanCursor struct {
+	spans       [][2]int
+	first, last int
+}
+
+func (c *codeSpanCursor) overlaps(start, end int) bool {
+	count := len(c.spans)
+	for c.first < count && c.spans[c.first][1] <= start {
+		c.first++
+	}
+	for c.last < count && c.spans[c.last][0] < end {
+		c.last++
+	}
+	if c.first >= c.last {
+		return false
+	}
+	return c.spans[c.first][0] < start || c.spans[c.last-1][1] > end
 }
 
 // codeSpans returns the [start, end) byte ranges of inline code spans: a run
