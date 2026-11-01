@@ -9,6 +9,7 @@ Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.15...v0.1.1
 ### Bug Fixes
 
 - **Preserve reading positions in normalized paragraphs (#196, fixes #194).** Resizing keeps the reader on the right content when wrapped lines span source lines. Long paragraphs with repeated spaces no longer trigger repeated full-suffix searches.
+- **Avoid repeated link searches while wrapping (#198, fixes #192).** External links and unmatched brackets no longer trigger repeated searches through the remaining paragraph.
 
 ## v0.1.15 (2026-10-29)
 
