@@ -1136,7 +1136,7 @@ type wrapLinkRange struct {
 
 type wrapLinkScanner struct {
 	matches []wrapLinkRange
-	spans   [][2]int
+	spans   codeSpanCursor
 	next    int
 }
 
@@ -1158,7 +1158,7 @@ func newWrapLinkScanner(line string) wrapLinkScanner {
 		}
 	}
 	matches = matches[:pending]
-	return wrapLinkScanner{matches: matches, spans: InlineCodeSpans(line)}
+	return wrapLinkScanner{matches: matches, spans: codeSpanCursor{spans: InlineCodeSpans(line)}}
 }
 
 func closeWrapLinkMatches(matches []wrapLinkRange, pending, end int) int {
@@ -1184,7 +1184,7 @@ func (s *wrapLinkScanner) matchAt(i int) int {
 	}
 	end := s.matches[s.next].end
 	s.next++
-	if end < 0 || IsInlineCodeRange(s.spans, i, end) {
+	if end < 0 || s.spans.overlaps(i, end) {
 		return 0
 	}
 	return end - i
