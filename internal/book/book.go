@@ -1129,20 +1129,70 @@ type wrapToken struct {
 	linkStart   int
 }
 
-func matchLinkToken(line string, i int, spans [][2]int) int {
-	if line[i] != '[' {
+type wrapLinkRange struct {
+	start int
+	end   int
+}
+
+type wrapLinkScanner struct {
+	matches []wrapLinkRange
+	spans   [][2]int
+	next    int
+}
+
+func newWrapLinkScanner(line string) wrapLinkScanner {
+	var matches []wrapLinkRange
+	open, pending := -1, 0
+	n := len(line)
+	for i := 0; i < n; i++ {
+		switch line[i] {
+		case '[':
+			open = i
+		case ']':
+			if open >= 0 && i > open+1 && strings.HasPrefix(line[i:], "](#") {
+				matches = append(matches, wrapLinkRange{start: open, end: i + 3})
+			}
+			open = -1
+		case ')':
+			pending = closeWrapLinkMatches(matches, pending, i)
+		}
+	}
+	matches = matches[:pending]
+	return wrapLinkScanner{matches: matches, spans: InlineCodeSpans(line)}
+}
+
+func closeWrapLinkMatches(matches []wrapLinkRange, pending, end int) int {
+	count := len(matches)
+	for pending < count {
+		if end > matches[pending].end {
+			matches[pending].end = end + 1
+		} else {
+			matches[pending].end = -1
+		}
+		pending++
+	}
+	return pending
+}
+
+func (s *wrapLinkScanner) matchAt(i int) int {
+	count := len(s.matches)
+	for s.next < count && s.matches[s.next].start < i {
+		s.next++
+	}
+	if s.next == len(s.matches) || s.matches[s.next].start != i {
 		return 0
 	}
-	match := linkRegex.FindStringIndex(line[i:])
-	if match == nil || match[0] != 0 || IsInlineCodeRange(spans, i, i+match[1]) {
+	end := s.matches[s.next].end
+	s.next++
+	if end < 0 || IsInlineCodeRange(s.spans, i, end) {
 		return 0
 	}
-	return match[1]
+	return end - i
 }
 
 // eachWrapToken consumes words as they are scanned, without retaining a token slice.
 func eachWrapToken(line string, consume func(wrapToken)) {
-	spans := InlineCodeSpans(line)
+	links := newWrapLinkScanner(line)
 	spaceBefore := false
 	n := len(line)
 	for i := 0; i < n; {
@@ -1163,7 +1213,7 @@ func eachWrapToken(line string, consume func(wrapToken)) {
 			if unicode.IsSpace(r) {
 				break
 			}
-			if matchLen := matchLinkToken(line, i, spans); matchLen > 0 {
+			if matchLen := links.matchAt(i); matchLen > 0 {
 				consume(wrapToken{text: line[start : i+matchLen], spaceBefore: spaceBefore, link: true, linkStart: i - start})
 				i += matchLen
 				link = true
