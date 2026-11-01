@@ -18,6 +18,8 @@ func TestIssue192Wrapping(t *testing.T) {
 		{"unmatched brackets", "[[[ words [[ here", 9, []string{"[[[ words", "[[ here"}},
 		{"internal after external", "[external](url) ([wide label](#target)) end", 23, []string{"[external](url)", "([wide label](#target))", "end"}},
 		{"unicode and code", "界 `[a](#b)` [x y](#z)", 12, []string{"界 `[a](#b)`", "[x y](#z)"}},
+		{"overlap in code", "`[a](#[b](#c)` [x y](#z)", 15, []string{"`[a](#[b](#c)`", "[x y](#z)"}},
+		{"empty target", "[a](#) [b c](#d)", 10, []string{"[a](#)", "[b c](#d)"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -39,5 +41,8 @@ func BenchmarkIssue192Wrap(b *testing.B) {
 				benchmarkWrapLines(b, strings.Repeat(tc.unit, size), 80)
 			})
 		}
+		b.Run(fmt.Sprintf("overlapping-code/%d", size), func(b *testing.B) {
+			benchmarkWrapLines(b, "`"+strings.Repeat("[a](#", size)+")`", 80)
+		})
 	}
 }
