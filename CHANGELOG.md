@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.17 (2026-11-06)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.16...v0.1.17
+
+### Bug Fixes
+
+- **Keep setext heading links available for navigation (#200, fixes #121).** Link placement now comes from the formatted layout, including links in setext headings with indented continuation lines.
+
 ## v0.1.16 (2026-11-01)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.15...v0.1.16
