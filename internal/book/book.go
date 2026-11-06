@@ -63,7 +63,6 @@ type Book struct {
 	anchors       map[string]int // anchor name -> line index in rawLines
 	pageWidth     int
 	pageHeight    int
-	sourceLinks   sourceLinkSet
 	rawLinePages  map[int]int
 	pagePositions []Position
 	lineSources   []Position
@@ -149,11 +148,6 @@ func titleCase(s string) string {
 	}, s)
 }
 
-// formattedLine is one display line paired with its raw-line provenance: the
-// 0-based index of the source line it came from, or -1 for a blank line that
-// formatting inserted as a paragraph spacer. Across a document the raw indices
-// are non-decreasing. The links field records link tokens whose markup starts
-// on the display line; heading marks all content lines of a heading block.
 type formattedLine struct {
 	text         string
 	raw          int
@@ -185,7 +179,6 @@ type placedLink struct {
 }
 
 type bookLayout struct {
-	formatted     []formattedLine
 	pages         []Page
 	anchors       map[string]int
 	rawLinePages  map[int]int
@@ -799,7 +792,6 @@ func isMarkdownPath(path string) bool {
 func layoutFromFormatted(formatted []formattedLine, height int) bookLayout {
 	height = normalizePageHeight(height)
 	return bookLayout{
-		formatted:     formatted,
 		pages:         paginateFormatted(formatted, height),
 		rawLinePages:  rawLinePages(formatted, height),
 		pagePositions: pagePositions(formatted, height),
@@ -848,6 +840,16 @@ func paginateFormatted(formatted []formattedLine, height int) []Page {
 			headings[j] = fl.heading
 		}
 		pages = append(pages, Page{Lines: pageLines, Links: []Link{}, Headings: headings})
+	}
+	for fi, line := range formatted {
+		for _, placed := range line.placed {
+			pageIndex := fi / height
+			link := placed.link
+			link.LineOnPage = fi % height
+			linkIndex := len(pages[pageIndex].Links)
+			pages[pageIndex].Links = append(pages[pageIndex].Links, link)
+			assignLabelSpans(pages, placed, fi, pageIndex, linkIndex, height)
+		}
 	}
 	return pages
 }
@@ -1269,17 +1271,12 @@ func (b *Book) Reflow(width, height int) {
 	b.layout(width, height)
 }
 
-// layout paginates rawLines at the given geometry and sets every laid-out
-// field. Source links are computed once and cached across reflows.
 func (b *Book) layout(width, height int) {
-	if b.sourceLinks.links == nil {
-		b.sourceLinks = sourceLinksFor(b.rawLines, b.plainText)
-	}
 	width = normalizePageWidth(width)
 	layout := layoutFromDocument(formatDocument(b.rawLines, width, b.plainText), height)
 	b.pageWidth = width
 	b.pageHeight = layout.height
-	b.pages = attachLinks(layout.pages, b.rawLines, layout.formatted, layout.height, b.sourceLinks)
+	b.pages = layout.pages
 	b.anchors = layout.anchors
 	b.rawLinePages = layout.rawLinePages
 	b.pagePositions = layout.pagePositions
