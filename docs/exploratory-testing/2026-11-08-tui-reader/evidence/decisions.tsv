@@ -1,0 +1,5 @@
+ts	phase	decision	why	evidence	result
+2026-11-08T01:33:17Z	setup	Built in an isolated worktree	Keep caches and fixtures separate from the checkout	setup.txt	Build and tests passed
+2026-11-08T01:33:17Z	driver	Retained exited tmux panes and repeated all journeys	The first capture lost the pane at quit	drive.sh	Driver completed and captured exit statuses
+2026-11-08T01:33:17Z	classify	Kept resize behavior as an existing scope limitation	The prior issue accepts page-level positioning	https://github.com/jonbaldie/tui-reader/issues/61	No new issue filed
+2026-11-08T01:35:53Z	classify	Marked resize round-trip as unresolved after independent review	The first paragraph disappears after two resizes and the prior scope is ambiguous	resize-replay.txt	No issue filed pending scope decision

@@ -46,3 +46,6 @@ unusual-input observations.
 
 See the [2026-10-31 exploratory-testing report](exploratory-testing/2026-10-31-tui-reader/REPORT.md)
 for reading, link-history, resize, and dump-mode observations.
+
+See the [2026-11-08 exploratory-testing report](exploratory-testing/2026-11-08-tui-reader/REPORT.md)
+for page navigation, missing links, and dump-mode observations.
