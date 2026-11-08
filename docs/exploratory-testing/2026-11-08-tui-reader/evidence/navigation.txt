@@ -1,0 +1,229 @@
+--- start 80x24
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Alpha](#alpha) [Beta](#beta) [Missing](#missing)
+
+      Intro paragraph 01.
+
+      Intro paragraph 02.
+
+      Intro paragraph 03.
+
+      Intro paragraph 04.
+
+      Intro paragraph 05.
+
+      Intro paragraph 06.
+
+      Intro paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Right
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+
+      Intro paragraph 08.
+
+      Intro paragraph 09.
+
+      Intro paragraph 10.
+
+      Intro paragraph 11.
+
+      Intro paragraph 12.
+
+      Intro paragraph 13.
+
+      Intro paragraph 14.
+
+      Intro paragraph 15.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Left
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Alpha](#alpha) [Beta](#beta) [Missing](#missing)
+
+      Intro paragraph 01.
+
+      Intro paragraph 02.
+
+      Intro paragraph 03.
+
+      Intro paragraph 04.
+
+      Intro paragraph 05.
+
+      Intro paragraph 06.
+
+      Intro paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- End
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+      Alpha paragraph 24.
+
+    # Beta
+
+      Beta destination.
+
+
+
+
+
+
+
+
+
+
+
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 7 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Home
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Alpha](#alpha) [Beta](#beta) [Missing](#missing)
+
+      Intro paragraph 01.
+
+      Intro paragraph 02.
+
+      Intro paragraph 03.
+
+      Intro paragraph 04.
+
+      Intro paragraph 05.
+
+      Intro paragraph 06.
+
+      Intro paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Right
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+
+      Intro paragraph 08.
+
+      Intro paragraph 09.
+
+      Intro paragraph 10.
+
+      Intro paragraph 11.
+
+      Intro paragraph 12.
+
+      Intro paragraph 13.
+
+      Intro paragraph 14.
+
+      Intro paragraph 15.
+
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 2 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- resize:60x20
+
+                            Tour
+  ────────────────────────────────────────────────────────
+
+    Intro paragraph 06.
+
+    Intro paragraph 07.
+
+    Intro paragraph 08.
+
+    Intro paragraph 09.
+
+    Intro paragraph 10.
+
+    Intro paragraph 11.
+
+  ────────────────────────────────────────────────────────
+                        Page 2 of 9
+    ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- resize:80x24
+
+                                      Tour
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Alpha](#alpha) [Beta](#beta) [Missing](#missing)
+
+      Intro paragraph 01.
+
+      Intro paragraph 02.
+
+      Intro paragraph 03.
+
+      Intro paragraph 04.
+
+      Intro paragraph 05.
+
+      Intro paragraph 06.
+
+      Intro paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 7
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- q
+EXIT=0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pane is dead (status 0, Sun Nov  8 01:35:12 2026)
