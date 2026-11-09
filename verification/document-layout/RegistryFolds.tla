@@ -6,10 +6,11 @@ Keys == {0,1}
 Init == /\ history = <<>> /\ headings = [k \in Keys |-> -1]
         /\ rawPages = [k \in Keys |-> -1] /\ query = -1 /\ answer = -1
 Register == /\ Len(history) < 3
-            /\ \E key \in Keys:
-                /\ history' = Append(history,key)
+            /\ \E key \in Keys, end \in Keys:
+                /\ end >= key
+                /\ history' = Append(history,[first |-> key, last |-> end])
                 /\ headings' = [headings EXCEPT ![key] = Len(history)]
-                /\ rawPages' = IF rawPages[key] = -1 THEN [rawPages EXCEPT ![key] = Len(history)] ELSE rawPages
+                /\ rawPages' = [k \in Keys |-> IF k >= key /\ k <= end /\ rawPages[k] = -1 THEN Len(history) ELSE rawPages[k]]
             /\ UNCHANGED <<query,answer>>
 Lookup == /\ Len(history) = 3 /\ query = -1
           /\ query' \in Keys /\ answer' = rawPages[query']
@@ -17,9 +18,12 @@ Lookup == /\ Len(history) = 3 /\ query = -1
 Done == /\ query # -1 /\ UNCHANGED vars
 Next == Register \/ Lookup \/ Done
 FirstLast == \A key \in Keys:
-  LET found == {i \in 1..Len(history) : history[i] = key}
-  IN IF found = {} THEN headings[key] = -1 /\ rawPages[key] = -1
-     ELSE /\ \E i \in found: /\ rawPages[key] = i-1 /\ \A j \in found: i <= j
-          /\ \E i \in found: /\ headings[key] = i-1 /\ \A j \in found: i >= j
+  LET headingFound == {i \in 1..Len(history) : history[i].first = key}
+      rawFound == {i \in 1..Len(history) : history[i].first <= key /\ key <= history[i].last}
+  IN /\ IF headingFound = {} THEN headings[key] = -1
+         ELSE \E i \in headingFound: /\ headings[key] = i-1 /\ \A j \in headingFound: i >= j
+     /\ IF rawFound = {} THEN rawPages[key] = -1
+         ELSE \E i \in rawFound: /\ rawPages[key] = i-1 /\ \A j \in rawFound: i <= j
+
 LookupRetainsFirst == query # -1 => answer = rawPages[query]
 ======================================================

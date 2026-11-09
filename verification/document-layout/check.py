@@ -30,15 +30,24 @@ with tempfile.TemporaryDirectory(prefix='reader-layout-') as scratch:
     if args.mutation:
         source = package / 'book.go'
         original = source.read_text()
-        needle = 'prevCode, prevList = false, false'
-        assert original.count(needle) == 1
-        source.write_text(original.replace(needle, needle + '\n\t\t\tfirstParagraph = true'))
-        mutated = run()
-        print(mutated.stdout, end='')
-        print(mutated.stderr, end='')
-        assert mutated.returncode != 0 and 'first-block privilege reset' in mutated.stdout, 'Mutation escaped the behavioral check'
-        source.write_text(original)
-        restored = run()
-        print(restored.stdout, end='')
-        assert restored.returncode == 0, restored.stderr
-        print('PASS: real-code mutation caught, isolated source restored, baseline passes.')
+        mutations = [
+            ('first block', 'prevCode, prevList = false, false', 'prevCode, prevList = false, false\n\t\t\tfirstParagraph = true', 'first-block privilege reset'),
+            ('explicit offset', 'sources[i].Offset = fl.sourceOffset', 'sources[i].Offset = 0', 'explicit offset ignored'),
+            ('normalized cursor reset', 'c.raw, c.offset = nextLine, 0', 'c.raw, c.offset = nextLine, c.offset', 'normalized provenance'),
+            ('raw range endpoint', 'raw <= max(fl.raw, fl.endRaw)', 'raw < max(fl.raw, fl.endRaw)', 'raw range registration'),
+            ('heading continuation', 'block.lines[i].heading = block.lines[i].text != ""', 'block.lines[i].heading = false', 'heading continuation lost classification'),
+        ]
+        for label, needle, replacement, failure in mutations:
+            assert original.count(needle) == 1, (label, needle)
+            try:
+                source.write_text(original.replace(needle, replacement))
+                mutated = run()
+                print(mutated.stdout, end='')
+                print(mutated.stderr, end='')
+                assert mutated.returncode != 0 and failure in mutated.stdout, f'{label} mutation escaped its behavioral check'
+            finally:
+                source.write_text(original)
+            restored = run()
+            print(restored.stdout, end='')
+            assert restored.returncode == 0, restored.stderr
+            print(f'PASS: {label} real-code mutation caught, isolated source restored, baseline passes.')

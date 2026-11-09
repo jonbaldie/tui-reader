@@ -18,8 +18,9 @@ Prose == Block("prose")
 Code == Block("code")
 List == Block("list")
 Heading == Block("heading")
+LineBlock == Block("lineblock")
 Done == /\ steps = 3 /\ UNCHANGED vars
-Next == Blank \/ Prose \/ Code \/ List \/ Heading \/ Done
+Next == Blank \/ Prose \/ Code \/ List \/ Heading \/ LineBlock \/ Done
 LaterProseKeepsIndent == ~wrongIndent
 PriorKindsExclusive == ~(prevCode /\ prevList)
 ======================================================

@@ -13,7 +13,7 @@ for name in ("BlockContext", "LayoutCache", "WidthAccumulator", "FenceContext", 
 mutations = {
     "token": ("emittedSpace' = (kind # \"space\" /\\ pending)", "emittedSpace' = TRUE"),
     "indent": ("accepted' = fits", "accepted' = TRUE"),
-    "provenance": ("IF success THEN cursor+1 ELSE cursor", "IF success THEN cursor+1 ELSE cursor+1"),
+    "provenance": ("IF cursor < 3 THEN cursor+1 ELSE cursor", "IF cursor < 3 THEN cursor+1 ELSE cursor+1"),
     "columns": ("accepted' = (column' >= 4)", "accepted' = TRUE"),
     "digits": ("accepted' = (digits /\\ ch = \"suffix\")", "accepted' = TRUE"),
     "title": ("titled' = previousSpace", "titled' = ~previousSpace"),
@@ -27,10 +27,11 @@ for name, (old, new) in mutations.items():
     (target / "ScannerDecisions.tla").write_text(text.replace(old, new))
     shutil.copy2(source / "ScannerDecisions.cfg", target)
 extras = {
+    "SourcePositions": [("explicit", "ELSE expected", "ELSE fallback")],
     "PageAnchors": [("priority", 'ELSE IF firstHeading >= 0 THEN firstHeading ELSE IF firstContent >= 0 THEN firstContent ELSE carry', 'ELSE carry')],
     "ProsePromotion": [("adjacency", 'collected > 0 /\\ kind = "underline"', 'kind = "underline"')],
     "PositionLookup": [("best", "best' = IF ok THEN", "best' = IF FALSE THEN")],
-    "RegistryFolds": [("last-heading", '[headings EXCEPT ![key] = Len(history)]', 'IF headings[key] = -1 THEN [headings EXCEPT ![key] = Len(history)] ELSE headings'),
+    "RegistryFolds": [("range", "k <= end /\\ rawPages[k]", "k < end /\\ rawPages[k]"), ("last-heading", '[headings EXCEPT ![key] = Len(history)]', 'IF headings[key] = -1 THEN [headings EXCEPT ![key] = Len(history)] ELSE headings'),
                       ("lookup", "answer' = rawPages[query']", "answer' = -1")],
 }
 for module, changes in extras.items():

@@ -1,63 +1,66 @@
 # Document layout verification
 
-Source correspondence: `dab9f7557cd033d89e80e732fab78d3c0934502e`, reviewed 2026-11-09. All source references below are in `internal/book/book.go`. Inventory numbers refer to `.audit/tui-reader-state-machines/scratch.md` in the parent workspace.
-
-From the repository root, one command reruns all document models, targeted model mutations, generated Go checks, and the isolated Go mutation/restoration check:
+Source correspondence: `9b158e9ce76bb27a71f41ec24481500a7e70625a`, reviewed 2026-11-09. Sources are `internal/book/book.go`; inventory numbers refer to the parent workspace's `.audit/tui-reader-state-machines/scratch.md`.
 
 ```sh
 python3 verification/document-layout/model_check.py && python3 verification/document-layout/check.py --mutation
 ```
 
-`model_check.py` uses an already installed TLA+ tools release **1.7.4**, SHA-256 `936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88`, whose checker reports **TLC 2.19 (08 August 2024, rev 5a47802)**. It resolves that pinned artifact and Temurin Java 25 through `mise`; alternatively set `JAVA` to the Java executable and `TLA2TOOLS` to that exact jar. The recorded Go run used Go 1.25.0. Python requires 3.11 or later. Temporary checker state and mutated source live outside the repository.
+The root aggregate `python3 verification/check_all.py` includes these checks. Python 3.11 or later and Go 1.25.0 are required. `model_check.py` resolves Temurin Java 25 and TLA+ tools release **1.7.4** through mise, or uses `JAVA` and `TLA2TOOLS`. That jar has SHA-256 `936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88` and reports TLC 2.19. Temporary modules, checker state and mutations live outside the repository.
 
-Read every TLA+ result through `/statechart`, using matching same-name `.cfg` files and scratch copies outside the repository. `BlockContext` also has `view.mjs`. The root aggregate `python3 verification/check_all.py` includes this subsystem. `/statechart` owns its own setup and invocation details.
+Read each model's result through `/statechart`, with its matching `.cfg`, in a scratch directory outside the repository. Use `view.mjs` with `BlockContext`. `/statechart` owns installation and invocation details.
 
-## Source mapping and finite abstractions
+## Source mapping and bounds
 
-| Inventory | Source | Model state and bound | Checked property |
-|---|---|---|---|
-| 8 | `Read`, `Reflow`, `layout` (1070–1104) | `LayoutCache`: geometry, pages/map geometry, source cache and layout calls; three synchronous layouts, geometry IDs 1–2 | Pages and maps belong to the requested geometry; source cache is initialized. |
-| 9 | `formatMarkdownDocument`, `formatNextBlock`, separator helpers (265–365,439–448) | `BlockContext`: first-block privilege, prior code/list category, blank tail; three blocks/blanks | A blank cannot restore the first-block privilege after an emitted block. Separator predicates are represented by context, but exact separator output is checked in Go. |
-| 10 | fence helpers and `findFenceBlockEnd` (217–259) | `FenceContext`: no fence/backtick/tilde, scanned event count, heading-registration flag; three events | A heading inside a fence cannot register. Delimiter-length and indentation parsing are abstracted into matching/nonmatching events. |
-| 12 | `findProseBlockEnd`, setext promotion (349–365,367–400,427–437) | `ProsePromotion`: input cursor, collected contiguous prose count, current line category, promotion and stop state; three consumed lines | Promotion requires collected prose and an adjacent underline; a boundary terminates collection. Line categories stand for dispatch results, not literal Markdown recognition. |
-| 14 | `eachWrapToken`, `matchLinkToken` (999–1048) | `ScannerDecisions` token mode: cursor, pending whitespace, previous pending separator, atomic word/link emission; three events | Emitted separators require preceding whitespace; a recognized link advances as one token. Link recognition and inline-code exclusion are input classifications, not proven regex semantics. |
-| 15 | `appendWordRunes` (961–982) | `WidthAccumulator`: current/emitted/consumed display columns; three runes, rune widths 1–2, page width 2 | Flushing never loses columns. Exact token-prefix and link-start metadata are exercised in Go and the link subsystem, not proved here. |
-| 16 | `wrapParagraphWithIndent`, `formatCodeBlock`, `fitsWithIndent` (504–520,589–615) | `ScannerDecisions` indent mode: candidate phase, retained fit decision, accept or full-width retry phase | A candidate is accepted exactly when it fits; rejection selects full width. The fit predicate and resulting text are tested against Go. |
-| 17 | `mapWrappedProvenance`, `advanceLine` (533–571) | `ScannerDecisions` provenance mode: retained search/raw cursors, prior cursors, success/failure event; three matches | Both cursors move forward; a failed search retains them. Matching and offset-to-raw conversion are reduced to atomic success events. |
-| 18 | `lineSources` (780–789) | `SourcePositions`: current/prior raw index, prior nonspace count, offset; three lines, raw IDs −1/0/1 and counts 1–2 | A synthetic spacer or changed raw index resets continuation; only repeated nonnegative raw IDs accumulate. |
-| 19 | `pagePositions`, `firstPageAnchor`, `pageAnchor` (759–778,801–832) | `PageAnchors`: page and line cursors, first-content/heading latches, last nonblank position, incoming carry, selected anchor; three pages of two lines | Page zero selects first content; later pages prefer first heading, then content, then incoming carry. Persistent scanning and carry are explicit. Source positions are scalar IDs. |
-| 25 | `splitLines`, `titleCase`, `codeIndentLength`, `isOrderedListItem` (103–122,145–160,196–215,450–458) | `ScannerDecisions`: separate modes retain terminator/cursor/output-count state, previous whitespace, indentation column and stopped/rejected state, or consumed-digit/suffix state; three character events | CRLF emits one terminator, word boundaries title-case, indentation stops at four, ordered-list acceptance requires prior digits and a valid suffix. A suffix event includes `. ` or `) `; EOF rejects. Exact strings and EOF empty tail are Go checks. |
-| 26 | `recordHeadingAnchor`, `rawLinePages` (303–323,739–757) | `RegistryFolds`: history, heading/raw-page maps, query and answer; three registrations over two keys | Heading registration keeps the last occurrence; raw pages keep the first; lookup returns that retained first value. Synthetic rows and normalization are reduced away. |
-| 26 | `PageForPosition`, `PageForRawLine` (1179–1227) | `PositionLookup`: scan cursor, best candidate, eligible candidates, stop flag, query, query mode; fixed three-entry sorted example with a repeated raw ID and a gap, four queries | The retained best is the greatest eligible page/index; a greater raw ID terminates the position scan. Exact-match, fallback, clamping and lazy-map behavior are checked in Go. This finite example is not a proof over arbitrary maps. |
+| Inventory | Source | Finite abstraction and checked property |
+|---|---|---|
+| 8 | `Read`, `layout`, `Reflow` | `LayoutCache`: three synchronous layouts, geometry IDs 1–2. Pages and derived maps must match the requested geometry. There is no persistent source-link cache in the current implementation. |
+| 9 | `formatMarkdownDocument`, `formatNextBlock`, `formatLineBlock`, separator helpers | `BlockContext`: three blocks/blanks, first-block privilege, prior code/list category and blank tail. Blank lines cannot restore first-block privilege. Heading and line blocks share the same context transition; line-block grouping and separator output are Go checks. |
+| 10 | fence helpers, `findFenceBlockEnd` | `FenceContext`: three events, no/backtick/tilde fence and heading-registration flag. Fenced headings cannot register. Delimiter matching is an input classification. |
+| 12 | `findProseBlockEnd`, setext dispatch | `ProsePromotion`: three lines, collected prose, category, stop and promotion. Promotion requires collected prose followed immediately by an underline. Category recognition is checked in Go. |
+| 14 | `eachWrapToken` | `ScannerDecisions` token mode: three classified token/space events, pending separator and cursor. Separators require preceding whitespace; a supplied link classification advances atomically. Persistent `wrapLinkScanner` recognition and inline-code exclusion belong to `verification/link-attribution`. |
+| 15 | `appendWordRunes` | `WidthAccumulator`: three runes of width 1–2, page width 2. Flushing conserves display columns. Exact text and widths are Go checks. |
+| 16 | `wrapParagraphWithIndent`, `formatCodeBlock`, `fitsWithIndent` | `ScannerDecisions` indent mode: candidate and retry phases with retained fit result. Acceptance requires a fit; rejection selects full width. |
+| 17 | `provenanceCursor.nextContent`, `.line`, `mapWrappedProvenance`, `advanceLine` | `ScannerDecisions` provenance mode: four calls over three content runes with raw IDs 0,0,1. Each call consumes one content rune or retains EOF; raw IDs follow source order. Whitespace and UTF-8 bytes are projected away. Exact rune offsets, raw transitions, normalized whitespace and spanning output rows are checked in Go. This replaces the retired substring-search success/failure abstraction. |
+| 18 | `lineSources` | `SourcePositions`: three rows, raw IDs −1/0/1, counts 1–2, optional authoritative source offsets 0–2. Explicit offsets win; otherwise only repeated nonnegative raw IDs accumulate and boundaries reset. The historical invariant name `OffsetsResetAtSourceBoundary` now checks this full decision. |
+| 19 | `pagePositions`, `firstPageAnchor`, `pageAnchor`, heading classification | `PageAnchors`: three pages of two rows, first-heading/content latches and incoming carry. Page zero selects first content; later pages prefer the first classified heading, then content, then carry. A heading event means the cached `formattedLine.heading` flag, including wrapped continuations. Recognition is a Go check. |
+| 25 | `splitLines`, `titleCase`, `codeIndentLength`, `isOrderedListItem` | Separate `ScannerDecisions` modes, each three character events. CRLF counts once, title casing follows whitespace boundaries, indentation reaches column four, list suffixes require preceding digits. Suffix events include `. ` or `) `; EOF rejects. |
+| 26 | anchor registration in `formatMarkdownDocument`, `rawLinePages` | `RegistryFolds`: three registrations over raw IDs 0–1, inclusive start/end ranges, heading/raw maps and one lookup. Headings keep the last start occurrence; raw pages keep the first covering occurrence. One abstract registration equals one formatted row/page. Synthetic rows are excluded. |
+| 26 | `PageForPosition`, `PageForRawLine` | `PositionLookup`: three sorted entries with a repeated raw ID and gap, four queries, cursor and best candidate. Selection retains the greatest eligible candidate. Exact-match, fallback and clamping are Go checks. Lazy rebuilding was deleted from production and is no longer claimed. |
 
-`ScannerDecisions` is a disjoint union: each initialized execution selects one scanner. Its registers are reused across modes; this avoids a large product of unrelated scanners. Bounds are part of the definitions, not hidden TLC constraints. Each module has a terminal self-loop and a matching configuration.
+`ScannerDecisions` chooses one independent scanner at initialization, avoiding a product of unrelated state. Bounds are encoded in the definitions. Each model has a terminal self-loop. These are bounded control-flow abstractions, not a proof of arbitrary Markdown, Unicode, delimiter recognition, allocation behavior or concurrency.
 
-## Go correspondence checks
+## Go correspondence
 
-`check.py` copies current production Go files into a temporary module and adds `code_test.go.txt`. It never changes the repository's production files. The generated wrapper corpus enumerates strings of length 0–4 over `a`, `b`, `界`, space and tab, at widths 1–5. Checks compare nonspace text preservation and allowed display width. Layout checks compare reflow with fresh construction over five documents, Markdown/plain modes, four widths and two heights. Focused checks exercise line endings including trailing empty segments, title boundaries, tab/space indentation, ordered-list suffixes, fence heading suppression, multi-line setext promotion, paragraph/code indentation fallback, provenance, offset resets, first and blank page anchors, first/last registry policies, lazy maps, copy isolation and lookup bounds.
+`check.py` copies current production files into a temporary Go module and installs `code_test.go.txt` in the same package. It uses the current `formatDocument` API, replacing deleted exported formatter helpers.
 
-These are bounded generated checks against real code. They complement finite control-flow abstractions; they do not turn the abstractions into proofs of the Go parser or of all Markdown, Unicode, offsets, cache states or input sizes. File I/O, invalid UTF-8 errors, concurrency, allocation failure, full inline-code/link matching, delimiter lengths, and exact regex recognition are outside the formal models. Links have a separate verification subsystem.
+The wrapper corpus enumerates lengths 0–4 over `a`, `b`, `界`, space and tab at widths 1–5, checking nonspace conservation and permitted width. Reflow is compared with fresh `Read` construction over five documents, Markdown/plain modes, four widths and two heights. A second generated corpus uses all sixteen pairs of prose lines containing repeated spaces, tabs, Unicode and leading/trailing whitespace at widths 1–8; each output row must identify the exact first source rune and last raw source line it contains.
 
-## Sensitivity checks
+Focused checks cover fences, setext, ordered lists, indentation fallback, line endings, normalized provenance, authoritative offsets, inclusive raw ranges, heading continuation flags, first/blank page anchor policy, first/last registration, lookup bounds, preserved table and blockquote rows, and clone isolation for every Page slice (`Lines`, `Links`, `Headings`, `LabelSpans`). Link recognition and occurrence-specific placements have a separate verification subsystem.
 
-`model_check.py` checks ten baseline models, prepares seventeen isolated mutants with `prepare_mutants.py`, and requires the **specific invariant name** to be violated. A parser error, crash or unrelated TLC error cannot satisfy that check.
+## Sensitivity and evidence
 
-| Mutant | Required violation |
+Ten baseline models and nineteen targeted model mutations must pass the sensitivity checks. `model_check.py` requires the named invariant violation, so parser errors and unrelated checker failures cannot pass as successful mutations.
+
+| Mutation | Required violation |
 |---|---|
-| Reset first-block state on a blank | `LaterProseKeepsIndent` |
-| Retain stale layout map geometry | `LayoutConsistent` |
-| Drop an emitted full line's columns | `NoLostColumns` |
-| Register a heading inside a fence | `CodeHeadingNotRegistered` |
-| Carry a source offset across raw-line changes | `OffsetsResetAtSourceBoundary` |
-| Discard a later page's heading/content priority | `AnchorPriority` |
-| Promote an underline without collected prose | `AdjacentOnly` |
-| Keep the first heading instead of last | `FirstLast` |
-| Return a missing value from a populated raw map | `LookupRetainsFirst` |
-| Refuse to update the best position candidate | `GreatestCandidate` |
-| Emit unrequested token space; accept rejected indentation; advance failed provenance; accept too-short code indent; accept invalid digit suffix; invert title boundary; double-count CRLF | `ObservedRule`, independently for each of seven mutants |
+| Reset first-block privilege on blank | `LaterProseKeepsIndent` |
+| Retain stale layout maps | `LayoutConsistent` |
+| Drop emitted columns | `NoLostColumns` |
+| Register fenced heading | `CodeHeadingNotRegistered` |
+| Carry offset across source boundary; ignore explicit source offset | `OffsetsResetAtSourceBoundary`, separately |
+| Discard later-page priority | `AnchorPriority` |
+| Promote without adjacent prose | `AdjacentOnly` |
+| Keep first heading; omit range endpoint | `FirstLast`, separately |
+| Return missing raw mapping | `LookupRetainsFirst` |
+| Refuse best-candidate update | `GreatestCandidate` |
+| Emit unrequested space; accept rejected indentation; advance beyond provenance EOF; accept short indent; accept invalid list suffix; invert title boundary; double-count CRLF | `ObservedRule`, seven separate mutations |
 
-`check.py --mutation` additionally inserts `firstParagraph = true` into the actual production blank-line branch **in the isolated copy**, requires the later-paragraph indentation assertion to fail, restores that source, and requires all checks to pass again. This is a real implementation mutation, not merely a model mutation. No defect is claimed in the unchanged production source.
+`check.py --mutation` makes five separate changes to isolated production source: reset first-block privilege, ignore authoritative offsets, retain offsets across raw boundaries, omit inclusive range endpoints, and remove heading continuation flags. Each must fail its specific behavioral assertion, then restoration must pass before the next mutation. No production mutation is retained.
 
-Recorded baseline and mutation reports, shortest counterexample paths and charts are under the parent workspace's `.audit/tui-reader-formal/document-layout/reviewed-final/`. `report-BlockContext/chart.mmd` is the compact overview; its five states hide steps that keep the same displayed context. Detailed reports retain all model state. Other charts are larger mechanical scanner graphs. Refresh this record after any model or source change.
+Landing evidence is in the parent workspace's `.audit/tui-reader-landing/layout/`: `before.txt` records the unchanged harness's compilation drift, `book.diff` the reviewed source changes, `after.txt` the current Go/mutation results, `models.txt` all baseline and targeted mutant checks, and `statechart/*/report/` each model's report, chart and TLC output. `mutant-statechart/*/report/` preserves each targeted counterexample. The previous reviewed evidence remains under `.audit/tui-reader-formal/document-layout/reviewed-final/`.
 
-The final model run passed every configured invariant and deadlock check: BlockContext 15 states, FenceContext 10, LayoutCache 7, PageAnchors 159, PositionLookup 32, ProsePromotion 19, RegistryFolds 31, ScannerDecisions 108, SourcePositions 59, and WidthAccumulator 13. All seventeen targeted mutants produced the specified invariant violation. Their shortest paths have 1–7 transitions; the first-block mutation is block → blank → prose, and the CRLF mutation is CR → LF. Generated Go checks passed before mutation, the production mutation failed the explicit first-block-privilege assertion, and the restored copy passed. No production change was retained.
+The maintenance review inspected every `book.go` change and commit message since `dab9f7557cd033d89e80e732fab78d3c0934502e`. It replaced stale cache/lazy-map claims, updated heading and line-block correspondence, and added normalized source offsets and inclusive registration ranges. Existing event bounds remain, except provenance now takes four calls to include an EOF call after three content runes. Source-offset choices and inclusive ranges broaden their existing three-row bounds. No production bug was reproduced by the refreshed checks.
+
+
+Changes to the promised behavior were intentional: `c93e41c` deleted the source construction helpers and lazy anchor rebuilding; `bc420ee` and `c77c1ea` made cached heading classification authoritative; `1f6b43f` introduced preserved table/quote line blocks; `24b9cb1` replaced substring matching with normalized content-rune provenance and authoritative offsets; `c6edb5b` removed the source-link cache in favor of layout placements. Their source, tests and commit messages support the updated contracts. `4c5be4a` adds page metadata cloned by `Page`. `e1475f9` and `1a4175b` change recognition inside the link subsystem, whose scanner checks cover that boundary. The old “failed substring search retains cursors” and “source cache is initialized” statements described deleted mechanisms and have been replaced by “content calls consume one source rune or retain EOF” and “all derived geometry belongs to the requested layout.”

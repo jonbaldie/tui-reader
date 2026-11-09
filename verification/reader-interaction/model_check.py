@@ -10,8 +10,10 @@ variants = [
     ('Reader', 'TypeOK', "page' = page + 1", "page' = 2"),
     ('Reader', 'SelectionValid', 'IF BadReset THEN selected ELSE -1', 'selected'),
     ('Reader', 'HistoryValid', 'Append(history,page)', 'Append(history,2)'),
-    ('Styling', 'OccurrenceAccounting', 'UNCHANGED <<tokens,occurrence,styled>>', "occurrence' = occurrence+1 /\\ UNCHANGED <<tokens,styled>>"),
-    ('Styling', 'NoDuplicateOccurrence', 'Append(styled,occurrence)', 'Append(styled,0)'),
+    ('Styling', 'OrderedRanges', 'Start(k)>=last', 'TRUE'),
+    ('Styling', 'SelectedOwner', 'Owner(k)=selected /\\ selected>=0', 'Owner(k)=selected'),
+    ('Styling', 'OpenerSelection', '(~IsOpener(k) \\/ Owner(k)=selected)', 'TRUE'),
+    ('Styling', 'LineIsolation', '~OtherLine(k)', 'TRUE'),
 ]
 for module, invariant, before, after in variants:
     text = (here / f'{module}.tla').read_text()

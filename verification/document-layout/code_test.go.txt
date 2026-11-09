@@ -17,6 +17,15 @@ func compact(s string) string {
 	}, s)
 }
 
+func formattedText(lines []string, width int) []string {
+	doc := formatDocument(lines, width, false)
+	result := make([]string, len(doc.lines))
+	for i, line := range doc.lines {
+		result[i] = line.text
+	}
+	return result
+}
+
 func TestGeneratedWrapConservation(t *testing.T) {
 	alphabet := []string{"a", "b", "界", " ", "\t"}
 	var visit func(string, int)
@@ -42,7 +51,7 @@ func TestGeneratedWrapConservation(t *testing.T) {
 }
 
 func TestBlockContext(t *testing.T) {
-	got := FormatParagraphs([]string{"# Heading", "", "Later prose"}, 40)
+	got := formattedText([]string{"# Heading", "", "Later prose"}, 40)
 	if !reflect.DeepEqual(got, []string{"# Heading", "", "  Later prose"}) {
 		t.Fatalf("first-block privilege reset: %q", got)
 	}
@@ -93,7 +102,6 @@ func TestLayoutReflowAndPositions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			links := b.sourceLinks.links
 			for _, width := range []int{1, 2, 5, 20} {
 				for _, height := range []int{1, 3} {
 					b.Reflow(width, height)
@@ -103,9 +111,6 @@ func TestLayoutReflowAndPositions(t *testing.T) {
 					}
 					if !reflect.DeepEqual(b.pages, fresh.pages) || !reflect.DeepEqual(b.pagePositions, fresh.pagePositions) || !reflect.DeepEqual(b.anchors, fresh.anchors) {
 						t.Fatal("stale layout after reflow")
-					}
-					if !reflect.DeepEqual(links, b.sourceLinks.links) {
-						t.Fatal("source links changed")
 					}
 					for page := 0; page < b.PageCount(); page++ {
 						pos := b.PositionForPage(page)
@@ -142,14 +147,18 @@ func TestLayoutReflowAndPositions(t *testing.T) {
 	if b.anchors["a"] != 4 {
 		t.Fatal("duplicate heading did not overwrite")
 	}
-	b.rawLinePages = nil
-	if b.PageForAnchor("a") < 0 {
-		t.Fatal("lazy mapping failed")
+	if b.PageForAnchor("a") != 4 {
+		t.Fatal("heading anchor map mismatch")
 	}
+	authoritative := lineSources([]formattedLine{{text: "ab", raw: 0}, {text: "c", raw: 0, sourceOffset: 7, hasOffset: true}})
+	if authoritative[1].Offset != 7 {
+		t.Fatalf("explicit offset ignored: %+v", authoritative)
+	}
+
 }
 
 func TestProvenanceAndAnchorSelection(t *testing.T) {
-	formatted := formatParagraphsWithProvenance([]string{"one two", "three four five"}, 4)
+	formatted := formatDocument([]string{"one two", "three four five"}, 4, false).lines
 	last := -1
 	for _, line := range formatted {
 		if line.raw >= 0 {
@@ -159,7 +168,7 @@ func TestProvenanceAndAnchorSelection(t *testing.T) {
 			last = line.raw
 		}
 	}
-	f := []formattedLine{{text: "start", raw: 0}, {text: "# heading", raw: 1}}
+	f := []formattedLine{{text: "start", raw: 0}, {text: "# heading", raw: 1, heading: true}}
 	if pagePositions(f, 2)[0].Raw != 0 {
 		t.Fatal("first page skipped start")
 	}
@@ -170,7 +179,7 @@ func TestProvenanceAndAnchorSelection(t *testing.T) {
 	}
 	for _, text := range []string{"  界", "[a b](#x)", "([long label](#target))", "a\tb", "``literal``"} {
 		for width := 1; width <= 6; width++ {
-			for _, line := range FormatParagraphs([]string{text}, width) {
+			for _, line := range formattedText([]string{text}, width) {
 				if runewidth.StringWidth(line) > max(width, 2) {
 					t.Fatalf("indent fallback overflow %q width%d", line, width)
 				}
@@ -185,9 +194,16 @@ func TestTokenAndLookupFolds(t *testing.T) {
 	if len(tokens) != 2 || tokens[0].text != "([long label](#x)" || !tokens[0].link || !tokens[0].spaceBefore || tokens[1].text != ")word" || tokens[1].spaceBefore {
 		t.Fatalf("token boundary %+v", tokens)
 	}
-	mapped := mapWrappedProvenance([]wrappedLine{{text: "a"}, {text: "missing"}, {text: "b"}}, "a b", []int{0, 2}, 10, false)
-	if mapped[0].raw != 10 || mapped[1].raw != 10 || mapped[2].raw != 11 {
-		t.Fatalf("failed search advanced provenance %+v", mapped)
+	joined := "a\t b c  d"
+	mapped := mapWrappedProvenance([]wrappedLine{{text: "a b c"}, {text: "d"}}, joined, []int{0, 5}, 10, false)
+	if mapped[0].raw != 10 || mapped[0].endRaw != 11 || mapped[0].sourceOffset != 0 || mapped[1].raw != 11 || mapped[1].sourceOffset != 1 {
+		t.Fatalf("normalized provenance: %+v", mapped)
+	}
+	cursor := provenanceCursor{source: "a  b 界", offsets: []int{0, 5}}
+	for i, want := range []Position{{Raw: 0, Offset: 0}, {Raw: 0, Offset: 1}, {Raw: 1, Offset: 0}, {Raw: 1, Offset: 1}} {
+		if got := cursor.nextContent(); got != want {
+			t.Fatalf("content cursor step%d: %+v want %+v", i, got, want)
+		}
 	}
 	b := Book{pages: make([]Page, 3), pageHeight: 1, rawLinePages: map[int]int{0: 0, 2: 2}, lineSources: []Position{{Raw: 0}, {Raw: 0, Offset: 2}, {Raw: 2}}}
 	for _, test := range []struct {
@@ -203,8 +219,88 @@ func TestTokenAndLookupFolds(t *testing.T) {
 			t.Fatalf("raw%d got%d want%d", raw, got, want)
 		}
 	}
-	lazy := Book{rawLines: []string{"# A", "text"}, anchors: map[string]int{"a": 0}, pageWidth: 40, pageHeight: 1, pages: make([]Page, 2)}
-	if lazy.PageForAnchor("a") != 0 || len(lazy.lineSources) != 0 || lazy.PageForPosition(Position{Raw: 0, Offset: 1}) != 0 {
-		t.Fatal("lazy map fallback")
+}
+
+func TestPreservedLineBlocksAndHeadingFlags(t *testing.T) {
+	for _, lines := range [][]string{{"| a | b |", "| c | d |"}, {"> alpha", "> beta"}} {
+		doc := formatDocument(lines, 80, false)
+		if len(doc.lines) != 2 || doc.lines[0].text != lines[0] || doc.lines[1].text != lines[1] || doc.lines[1].raw != 1 {
+			t.Fatalf("line block grouping: %+v", doc.lines)
+		}
+	}
+	doc := formatDocument([]string{"    # literal", "", "# long heading"}, 4, false)
+	headingCount := 0
+	for _, line := range doc.lines {
+		if line.heading {
+			headingCount++
+		}
+		if line.raw == 0 && line.heading {
+			t.Fatal("code classified heading")
+		}
+	}
+	if headingCount < 2 {
+		t.Fatal("heading continuation lost classification")
+	}
+	b, err := Read(strings.NewReader("# Heading\n\n[x](#heading)"), "t", 40, 4, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	page := b.Page(0)
+	if len(page.Headings) == 0 || len(page.Links) == 0 || len(page.LabelSpans) == 0 {
+		t.Fatal("missing page metadata")
+	}
+	page.Headings[0] = false
+	page.Links[0].Target = "changed"
+	page.LabelSpans[0].Start = 999
+	fresh := b.Page(0)
+	if !fresh.Headings[0] || fresh.Links[0].Target == "changed" || fresh.LabelSpans[0].Start == 999 {
+		t.Fatal("page metadata aliases book")
+	}
+}
+
+func TestGeneratedNormalizedSourcePositions(t *testing.T) {
+	inputs := []string{"a  b", "c\td", "界 e", " f g "}
+	for _, first := range inputs {
+		for _, second := range inputs {
+			for width := 1; width <= 8; width++ {
+				raw := []string{first, second}
+				var source []Position
+				for ri, text := range raw {
+					offset := 0
+					for _, r := range text {
+						if !unicode.IsSpace(r) {
+							source = append(source, Position{Raw: ri, Offset: offset})
+							offset++
+						}
+					}
+				}
+				doc := formatDocument(raw, width, false)
+				rank := 0
+				for _, line := range doc.lines {
+					count := nonSpaceRunes(line.text)
+					if count == 0 {
+						continue
+					}
+					if rank+count > len(source) {
+						t.Fatal("formatted source grew")
+					}
+					want := source[rank]
+					if line.raw != want.Raw || line.sourceOffset != want.Offset || !line.hasOffset || line.endRaw != source[rank+count-1].Raw {
+						t.Fatalf("normalized source%q width%d row%+v want%+v end%d", raw, width, line, want, source[rank+count-1].Raw)
+					}
+					rank += count
+				}
+				if rank != len(source) {
+					t.Fatal("formatted source lost content")
+				}
+			}
+		}
+	}
+}
+
+func TestInclusiveSourceRanges(t *testing.T) {
+	ranged := rawLinePages([]formattedLine{{text: "ab", raw: 0, endRaw: 2}, {text: "cd", raw: 2, endRaw: 3}}, 1)
+	if !reflect.DeepEqual(ranged, map[int]int{0: 0, 1: 0, 2: 0, 3: 1}) {
+		t.Fatalf("raw range registration: %+v", ranged)
 	}
 }

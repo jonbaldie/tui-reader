@@ -1,37 +1,25 @@
------------------------ MODULE LinkAttribution -----------------------
-EXTENDS Naturals, Sequences
-CONSTANTS MutateFence, MutateQueue
-VARIABLES phase, inFence, scanned, sources, next, attached, cached
-vars == <<phase, inFence, scanned, sources, next, attached, cached>>
-Init == /\ phase = "Extract" /\ inFence = FALSE /\ scanned = 0
-        /\ sources = <<>> /\ next = 0 /\ attached = <<>> /\ cached = FALSE
-OpenFence == /\ phase = "Extract" /\ scanned < 3 /\ ~inFence
-             /\ inFence' = TRUE /\ scanned' = scanned + 1
-             /\ UNCHANGED <<phase, sources, next, attached, cached>>
-CloseFence == /\ phase = "Extract" /\ scanned < 3 /\ inFence
-              /\ inFence' = FALSE /\ scanned' = scanned + 1
-              /\ UNCHANGED <<phase, sources, next, attached, cached>>
-ReadLink == /\ phase = "Extract" /\ scanned < 3
-            /\ sources' = IF ~inFence \/ MutateFence
-                           THEN Append(sources, [raw |-> scanned, code |-> inFence])
-                           ELSE sources
-            /\ scanned' = scanned + 1
-            /\ UNCHANGED <<phase, inFence, next, attached, cached>>
-CacheSource == /\ phase = "Extract" /\ scanned = 3
-               /\ phase' = "Attach" /\ cached' = TRUE
-               /\ UNCHANGED <<inFence, scanned, sources, next, attached>>
-ConsumeOccurrence == /\ phase = "Attach" /\ next < Len(sources)
-                     /\ attached' = Append(attached, sources[next+1].raw)
-                     /\ next' = IF MutateQueue THEN next ELSE next+1
-                     /\ UNCHANGED <<phase, inFence, scanned, sources, cached>>
-Finish == /\ phase = "Attach" /\ next = Len(sources)
-          /\ phase' = "Done"
-          /\ UNCHANGED <<inFence, scanned, sources, next, attached, cached>>
-Done == /\ phase = "Done" /\ UNCHANGED vars
-Next == OpenFence \/ CloseFence \/ ReadLink \/ CacheSource \/ ConsumeOccurrence \/ Finish \/ Done
-NoCodeLinks == \A i \in 1..Len(sources): ~sources[i].code
-ConsumedOnce == Len(attached) = next
-AttachmentOrder == \A i \in 1..Len(attached): attached[i] = sources[i].raw
-CacheBeforeAttach == phase \in {"Attach", "Done"} => cached
-Complete == phase = "Done" => Len(attached) = Len(sources)
+------------------------- MODULE LinkAttribution -------------------------
+EXTENDS Naturals, Integers, Sequences, FiniteSets
+VARIABLES height, starts, offsets, next, attached, spans
+vars == <<height,starts,offsets,next,attached,spans>>
+Init == /\ height \in {1,2}
+        /\ starts \in [1..2 -> 0..2] /\ starts[1]<=starts[2]
+        /\ offsets \in [1..2 -> {0,1}]
+        /\ next=1 /\ attached= <<>> /\ spans={}
+Owner(i) == starts[i] \div height
+Local(i) == Cardinality({j \in 1..(i-1): Owner(j)=Owner(i)})
+Expected(i) == LET labelPage == (starts[i]+offsets[i]) \div height
+              IN {[id |-> i, page |-> labelPage, index |-> IF labelPage=Owner(i) THEN Local(i) ELSE -1, opener |-> FALSE]}
+                 \cup IF labelPage=Owner(i) THEN {} ELSE {[id |-> i, page |-> Owner(i), index |-> Local(i), opener |-> TRUE]}
+Place == /\ next<=2
+         /\ attached'=Append(attached,[id |-> next,page |-> Owner(next),index |-> Local(next)])
+         /\ spans'=spans \cup Expected(next)
+         /\ next'=next+1
+         /\ UNCHANGED <<height,starts,offsets>>
+Done == /\ next=3 /\ UNCHANGED vars
+Next == Place \/ Done
+OccurrenceOrder == attached= [i \in 1..(next-1) |-> [id |-> i,page |-> Owner(i),index |-> Local(i)]]
+SpanOwnership == \A s \in spans: ~s.opener => s.index=IF s.page=Owner(s.id) THEN Local(s.id) ELSE -1
+OwnerFallback == \A i \in 1..(next-1): (\E s \in spans: s.id=i /\ s.opener) \equiv ((starts[i]+offsets[i]) \div height # Owner(i))
+CompleteSpans == spans=UNION {Expected(i): i \in 1..(next-1)}
 =============================================================================

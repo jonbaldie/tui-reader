@@ -16,6 +16,8 @@ expected = {
     'WidthAccumulator': 'NoLostColumns',
     'FenceContext': 'CodeHeadingNotRegistered',
     'SourcePositions': 'OffsetsResetAtSourceBoundary',
+    'SourcePositions-explicit': 'OffsetsResetAtSourceBoundary',
+    'RegistryFolds-range': 'FirstLast',
     'PageAnchors-priority': 'AnchorPriority',
     'ProsePromotion-adjacency': 'AdjacentOnly',
     'RegistryFolds-last-heading': 'FirstLast',
@@ -47,4 +49,4 @@ with tempfile.TemporaryDirectory(prefix='reader-layout-models-') as scratch:
         invariant = expected[folder.name]
         assert result.returncode != 0 and f'Invariant {invariant} is violated.' in result.stdout, result.stdout
         print(folder.name, 'caught:', invariant, flush=True)
-print('PASS: 10 model baselines and 17 targeted model mutations.')
+print('PASS: 10 model baselines and 19 targeted model mutations.')

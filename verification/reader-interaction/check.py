@@ -1,5 +1,5 @@
 from pathlib import Path
-import subprocess, tempfile, json, sys
+import subprocess, tempfile, json, sys, shutil
 root=Path(__file__).resolve().parents[2]
 cmd=['go','test','-count=1','./verification/reader-interaction','./internal/tui']
 subprocess.run(cmd,cwd=root,check=True)
@@ -19,3 +19,23 @@ if '--mutate' in sys.argv:
         assert result.returncode!=0 and 'page movement retained link focus' in result.stdout, 'mutation was not detected by the expected assertion'
     subprocess.run(cmd,cwd=root,check=True)
     print('PASS: real Go focus-reset mutation detected; unchanged source passes.')
+with tempfile.TemporaryDirectory(prefix='reader-spans-') as tmp:
+    target=Path(tmp)
+    for name in ('go.mod','go.sum'):
+        shutil.copy2(root/name,target/name)
+    shutil.copytree(root/'internal',target/'internal')
+    shutil.copy2(Path(__file__).with_name('styling_test.go.txt'),target/'internal/tui/formal_span_test.go')
+    stylecmd=['go','test','-count=1','-run','^TestFormalLabelSpans$','./internal/tui']
+    subprocess.run(stylecmd,cwd=target,check=True)
+    if '--mutate' in sys.argv:
+        source=target/'internal/tui/model.go'
+        original=source.read_text()
+        before='span.LinkIndex == selectedIndex && selectedIndex >= 0'
+        assert original.count(before)==1
+        source.write_text(original.replace(before,'span.LinkIndex == selectedIndex'))
+        result=subprocess.run(stylecmd,cwd=target,capture_output=True,text=True)
+        print(result.stdout+result.stderr)
+        assert result.returncode!=0 and 'TestFormalLabelSpans/continuation_remains_unselected' in result.stdout and 'span styling differs' in result.stdout, 'expected continuation assertion did not reject the source mutation'
+        source.write_text(original)
+        subprocess.run(stylecmd,cwd=target,check=True)
+        print('PASS: continuation styling mutation detected; restored source passes.')

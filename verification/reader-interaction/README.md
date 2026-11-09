@@ -2,23 +2,20 @@
 
 `Reader.tla` models complete synchronous input updates. Each action maps to the corresponding navigation branch in `internal/tui/model.go`. `Resize` abstracts source-position capture and restoration as a map from a two-page layout into one page. It preserves a valid representative when expanding again. Selection cycling uses a one-link equivalence class.
 
-`Styling.tla` models one iteration per regex match in `styleLinkMarkup`, after extraction and code-span classification. The source renderer's byte cursor becomes an ordered token cursor. Only attached matches consume page-level selection indices.
+`Styling.tla` models layout-provided label spans consumed by `styleLine`. It tracks the span cursor, retained byte end, rendered ranges and highlighted owners. It covers continuation owners, selected openers, overlapping ranges and spans on other lines.
 
 ## Results
 
-The baseline Reader check reached 34 states and 240 steps. TypeOK, SelectionValid, HistoryValid, and NoDeadlock held. Its reader-language view produced six chart states and fourteen arrows. The view hides Idle steps and merges steps within one visible label. It includes no bug marks.
+At synchronization commit `9b158e9`, Reader reached 34 states and 240 steps. TypeOK, SelectionValid, HistoryValid and NoDeadlock held. Its reader-language view produced six chart states and fourteen arrows. The view hides Idle steps and merges steps within one visible label.
 
-The baseline Styling check reached 108 states and 108 steps. OccurrenceAccounting, NoDuplicateOccurrence, and NoDeadlock held. Its raw graph is a diagnostic graph rather than a primary user-flow chart.
+Styling reached 225 states and 225 steps. OrderedRanges, SelectedOwner, OpenerSelection, LineIsolation and NoDeadlock held. Its raw graph is a diagnostic graph rather than a primary user-flow chart.
 
-All results are bounded model results, not proofs of the Go code. The skill lists the bounds and exclusions.
+All results are bounded model results. The skill lists the bounds and exclusions, including Reader's page-zero history reduction and Styling's assumed valid span bounds.
 
-## Demonstrated model mutations
+## Mutation demonstrations
 
-Use `/statechart` on scratch copies with these exact changes. Rename the module to match each scratch filename. Keep the original invariants.
+`model_check.py` requires a named invariant violation for each of seven isolated mutations. Reader mutations fabricate page two, retain stale focus and append an invalid history origin. Styling mutations allow overlapping ranges, select continuation owner -1, render unselected openers and accept spans from another line. Use `/statechart` on scratch copies to read their shortest counterexamples.
 
-- Set Reader.cfg's BadReset constant to TRUE. SelectionValid fails after select a link, then turn the page. Selection remains zero on a page without links.
-- Replace Reader's `page < Last` guard with `page < 2`. TypeOK fails after go to the end, then turn the page. The page becomes two in a layout whose last page is one.
-- Replace `Append(history,page)` with `Append(history,2)`. HistoryValid fails after select a link, then follow it. Back subsequently violates TypeOK.
-- Replace Styling's `occurrence+1` with `occurrence+2`. OccurrenceAccounting fails on the first attached match. NoDuplicateOccurrence fails on the second attached match because the indices are zero and two.
+`python3 verification/reader-interaction/check.py --mutate` also checks actual Go behavior. It removes the next-page selection reset through a temporary Go overlay and requires TestFocusClearsOnMove to reject the change. In a temporary module copy, it removes styleLine's nonnegative-selection guard and requires the continuation styling fixture to fail. Both mutations are followed by a restored-source passing run. Production files remain unchanged.
 
-The real-Go mutation demonstration is executable with `python3 verification/reader-interaction/check.py --mutate`. It removes the next-page selection reset through a temporary Go overlay. TestFocusClearsOnMove rejects that code with `page movement retained link focus`. It never edits the production file. The command reruns the unchanged source and requires it to pass.
+Six exact styling fixtures check continuation, opener selection, overlap, line isolation and adjacent owners. The command also runs the existing TUI tests and generated navigation sequences.

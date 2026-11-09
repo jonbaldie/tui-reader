@@ -1,3 +1,3 @@
-export const title = 'Extract links outside code, then attach each occurrence';
-export const state = v => v.phase === 'Extract' ? (v.inFence ? 'Inside code' : 'Reading Markdown') : v.phase === 'Attach' ? 'Matching link occurrences' : 'Links ready';
-export const step = a => ({OpenFence:'code block starts', CloseFence:'code block ends', ReadLink:'read an internal link', CacheSource:'finish reading the document', ConsumeOccurrence:'place the next link', Finish:'finish matching', Done:'finished'})[a] ?? a;
+export const title = "Each link occurrence owns one navigation entry";
+export const state = v => Number(v.next) === 3 ? "Both occurrences attached" : Number(v.next) === 2 ? "First occurrence attached" : "Layout placements ready";
+export const step = a => a === "Place" ? "attach next occurrence and its label pieces" : "finished";

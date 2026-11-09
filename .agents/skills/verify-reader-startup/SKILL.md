@@ -13,7 +13,7 @@ Then use `/statechart` on `verification/startup/Startup.tla`, its adjacent confi
 
 ## Coverage and bounds
 
-Confirmed against `dab9f7557cd033d89e80e732fab78d3c0934502e`.
+Confirmed against `9b158e9ce76bb27a71f41ec24481500a7e70625a`.
 
 - `main.go` `run` and `runInteractive` correspond to process phases and exit-status rules in `Startup.tla`.
 - `parseArgs` corresponds to the option fold. TLA explores zero through two valid option events, two positive counts, path present or absent, invalid count, and nondeterministic load and terminal-program outcomes.
@@ -25,3 +25,5 @@ The model checks domains, load-error exit status, dump avoiding the reader, usag
 ## Interpret and maintain
 
 An unexpected failure remains a finding until replayed against Go. Compare each action to its function before deciding whether the code or abstraction is wrong. Do not weaken a rule to hide a failure. For intended behavior changes, update the model, its generated-input oracle, and mutation expectations together. Recheck source correspondence before advancing the sync commit. Use `/maintain-formal-verification-skill` when covered code changed without this check.
+
+The maintenance review found no main.go changes between the previous sync dab9f75 and 9b158e9. The baseline, all named-invariant mutants and the real parser source mutation were rerun successfully on the integration candidate. Outcome is in sync.

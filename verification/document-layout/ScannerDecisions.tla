@@ -28,13 +28,16 @@ Indent == /\ machine = "indent" /\ cursor < 2 /\ steps' = steps+1
                 /\ fits' = fits /\ accepted' = fits /\ cursor' = 2
                 /\ result' = IF fits THEN "indented" ELSE "full width"
           /\ UNCHANGED <<machine,pending,emittedSpace,hadSpace,previousCursor,found,heading,content,column,digits,suffix,previousSpace,titled,wasLF,consumedCRLF,previousRaw,previousCount>>
-Provenance == /\ machine = "provenance" /\ steps < 3 /\ steps' = steps+1
-              /\ \E success \in BOOLEAN:
-                  /\ found' = success /\ previousCursor' = cursor
-                  /\ cursor' = IF success THEN cursor+1 ELSE cursor
-                  /\ previousCount' = previousRaw
-                  /\ previousRaw' = IF success THEN previousRaw+1 ELSE previousRaw
+\* Source whitespace/UTF-8 bytes are projected to three content runes, with
+\* raw IDs 0,0,1. Each nextContent call consumes one rune or retains EOF.
+SourceRaw == [i \in 1..3 |-> IF i < 3 THEN 0 ELSE 1]
+Provenance == /\ machine = "provenance" /\ steps < 4 /\ steps' = steps+1
+              /\ found' = (cursor < 3) /\ previousCursor' = cursor
+              /\ cursor' = IF cursor < 3 THEN cursor+1 ELSE cursor
+              /\ previousCount' = previousRaw
+              /\ previousRaw' = IF cursor < 3 THEN SourceRaw[cursor+1] ELSE previousRaw
               /\ UNCHANGED <<machine,pending,emittedSpace,hadSpace,fits,accepted,heading,content,result,column,digits,suffix,previousSpace,titled,wasLF,consumedCRLF>>
+
 Columns == /\ machine = "columns" /\ steps < 3 /\ column < 4 /\ ~suffix /\ steps' = steps+1
            /\ \E ch \in {"space","tab","other"}:
                /\ column' = IF ch = "space" THEN column+1 ELSE IF ch = "tab" THEN column+(4-(column % 4)) ELSE column
@@ -57,11 +60,11 @@ Lines == /\ machine = "lines" /\ steps < 3 /\ steps' = steps+1
              /\ consumedCRLF' = (ch = "LF" /\ wasLF)
              /\ wasLF' = (ch = "CR")
          /\ UNCHANGED <<machine,pending,emittedSpace,fits,found,heading,content,result,column,digits,suffix,previousSpace,titled>>
-Done == /\ (steps = 3 \/ (machine = "columns" /\ (column >= 4 \/ suffix)) \/ (machine = "indent" /\ cursor = 2) \/ (machine = "digits" /\ suffix)) /\ UNCHANGED vars
+Done == /\ ((steps = 3 /\ machine # "provenance") \/ (steps = 4 /\ machine = "provenance") \/ (machine = "columns" /\ (column >= 4 \/ suffix)) \/ (machine = "indent" /\ cursor = 2) \/ (machine = "digits" /\ suffix)) /\ UNCHANGED vars
 Next == Token \/ Indent \/ Provenance \/ Columns \/ Digits \/ Title \/ Lines \/ Done
 ObservedRule == CASE machine = "token" -> ((emittedSpace => hadSpace) /\ (found => result = "link" /\ cursor = previousCursor+2))
                  [] machine = "indent" -> (cursor = 2 => (accepted = fits /\ result = IF fits THEN "indented" ELSE "full width"))
-                 [] machine = "provenance" -> (cursor >= previousCursor /\ (~found => cursor = previousCursor) /\ previousRaw >= previousCount /\ (~found => previousRaw = previousCount))
+                 [] machine = "provenance" -> (cursor = IF found THEN previousCursor+1 ELSE previousCursor) /\ previousRaw >= previousCount /\ (found => previousRaw = SourceRaw[cursor]) /\ (~found => previousRaw = previousCount)
                  [] machine = "columns" -> (accepted = (column >= 4))
                  [] machine = "digits" -> (accepted => digits /\ suffix /\ result = "suffix")
                  [] machine = "title" -> titled = hadSpace

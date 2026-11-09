@@ -2,16 +2,16 @@
 
 Four project-local skills describe the subsystem checks.
 
-This is verification of the inventory snapshot at `dab9f7557cd033d89e80e732fab78d3c0934502e`. Remote main was `9b158e9` at handoff and has changed production behavior, including link-span rendering. These models have not been reconciled with those changes. Run the checks on this branch for the recorded snapshot. Before using them on newer code, follow `/maintain-formal-verification-skill` and review source correspondence. A passing snapshot does not verify the newer main branch.
+The original inventory was recorded at `dab9f7557cd033d89e80e732fab78d3c0934502e`. All four checks have been reconciled with production source at `9b158e9ce76bb27a71f41ec24481500a7e70625a`. Startup and reader navigation were unchanged. Layout, link placement and styling checks now describe normalized source positions, placed links and label spans. Removed caches and occurrence queues are no longer modeled.
 
 | Skill | Inventory entries | State represented |
 |---|---|---|
 | `verify-reader-startup` | 1, 2 | Argument fold, loading outcome, dump or interactive choice, exit status. |
-| `verify-reader-interaction` | 3 through 7, 24 | Reader lifecycle, pages, focus, history, resize, styling occurrence cursor. |
-| `verify-document-layout` | 8 through 10, 12, 14 through 19, book helpers in 25, 26 | Layout/cache, blocks, fences, tokenization, wrapping, indentation, provenance, page positions, lexical helpers and lookup policies. |
-| `verify-link-attribution` | 8 link cache, 11, 13, 20 through 23, anchor helper in 25 | Source extraction, code spans, occurrence queues, page assignment, grouping and normalization. |
+| `verify-reader-interaction` | 3 through 7, 24 | Reader lifecycle, pages, focus, history, resize, label-span styling. |
+| `verify-document-layout` | 8 through 10, 12, 14 through 19, book helpers in 25, 26 | Fresh layout state, blocks, fences, tokenization, wrapping, indentation, provenance, page positions, lexical helpers and lookup policies. |
+| `verify-link-attribution` | 8 former link cache, 11, 13, 20 through 23, anchor helper in 25 | Placement ownership, continuation spans, page assignment, code spans, grouping and normalization. |
 
-The source inventory is `.audit/tui-reader-state-machines/scratch.md` in the parent multi-repo workspace. The skill coverage records point directly to code and record synchronization commit `dab9f7557cd033d89e80e732fab78d3c0934502e`.
+The source inventory is `.audit/tui-reader-state-machines/scratch.md` in the parent multi-repo workspace. The skill coverage records point directly to code and record synchronization commit `9b158e9ce76bb27a71f41ec24481500a7e70625a`.
 
 ## Run
 
@@ -32,4 +32,4 @@ The selected flows are inferred from the controls and existing stateful tests. T
 
 ## Limits
 
-These are bounded models and finite generated-input checks. No unbounded correctness, liveness, complete Markdown conformance, terminal-library behavior, or operating-system behavior is claimed. Reader resize uses a small abstract source-position map. Its Go check exercises a multi-page fixture separately. Styling models occurrence accounting rather than exact ANSI output. Startup source checking exhausts a finite argument alphabet; filesystem and process outcomes are abstract in its TLA+ model. Subsystem coverage records state other reductions.
+These are bounded models and finite generated-input checks. No unbounded correctness, liveness, complete Markdown conformance, terminal-library behavior, or operating-system behavior is claimed. Reader resize uses a small abstract source-position map. Its Go check exercises a multi-page fixture separately. Styling models valid span consumption over representative owners and ranges. Its Go fixtures check exact rendered output separately. Startup source checking exhausts a finite argument alphabet; filesystem and process outcomes are abstract in its TLA+ model. Subsystem coverage records state other reductions.

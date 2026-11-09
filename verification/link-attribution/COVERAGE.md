@@ -1,52 +1,55 @@
 # Link-attribution verification coverage
 
-Sync revision is `dab9f7557cd033d89e80e732fab78d3c0934502e`.
+Sync revision is `9b158e9ce76bb27a71f41ec24481500a7e70625a`.
 
-## Model and bounds
+## Current pipeline and drift
 
-`LinkAttribution.tla` represents `collectSourceLinks`, `attachLinks`, `recordFormattedLine`, and `assignLinksToPages`. It explores all three-event streams of opening a fence, closing a fence, and reading one link. Fence syntax is abstracted to an already-classified event. An unclosed fence stays active to EOF. Source cache construction precedes attachment. Each source occurrence has a distinct raw index. Duplicate markup is abstracted as occurrences in one queue, not collapsed into a set.
+The reviewed changes since `dab9f7557cd033d89e80e732fab78d3c0934502e` include all edits to `internal/book/anchors.go` and `internal/book/book.go`. Commit `c6edb5b` removes source-link caches, occurrence queues, and both matching passes. Wrapping now emits `placedLink` occurrences with opener coordinates and label pieces. `paginateFormatted` walks those placements once, adds navigation entries to the opener page, and calls `assignLabelSpans` for owner and continuation pages. Those retired mechanisms are no longer modeled as current behavior.
 
-Extraction, cache construction, and occurrence consumption are internal algorithm steps. They are not concurrent UI events. The model describes their ordered execution. Actual Go executes the full attachment call synchronously.
+The first unchanged checker run on the integrated source failed to compile its Go harness because `collectSourceLinks`, `proseBlockStarts`, `buildLocations`, and `Book.sourceLinks` were removed. The old TLA+ models passed before that compile failure, demonstrating that a stale model pass alone is insufficient.
 
-The baseline reaches 36 distinct states and 43 transitions. The statechart groups them into four states and five arrows. Changes within the same chart label are hidden by the chart projection.
+Commits `e1475f9` and `1a4175b` replace repeated regex searches and span rescans with persistent ordered cursors. Commit `4c5be4a` carries occurrence label ranges through hard wraps. Commits `1f6b43f`, `24b9cb1`, `c77c1ea`, and `bc420ee` change line blocks, normalized provenance, and shared heading classification. The document-layout verifier owns provenance and heading semantics. This verifier covers the link metadata that passes through those paths.
 
-| Rule | Meaning | Sensitivity check |
+## Models and bounds
+
+`LinkAttribution.tla` models two distinct occurrence IDs, including identical markup, with nondecreasing opener lines 0 through 2, page heights 1 or 2, and one nonempty label piece either on the opener line or the following line. Each placement step represents one synchronous iteration of `paginateFormatted` and the complete `assignLabelSpans` call. It checks the finished metadata of that call, without exposing its internal piece loop. It explores 144 distinct states. The chart projects those states to placements ready, first occurrence attached, and both attached. It hides only transitions that stay within a chart label.
+
+| Rule | Observable contract | Failing model mutation |
 |---|---|---|
-| NoCodeLinks | No extracted source occurrence comes from inside a fence. | Permit collection while fenced. |
-| ConsumedOnce | The attached count equals the consumed source count. | Leave the source cursor unchanged. |
-| AttachmentOrder | Attached raw indices preserve source occurrence order. | Attach a fabricated raw index. |
-| CacheBeforeAttach | Attachment starts only after source extraction is cached. | Skip setting the cache marker. |
-| Complete | Completion retains all collected occurrences. | Finish before the source queue is exhausted. |
+| OccurrenceOrder | Every visited placement has one navigation entry in occurrence order, with a page-local index. | Fabricate the attached occurrence ID. |
+| SpanOwnership | A label piece on another page has index -1; an owner-page piece uses its navigation index. | Give continuation pieces an owner index. |
+| OwnerFallback | An opener marker exists exactly when no label piece fits on the owner page. | Omit opener markers. |
+| CompleteSpans | Every visited placement retains its label piece and any necessary opener. | Drop the span update. |
 
-NoDeadlock is checked, with explicit stuttering only after completion. It is a checker diagnostic rather than an asserted parser guarantee.
+The model trusts valid placement geometry from wrapping. It does not prove arbitrary numbers of pieces, byte coordinates, malformed negative coordinates, truncated pages, or Markdown recognition. `Expected` describes the atomic placement result and the independent invariant reference, so this is a bounded contract model rather than a refinement proof of the internal loop. The Go harness separately checks generated coordinates against actual display text.
 
-## Correspondence to the scratch inventory
+`CodeCursor.tla` models the actual advancing first/last span cursors for two disjoint spans `[1,3)` and `[4,6)`. Candidate ranges have nondecreasing starts and ends, with endpoints 0 through 7. Its 29 states check `OverlapEquivalent`: cursor classification equals the full overlap predicate, including code wholly contained by a label. Replacing the edge-overlap OR with AND fails that rule. This models the cursor, not the lexical construction of candidate ranges.
 
-Paths below are relative to the repository root. Line numbers are at the sync revision.
+`InlinePairs.tla` retains the actual outer cursor and first exact-match lookahead over all four-run sequences with run lengths 1 or 2. Its 52 states check exact pair lengths (`ExactPairs`), ordered disjoint pairs (`OrderedPairs`), and recovery after an unmatched opener (`EOFRecovery`). Respectively, pairing arbitrary run lengths, reversing a pair, and suppressing later candidates fail those rules.
 
-| Scratch entries | Source | Evidence and abstraction |
-|---|---|---|
-| 8, cache sentinel | `internal/book/anchors.go:220-258`, `internal/book/book.go:1091-1103` | Model separates unknown from collected cache. Go checks assert nil triggers collection, non-nil empty suppresses it, plain text is computed-empty, and reflow retains source data. No concurrent invalidation is modeled. |
-| 11, fence extraction | `internal/book/anchors.go:179-218` | Model checks fenced suppression. Go exhausts 512 three-line streams over eight tokens, including both fence characters, lengths three and four, indented delimiters, links, and blanks. Syntax beyond that alphabet is excluded. |
-| 13, inline backtick spans | `internal/book/anchors.go:55-156` | `LinkScanners` Inline mode retains an opener length and closes only an equal run over four events with lengths one or two. It checks that every closed pair matches. This streaming abstraction is only a delimiter-pair contract, not the actual outer scanner. `InlinePairs.tla` models the actual outer cursor and exact-match lookahead over every four-run sequence with run lengths one or two. A missing closer advances only past the opener, permitting a later different-length pair. Its three invariants check exact pairs, ordered non-overlapping pairs, and a specific unmatched-opener recovery case. All three have demonstrated failing mutants. Go checks all 16 opener/closer length pairs from one through four, an unmatched opener, and code inside a link label. The occurrence model assumes classified active links; the scanner abstraction does not prove arbitrary byte-level scanning. |
-| 20, raw attribution cursor | `internal/book/anchors.go:227-246` | `LinkScanners` SourceCursor mode retains ordered match positions and a source cursor over three source lines at offsets 0, 10, and 20, for up to three matches in positions 0 through 29. It checks that the cursor owns each latest match. Go checks a label crossing source lines and following matches attributed to their opening raw line. It checks source order and first-line registration. Arbitrary whitespace and Unicode are excluded. |
-| 21, prose block grouping | `internal/book/anchors.go:336-352` | `LinkScanners` Grouping mode retains active block start and output groups over four prose, boundary, or setext events. It checks that a block never starts after its member. Go checks continuation, blank boundaries, and setext boundaries. Occurrence matching uses one block-key queue. Predicate recognition is supplied by the scanner model event classes rather than Go syntax. |
-| 22, source occurrence queues | `internal/book/anchors.go:262-332`, `internal/book/anchors.go:354-360` | Model checks each source consumed once and in order. Go checks repeated identical markup on separate raw lines with distinct formatted positions. A real-source cursor mutation must fail. |
-| 23, assignment queues | `internal/book/anchors.go:369-394` | Model checks ordered completion. Go checks total occurrence preservation and page-line bounds for one through four repeated paragraph links plus another paragraph link, widths one through 24, heights one through four, and reflows through width 25 and back. Missing-location and invalid-index fallback paths are not exhaustively modeled. |
-| 25, NormalizeAnchor | `internal/book/anchors.go:24-42` | `LinkScanners` Anchor mode retains pending separator and emitted output over four letter, separator, or punctuation classes. It checks normalized separator placement. Go exhausts all strings of length at most four over seven runes, 2,801 strings total. It checks idempotence, absence of leading, trailing, or doubled separators, allowed rune classes, and selected exact results. This is bounded behavioral verification, not an unbounded proof. |
+`LinkScanners.tla` now contains only anchor normalization: four events chosen from letter, separator, and punctuation classes. Its 30 states check separator placement (`Normalized`). Emitting a separator without the following letter fails that rule. The obsolete streaming inline scanner, source cursor, and prose grouping modes and configurations are removed. Their former source mechanisms are retired or belong to document-layout verification.
+
+Every named invariant has a separate failing mutant, checked alone so another invariant cannot hide the intended failure. NoDeadlock is a TLC diagnostic, with an explicit terminal stutter, rather than a parser guarantee.
+
+## Actual Go checks
+
+The runner copies current production `internal/book/*.go` files into a temporary module and installs the generated in-package harness there. It checks:
+
+- Persistent `wrapLinkScanner.matchAt` against an independent regex-at-position and full-span reference at every byte of 225 two-fragment inputs. The alphabet includes nested and overlapping targets, empty/unclosed targets, repeated adjacent links, whitespace, and closed/unclosed backtick runs. This tests lexical queue construction in actual Go; no TLA+ lexical-scanner proof is claimed.
+- `codeSpanCursor.overlaps` against `overlapsCodeSpan` for every pair of disjoint nonempty spans with endpoints 0 through 7 and every two nonempty candidate ranges with nondecreasing starts and ends through endpoint 8.
+- Occurrence counts, valid UTF-8 label byte ranges, exact reconstructed labels, navigation line bounds, continuation indexes, and selectable owner labels/openers for one through three identical links; labels `x`, `long label`, `界é`, and inline code; ordinary prose, an indented second paragraph, quote, and table paths; widths 1 through 24 and heights 1 through 3. Each case reflows through width 25 and back.
+- Distinct target order for three occurrences in a single paragraph, joined raw lines and a second paragraph, and a table row at those geometries.
+- Literal fenced, unclosed-fenced, indented-code, and plain-text examples; all 16 opener/closer length pairs from 1 through 4; unmatched backtick recovery; and code contained by a link label.
+- Anchor idempotence and normalized shape over all 2,801 strings of at most four runes from a seven-rune alphabet, plus selected exact outputs.
+
+Five real-source mutations must fail behavioral tests: duplicating the navigation append, assigning continuation pieces an owner index, reversing the owner-fallback condition, changing the overlap OR to AND, and dropping scanner openers. Each runs against a fresh restored source copy; `finally` restores the edited copy, and the final unmutated Go run must pass. The production working tree is never mutated.
+
+These are finite input families, not claims about arbitrary Markdown or Unicode. The placement model and scanner models are checked separately, not as a full cross-product. TUI selection styling is owned by reader-interaction verification.
 
 ## Reproduce and maintain
 
-Run `python3 verification/link-attribution/check.py` from the repository root. It records TLC output for the occurrence model and four scanner configurations, generated Go results, three real-source mutant failures, and model failures for all five protocol rules plus each scanner rule. No product mutation remains after the command because mutations occur only in temporary source copies.
+Run `python3 verification/link-attribution/check.py` from the repository root. `VERIFY_OUT` chooses the evidence directory. The four TLA+ files each have a matching basename configuration, so `verification/check_all.py` discovers them without relying on the deleted mode configurations. The runner uses Python 3, Java 11 or later, the repository Go toolchain, and checksum-pinned TLA+ tools release 1.7.4 (TLC reports 2.19). `JAVA` and `TLA2TOOLS` select existing tools.
 
-Tested tools were Python 3.14, Go 1.26.3, OpenJDK 22.0.1, and TLC 1.7.4. The tool download is pinned by SHA-256. The script allows Java 11 or later and uses the installed Go compiler against the current module.
+Use `/statechart` for each baseline and each mutant in scratch directories outside the repository. Retain its report, chart, command output, and the exact mutated model beside the checker evidence. The landing verification trail is in workspace `.audit/tui-reader-landing/links/`, including `before.txt`, `source.diff`, `current/`, and `statecharts/`. No model violation was reproduced as a product defect during this update.
 
-A failure on a changed source line can mean a real regression or an outdated model. Inspect both before changing an invariant. Use `/maintain-formal-verification-skill` to reconcile later changes.
-
-## Scanner configurations
-
-`LinkScanners.tla` uses `Anchor.cfg`, `Inline.cfg`, `Grouping.cfg`, and `SourceCursor.cfg`. `LinkScanners.cfg` is the default Anchor configuration for tools that require matching basenames. The runner checks all four modes separately. Scanner state is deliberately independent of the occurrence protocol, so no claim about their full cross-product is made.
-
-The occurrence protocol collapses the two implementation matching passes into a single ordered consumption step. It proves the consumption contract at that abstraction, not missing-candidate fallback or arbitrary mixtures of block keys. Actual Go checks exercise both implementation passes with repeated identical markup and multiple prose blocks. The scanner rules each have a failing model mutation. That demonstrates sensitivity within the finite abstraction, not an automatic refinement proof from Go.
-
-`InlinePairs.cfg` checks the outer inline scanner independently. The checked recovery example has run lengths 1, 2, 2, 2 and must emit the pair at positions 2 and 3. Go checks include the same unmatched-opener behavior.
+After later source changes, compare the named functions and commit messages with this mapping before advancing the sync revision. A failure can be a product regression or a stale abstraction; replay it against current source before changing a property.
