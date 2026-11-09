@@ -2,6 +2,7 @@ package book
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/mattn/go-runewidth"
@@ -24,7 +25,7 @@ func TestIssue105_IndentedCodeBlockRespectsDisplayWidth(t *testing.T) {
 	for _, tc := range cases {
 		for width := 1; width <= 6; width++ {
 			t.Run(fmt.Sprintf("%s/width=%d", tc.name, width), func(t *testing.T) {
-				for pageIndex, page := range Paginate(tc.raw, width, 20) {
+				for pageIndex, page := range readBook(t, strings.Join(tc.raw, "\n"), true, width, 20).pages {
 					for lineIndex, line := range page.Lines {
 						got := runewidth.StringWidth(line)
 						if got > width && !isUnavoidableWideRune(line, width) {

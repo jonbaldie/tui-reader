@@ -1,0 +1,4 @@
+all modules verified
+ok  	github.com/jonbaldie/tui-reader	0.021s
+ok  	github.com/jonbaldie/tui-reader/internal/book	1.032s
+ok  	github.com/jonbaldie/tui-reader/internal/tui	2.707s

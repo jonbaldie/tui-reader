@@ -1,0 +1,6 @@
+go version go1.26.8 linux/amd64
+beb69b987dd8e567fc487a4961085f64fdd70444
+all modules verified
+ok  	github.com/jonbaldie/tui-reader	0.019s
+ok  	github.com/jonbaldie/tui-reader/internal/book	0.926s
+ok  	github.com/jonbaldie/tui-reader/internal/tui	2.831s

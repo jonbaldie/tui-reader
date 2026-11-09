@@ -5,96 +5,82 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jonbaldie/tui-reader/internal/book"
 	"github.com/muesli/termenv"
 )
 
-func TestStyleLinkMarkup_PreservesRepeatedLabelsAndMarkup(t *testing.T) {
+func TestStyleLine_PreservesRepeatedLabelsAndMarkup(t *testing.T) {
 	line := "[repeat](#first) then [repeat](#second)"
-	got, _ := styleLinkMarkup(line, map[linkKey]struct{}{
-		{label: "repeat", target: "first"}:  {},
-		{label: "repeat", target: "second"}: {},
-	}, 1, 0)
+	got := styledBookLine(t, line, 1)
 	if plain := stripAnsi(got); plain != line {
 		t.Errorf("styled line = %q, want original markup %q after stripping ANSI", plain, line)
 	}
 }
 
-func TestStyleLinkMarkup_LeavesUnattachedMarkupPlain(t *testing.T) {
-	line := "[visible](#attached) and [plain](#unattached)"
-	got, _ := styleLinkMarkup(line, map[linkKey]struct{}{
-		{label: "visible", target: "attached"}: {},
-	}, -1, 0)
+func TestStyleLine_LeavesUnattachedMarkupPlain(t *testing.T) {
+	profile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.ANSI256)
+	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
+	line := "[visible](#attached) and `[plain](#unattached)`"
+	got := styledBookLine(t, line, -1)
 	if plain := stripAnsi(got); plain != line {
 		t.Errorf("styled line = %q, want original markup %q after stripping ANSI", plain, line)
 	}
+	if strings.Contains(got, unselectedLinkStyle.Render("plain")) {
+		t.Errorf("inline code link was styled: %q", got)
+	}
 }
 
-func TestStyleLinkMarkup_SelectedLinkUsesDistinctStyle(t *testing.T) {
+func TestStyleLine_SelectedLinkUsesDistinctStyle(t *testing.T) {
 	profile := lipgloss.ColorProfile()
 	lipgloss.SetColorProfile(termenv.ANSI256)
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
-	links := map[linkKey]struct{}{{label: "link", target: "target"}: {}}
-	selected, _ := styleLinkMarkup("[link](#target)", links, 0, 0)
-	unselected, _ := styleLinkMarkup("[link](#target)", links, -1, 0)
+	selected := styledBookLine(t, "[link](#target)", 0)
+	unselected := styledBookLine(t, "[link](#target)", -1)
 	if selected == unselected {
 		t.Fatal("selected and unselected links must have distinct ANSI styling")
 	}
 }
 
-func TestStyleLinkMarkup_ExactFormatting(t *testing.T) {
+func TestStyleLine_ExactFormatting(t *testing.T) {
 	profile := lipgloss.ColorProfile()
 	lipgloss.SetColorProfile(termenv.ANSI256)
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
 	line := "prefix [one](#target1) middle [two](#target2) suffix"
-	links := map[linkKey]struct{}{
-		{label: "one", target: "target1"}: {},
-		{label: "two", target: "target2"}: {},
-	}
-	got, _ := styleLinkMarkup(line, links, 1, 0)
-
-	want := "prefix [" + lipgloss.NewStyle().
-		Foreground(lipgloss.Color("75")).
-		Underline(true).
-		Render("one") + "](#target1) middle [" + lipgloss.NewStyle().
-		Foreground(lipgloss.Color("0")).
-		Background(lipgloss.Color("117")).
-		Bold(true).
-		Underline(true).
-		Render("two") + "](#target2) suffix"
-
+	got := styledBookLine(t, line, 1)
+	want := textStyle.Render("prefix [" + unselectedLinkStyle.Render("one") + "](#target1) middle [" + selectedLinkStyle.Render("two") + "](#target2) suffix")
 	if got != want {
-		t.Fatalf("styleLinkMarkup mismatch:\ngot:  %q\nwant: %q", got, want)
+		t.Fatalf("styleLine mismatch:\ngot:  %q\nwant: %q", got, want)
 	}
 }
 
-func TestStyleLinkMarkup_DuplicateTargetsSelectOneInstance(t *testing.T) {
+func TestStyleLine_DuplicateTargetsSelectOneInstance(t *testing.T) {
 	profile := lipgloss.ColorProfile()
 	lipgloss.SetColorProfile(termenv.ANSI256)
 	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
 
 	line := "[First Link](#target) and [Second Link](#target)"
-	links := map[linkKey]struct{}{
-		{label: "First Link", target: "target"}:  {},
-		{label: "Second Link", target: "target"}: {},
-	}
-
-	got0, _ := styleLinkMarkup(line, links, 0, 0)
-	got1, _ := styleLinkMarkup(line, links, 1, 0)
+	got0 := styledBookLine(t, line, 0)
+	got1 := styledBookLine(t, line, 1)
 	if got0 == got1 {
 		t.Fatal("selecting first vs second same-target link produced identical markup")
 	}
-
-	selectedFirst := selectedLinkStyle.Render("First Link")
-	selectedSecond := selectedLinkStyle.Render("Second Link")
-	unselectedFirst := unselectedLinkStyle.Render("First Link")
-	unselectedSecond := unselectedLinkStyle.Render("Second Link")
-
-	if !strings.Contains(got0, selectedFirst) || !strings.Contains(got0, unselectedSecond) || strings.Contains(got0, selectedSecond) {
+	if !strings.Contains(got0, selectedLinkStyle.Render("First Link")) || !strings.Contains(got0, unselectedLinkStyle.Render("Second Link")) || strings.Contains(got0, selectedLinkStyle.Render("Second Link")) {
 		t.Fatalf("index 0 should select only First Link, got %q", got0)
 	}
-	if !strings.Contains(got1, selectedSecond) || !strings.Contains(got1, unselectedFirst) || strings.Contains(got1, selectedFirst) {
+	if !strings.Contains(got1, selectedLinkStyle.Render("Second Link")) || !strings.Contains(got1, unselectedLinkStyle.Render("First Link")) || strings.Contains(got1, selectedLinkStyle.Render("First Link")) {
 		t.Fatalf("index 1 should select only Second Link, got %q", got1)
 	}
+}
+
+func styledBookLine(t *testing.T, line string, selected int) string {
+	t.Helper()
+	b, err := book.Read(strings.NewReader(line), "test", 120, 20, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	page := b.Page(0)
+	return styleLine(page.Lines[0], page.Headings[0], 0, page.LabelSpans, selected)
 }

@@ -1,0 +1,107 @@
+--- start 80x24
+
+                                   Structures
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Jump to Title](#title)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Tab
+
+                                   Structures
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Jump to Title](#title)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- Enter
+
+                                   Structures
+    ────────────────────────────────────────────────────────────────────────
+
+      Filler paragraph 25.
+
+      Filler paragraph 26.
+
+      Filler paragraph 27.
+
+    # Title
+
+      A | B --|-- 1 | 2
+
+    > first quote
+    > second quote
+
+        ~~~sh
+        # fake heading
+        ~~~
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 4 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- b
+
+                                   Structures
+    ────────────────────────────────────────────────────────────────────────
+    # Contents
+
+      [Jump to Title](#title)
+
+      Filler paragraph 01.
+
+      Filler paragraph 02.
+
+      Filler paragraph 03.
+
+      Filler paragraph 04.
+
+      Filler paragraph 05.
+
+      Filler paragraph 06.
+
+      Filler paragraph 07.
+    ────────────────────────────────────────────────────────────────────────
+                                  Page 1 of 5
+              ←/→ page • tab link • enter follow • b back • q quit
+
+
+--- q
+
+EXIT=0

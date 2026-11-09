@@ -82,7 +82,9 @@ func TestNovelJourneyOutput(t *testing.T) {
 		digest := sha256.New()
 		for page := range model.book.PageCount() {
 			model.currentPage = page
-			fmt.Fprintf(digest, "%v\n%d\n%s\n", model.book.Page(page), model.book.RawLineForPage(page), model.View())
+			// Keep the pre-metadata snapshot of text, links and views stable.
+			p := model.book.Page(page)
+			fmt.Fprintf(digest, "{%v %v}\n%d\n%s\n", p.Lines, p.Links, model.book.RawLineForPage(page), model.View())
 		}
 		if got := fmt.Sprintf("%x", digest.Sum(nil)); got != want[width] {
 			t.Fatalf("width=%d: output hash %s, want %s", width, got, want[width])

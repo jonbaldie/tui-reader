@@ -2,6 +2,35 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.1.17 (2026-11-06)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.16...v0.1.17
+
+### Bug Fixes
+
+- **Keep setext heading links available for navigation (#200, fixes #121).** Link placement now comes from the formatted layout, including links in setext headings with indented continuation lines.
+
+## v0.1.16 (2026-11-01)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.15...v0.1.16
+
+### Bug Fixes
+
+- **Preserve reading positions in normalized paragraphs (#196, fixes #194).** Resizing keeps the reader on the right content when wrapped lines span source lines. Long paragraphs with repeated spaces no longer trigger repeated full-suffix searches.
+- **Avoid repeated link searches while wrapping (#198, fixes #192).** External links and unmatched brackets no longer trigger repeated searches through the remaining paragraph.
+- **Avoid repeated inline-code overlap scans (#197, fixes #193).** Link extraction and wrapping no longer restart overlap checks for each link candidate.
+
+## v0.1.15 (2026-10-29)
+
+Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.14...v0.1.15
+
+### Bug Fixes
+
+- **Keep heading styling and resize positions consistent (#186, fixes #144).** Wrapped headings keep their styling, and hash-prefixed prose and plain text no longer appear as headings. Resize anchoring uses the same heading classification.
+- **Preserve table rows and blockquote lines (#187, fixes #180).** Markdown tables retain their spacing and separate rows, and blockquote lines no longer join into prose.
+- **Highlight hard-wrapped link selections (#189, fixes #188).** Links split across display lines show their selection highlight while remaining navigable.
+- **Recognise ATX headings consistently (#190, fixes #125).** Hash-prefixed lines that are not headings remain prose, matching heading navigation and styling.
+
 ## v0.1.14 (2026-10-11)
 
 Full changelog: https://github.com/jonbaldie/tui-reader/compare/v0.1.13...v0.1.14

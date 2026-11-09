@@ -21,14 +21,14 @@ func tildeFenceLines() []string {
 }
 
 func TestIssue178_TildeFenceDoesNotHijackAnchors(t *testing.T) {
-	anchors := ExtractAnchors(tildeFenceLines())
+	anchors := readBook(t, strings.Join(tildeFenceLines(), "\n"), true, 80, 20).anchors
 	if got, ok := anchors["install"]; !ok || got != 2 {
 		t.Fatalf("anchors[install] = %d (ok=%v), want 2 (# Install); anchors=%#v", got, ok, anchors)
 	}
 }
 
 func TestIssue178_TildeFenceLinesAreNotMerged(t *testing.T) {
-	formatted := FormatParagraphs(tildeFenceLines(), 60)
+	formatted := readDisplayLines(t, tildeFenceLines(), 60)
 	for i, line := range formatted {
 		if strings.Contains(line, "~~~") && (strings.Contains(line, "# install") || strings.Contains(line, "make install")) {
 			t.Fatalf("line %d joins code with tilde fence: %q", i, line)
@@ -59,7 +59,7 @@ func TestIssue178_FenceClosesOnlyWithMatchingCharacter(t *testing.T) {
 		"```",
 		"# Real",
 	}
-	anchors := ExtractAnchors(lines)
+	anchors := readBook(t, strings.Join(lines, "\n"), true, 80, 20).anchors
 	for _, fake := range []string{"inside-tilde", "inside-backtick"} {
 		if _, ok := anchors[fake]; ok {
 			t.Fatalf("%s should not be an anchor: %#v", fake, anchors)
@@ -71,7 +71,7 @@ func TestIssue178_FenceClosesOnlyWithMatchingCharacter(t *testing.T) {
 }
 
 func TestIssue178_TildeInfoStringMayContainBackticks(t *testing.T) {
-	anchors := ExtractAnchors([]string{"~~~ `weird` info", "# fake", "~~~", "# Real"})
+	anchors := readBook(t, strings.Join([]string{"~~~ `weird` info", "# fake", "~~~", "# Real"}, "\n"), true, 80, 20).anchors
 	if _, ok := anchors["fake"]; ok {
 		t.Fatalf("fake should not be an anchor: %#v", anchors)
 	}

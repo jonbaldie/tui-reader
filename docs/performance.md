@@ -27,9 +27,7 @@ After the change, the same workload measured:
 | 128 | 281 µs | 2,932 | 296 KB |
 | 512 | 1.13 ms | 11,587 | 1.17 MB |
 
-Each fourfold input increase remains approximately fourfold in time and
-memory. The attachment pass parses every raw source line once, visits each
-rendered line associated with a source link once, and appends every parsed
-link once. Its additional work is therefore `O(B + V + L)` time and
-`O(B + L)` space, where `B` is raw input size, `V` rendered-line count, and
-`L` parsed link count.
+Each fourfold input increase remained approximately fourfold in time and
+memory. Those measurements predate the removal of the separate attachment pass.
+Pagination now copies link placements directly from the formatted lines. See
+`docs/complexity.md` for the current complexity bounds.
