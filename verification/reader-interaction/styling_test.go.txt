@@ -1,0 +1,33 @@
+package tui
+
+import (
+	"github.com/charmbracelet/lipgloss"
+	"github.com/jonbaldie/tui-reader/internal/book"
+	"github.com/muesli/termenv"
+	"testing"
+)
+
+func TestFormalLabelSpans(t *testing.T) {
+	profile := lipgloss.ColorProfile()
+	lipgloss.SetColorProfile(termenv.ANSI256)
+	t.Cleanup(func() { lipgloss.SetColorProfile(profile) })
+	for _, tc := range []struct {
+		name     string
+		spans    []book.LabelSpan
+		selected int
+		want     string
+	}{
+		{"continuation remains unselected", []book.LabelSpan{{Line: 0, Start: 1, End: 2, LinkIndex: -1}}, -1, textStyle.Render("a" + unselectedLinkStyle.Render("b") + "c")},
+		{"unselected opener stays literal", []book.LabelSpan{{Line: 0, Start: 0, End: 1, LinkIndex: 0, Opener: true}}, -1, textStyle.Render("abc")},
+		{"selected opener is visible", []book.LabelSpan{{Line: 0, Start: 0, End: 1, LinkIndex: 0, Opener: true}}, 0, textStyle.Render(selectedLinkStyle.Render("a") + "bc")},
+		{"overlapping span is skipped", []book.LabelSpan{{Line: 0, Start: 0, End: 2, LinkIndex: 0}, {Line: 0, Start: 1, End: 2, LinkIndex: 1}}, 0, textStyle.Render(selectedLinkStyle.Render("ab") + "c")},
+		{"other line is skipped", []book.LabelSpan{{Line: 1, Start: 0, End: 1, LinkIndex: 0}}, 0, textStyle.Render("abc")},
+		{"adjacent distinct owners", []book.LabelSpan{{Line: 0, Start: 0, End: 1, LinkIndex: 0}, {Line: 0, Start: 1, End: 2, LinkIndex: 1}}, 1, textStyle.Render(unselectedLinkStyle.Render("a") + selectedLinkStyle.Render("b") + "c")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := styleLine("abc", false, 0, tc.spans, tc.selected); got != tc.want {
+				t.Fatalf("span styling differs: got %q want %q", got, tc.want)
+			}
+		})
+	}
+}

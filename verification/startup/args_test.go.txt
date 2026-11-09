@@ -1,0 +1,24 @@
+package main
+import "testing"
+func TestFormalArguments(t *testing.T) {
+ alphabet := []string{"a.md","b.txt","--dump","--dump=1","--dump=2","--dump=0","--unknown"}
+ var walk func([]string,int)
+ walk = func(args []string, left int) {
+  want := parsedArgs{}
+  invalid := false
+  for _, a := range args {
+   switch a {
+   case "--dump": want.dumpMode=true
+   case "--dump=1": want.dumpMode=true; want.dumpPages=1
+   case "--dump=2": want.dumpMode=true; want.dumpPages=2
+   case "--dump=0": invalid=true
+   default: want.path=a
+   }
+   if invalid { break }
+  }
+  got,err:=parseArgs(args)
+  if (err!=nil)!=invalid || got!=want { t.Fatalf("args %q got %+v,%v want %+v invalid=%v",args,got,err,want,invalid) }
+  if left>0 { for _,a:= range alphabet { walk(append(append([]string{},args...),a),left-1) } }
+ }
+ walk(nil,3)
+}
