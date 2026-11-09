@@ -1,0 +1,182 @@
+package book
+
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"testing"
+	"unicode"
+)
+
+func TestFormalFenceBound(t *testing.T) {
+	tokens := []string{"", "[x](#x)", "```", "~~~", "````", "~~~~", "    ```", "    [x](#x)"}
+	for a := range tokens {
+		for b := range tokens {
+			for c := range tokens {
+				input := []string{tokens[a], tokens[b], tokens[c]}
+				fence := ""
+				want := 0
+				for _, line := range input {
+					if strings.HasPrefix(line, "    ") {
+						continue
+					}
+					if fence != "" {
+						if strings.Trim(line, fence[:1]) == "" && len(line) >= len(fence) {
+							fence = ""
+						}
+						continue
+					}
+					if strings.HasPrefix(line, "```") || strings.HasPrefix(line, "~~~") {
+						fence = line
+						continue
+					}
+					if line == "[x](#x)" {
+						want++
+					}
+				}
+				got := 0
+				for _, links := range collectSourceLinks(input).links {
+					got += len(links)
+				}
+				if got != want {
+					t.Fatalf("%q got %d want %d", input, got, want)
+				}
+			}
+		}
+	}
+}
+
+func TestFormalInlineBound(t *testing.T) {
+	for opener := 1; opener <= 4; opener++ {
+		for closer := 1; closer <= 4; closer++ {
+			text := strings.Repeat("`", opener) + "[x](#x)" + strings.Repeat("`", closer)
+			want := 1
+			if opener == closer {
+				want = 0
+			}
+			if got := len(ExtractLinks(text)); got != want {
+				t.Fatalf("%q got %d want %d", text, got, want)
+			}
+		}
+	}
+	if got := len(ExtractLinks("[a `code`](#a)")); got != 1 {
+		t.Fatal("code inside label must remain a link")
+	}
+	if len(InlineCodeSpans("`a``b``c``")) != 1 {
+		t.Fatal("unmatched opener prevented later span")
+	}
+	if len(InlineCodeSpans("`unclosed")) != 0 {
+		t.Fatal("unclosed run must not open span")
+	}
+}
+
+func TestFormalAttributionBound(t *testing.T) {
+	for count := 1; count <= 4; count++ {
+		for width := 1; width <= 24; width++ {
+			for height := 1; height <= 4; height++ {
+				source := "# x\n\n" + strings.Repeat("[x](#x) ", count) + "\n\n[x](#x)\n"
+				b, err := Read(strings.NewReader(source), "x", width, height, false)
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, w := range []int{width, 25, width} {
+					b.Reflow(w, height)
+					got := 0
+					for p := 0; p < b.PageCount(); p++ {
+						for _, link := range b.Page(p).Links {
+							if link.Target != "x" || link.Label != "x" || link.LineOnPage < 0 || link.LineOnPage >= height {
+								t.Fatalf("invalid link %+v", link)
+							}
+							got++
+						}
+					}
+					if got != count+1 {
+						t.Fatalf("count=%d width=%d height=%d got=%d", count, w, height, got)
+					}
+				}
+			}
+		}
+	}
+	raw := []string{"[x](#x)", "[x](#x)", "", "[x](#x)"}
+	if got, want := proseBlockStarts(raw), []int{0, 0, -1, 3}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("blocks %v", got)
+	}
+	source := collectSourceLinks(raw)
+	if !reflect.DeepEqual(source.order, []int{0, 1, 3}) {
+		t.Fatalf("order %v", source.order)
+	}
+	loc := buildLocations([]formattedLine{{raw: 0, text: "[x](#x)", links: []Link{{Label: "x", Target: "x"}}}, {raw: 1, text: "[x](#x)", links: []Link{{Label: "x", Target: "x"}}}}, raw, source.links)
+	if loc[0] == nil || loc[1] == nil || loc[0].first != 0 || loc[1].first != 1 {
+		t.Fatalf("source occurrence cursor reused: %v", loc)
+	}
+}
+
+func TestFormalAnchorBound(t *testing.T) {
+	alphabet := []rune{'A', 'b', '1', ' ', '-', '!', '界'}
+	var visit func(string, int)
+	visit = func(s string, left int) {
+		normalized := NormalizeAnchor(s)
+		if NormalizeAnchor(normalized) != normalized || strings.HasPrefix(normalized, "-") || strings.HasSuffix(normalized, "-") || strings.Contains(normalized, "--") {
+			t.Fatalf("invalid normalization %q -> %q", s, normalized)
+		}
+		for _, r := range normalized {
+			if !(unicode.IsLower(r) || unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-') {
+				t.Fatalf("bad rune %q", r)
+			}
+		}
+		if left > 0 {
+			for _, r := range alphabet {
+				visit(s+string(r), left-1)
+			}
+		}
+	}
+	visit("", 4)
+	for input, want := range map[string]string{" A ! b- ": "a-b", "A!B": "ab", "界 界": "界-界"} {
+		if got := NormalizeAnchor(input); got != want {
+			t.Fatal(fmt.Sprintf("%q got %q want %q", input, got, want))
+		}
+	}
+}
+
+func TestFormalCacheBound(t *testing.T) {
+	plain := sourceLinksFor([]string{"[x](#x)"}, true)
+	if plain.links == nil || len(plain.links) != 0 {
+		t.Fatal("plain cache must be computed empty")
+	}
+	b, err := Read(strings.NewReader("[x](#x)\n\n# x"), "x", 20, 2, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := b.sourceLinks
+	b.Reflow(3, 1)
+	if !reflect.DeepEqual(before, b.sourceLinks) {
+		t.Fatal("reflow changed source links")
+	}
+	if before.links == nil {
+		t.Fatal("source cache remains nil")
+	}
+}
+
+func TestFormalSourceCursorAndCache(t *testing.T) {
+	source := collectSourceLinks([]string{"[first", "label](#x) [second](#x)", "---", "[third](#x)"})
+	if !reflect.DeepEqual(source.order, []int{0, 1, 3}) {
+		t.Fatalf("joined match source lines %v", source.order)
+	}
+	if source.links[0][0].Label != "first label" {
+		t.Fatal("multiline label not joined")
+	}
+	if got := proseBlockStarts([]string{"title", "===", "next"}); !reflect.DeepEqual(got, []int{0, -1, 2}) {
+		t.Fatalf("setext groups %v", got)
+	}
+	raw := []string{"[x](#x)"}
+	formatted := formatParagraphsWithProvenance(raw, 20)
+	pages := []Page{{Lines: []string{"[x](#x)"}}}
+	attachLinks(pages, raw, formatted, 20, sourceLinkSet{})
+	if len(pages[0].Links) != 1 {
+		t.Fatal("nil cache did not extract")
+	}
+	attachLinks(pages, raw, formatted, 20, sourceLinkSet{links: map[int][]Link{}})
+	if len(pages[0].Links) != 0 {
+		t.Fatal("computed-empty cache was extracted again")
+	}
+}

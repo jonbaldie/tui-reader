@@ -1,0 +1,26 @@
+---
+title: "Reading, following links, returning, and resizing"
+---
+stateDiagram-v2
+  s0: Reading start
+  s1: Document could not open
+  s2: Reader closed
+  s3: Reading destination
+  s4: Link selected
+  s5: Reading with return history
+  [*] --> s0
+  [*] --> s1
+  s0 --> s2: you quit
+  s0 --> s3: you go to the end or you turn the page
+  s0 --> s4: you select a link
+  s1 --> s2: you quit
+  s3 --> s0: you go to the start or you turn back a page or you resize the terminal or you return to the link origin
+  s3 --> s2: you quit
+  s4 --> s0: you go to the start or you resize the terminal or you go to the end
+  s4 --> s3: you go to the end or you turn the page or you follow the link
+  s4 --> s2: you quit
+  s3 --> s5: you go to the start or you turn back a page or you resize the terminal or you return to the link origin
+  s4 --> s5: you follow the link
+  s5 --> s0: you return to the link origin
+  s5 --> s3: you go to the end or you turn the page or you follow the link
+  s5 --> s2: you quit

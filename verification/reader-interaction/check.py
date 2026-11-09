@@ -1,0 +1,21 @@
+from pathlib import Path
+import subprocess, tempfile, json, sys
+root=Path(__file__).resolve().parents[2]
+cmd=['go','test','-count=1','./verification/reader-interaction','./internal/tui']
+subprocess.run(cmd,cwd=root,check=True)
+if '--mutate' in sys.argv:
+    source=root/'internal/tui/model.go'
+    original=source.read_text()
+    old='m.currentPage++\n\t\t\tm.selectedLink = -1'
+    assert original.count(old)==1
+    with tempfile.TemporaryDirectory(prefix='reader-mutant-') as tmp:
+        tmp=Path(tmp)
+        modified=tmp/'model.go'
+        modified.write_text(original.replace(old,'m.currentPage++'))
+        overlay=tmp/'overlay.json'
+        overlay.write_text(json.dumps({'Replace':{str(source):str(modified)}}))
+        result=subprocess.run(['go','test','-overlay',str(overlay),'-count=1','-run','TestFocusClearsOnMove','./verification/reader-interaction'],cwd=root,capture_output=True,text=True)
+        print(result.stdout+result.stderr)
+        assert result.returncode!=0 and 'page movement retained link focus' in result.stdout, 'mutation was not detected by the expected assertion'
+    subprocess.run(cmd,cwd=root,check=True)
+    print('PASS: real Go focus-reset mutation detected; unchanged source passes.')

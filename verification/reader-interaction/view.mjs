@@ -1,0 +1,3 @@
+export const title = 'Reading, following links, returning, and resizing';
+export const state = v => v.quitting ? 'Reader closed' : v.error ? 'Document could not open' : v.page === 1 ? 'Reading destination' : Object.keys(v.history).length ? 'Reading with return history' : v.selected === 0 ? 'Link selected' : 'Reading start';
+export const step = action => ({Move:'you turn the page',Previous:'you turn back a page',Home:'you go to the start',End:'you go to the end',Focus:'you select a link',Follow:'you follow the link',Back:'you return to the link origin',Resize:'you resize the terminal',Quit:'you quit',Idle:null})[action] ?? null;

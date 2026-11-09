@@ -1,0 +1,94 @@
+package book
+
+import (
+ "reflect"
+ "strings"
+ "testing"
+ "unicode"
+ "github.com/mattn/go-runewidth"
+)
+
+func compact(s string) string { return strings.Map(func(r rune) rune { if unicode.IsSpace(r) { return -1 }; return r },s) }
+
+func TestGeneratedWrapConservation(t *testing.T) {
+ alphabet:=[]string{"a","b","界"," ","\t"}
+ var visit func(string,int)
+ visit=func(s string,n int) {
+  for width:=1;width<=5;width++ {
+   got:=WrapLines([]string{s},width)
+   if compact(strings.Join(got,""))!=compact(s) { t.Fatalf("lost text %q width%d: %q",s,width,got) }
+   for _,line:=range got { if runewidth.StringWidth(line)>max(width,2) {t.Fatalf("overflow %q width%d",line,width)} }
+  }
+  if n>0 {for _,c:=range alphabet {visit(s+c,n-1)}}
+ }
+ visit("",4)
+}
+
+func TestBlockContext(t *testing.T) {
+ got:=FormatParagraphs([]string{"# Heading","","Later prose"},40)
+ if !reflect.DeepEqual(got,[]string{"# Heading","","  Later prose"}) {t.Fatalf("first-block privilege reset: %q",got)}
+ for _,fence:=range []string{"```","~~~~"} {
+  b,err:=Read(strings.NewReader(fence+"\n# Hidden\n\n"+fence+"\n# Visible"),"t",40,4,false)
+  if err!=nil {t.Fatal(err)}
+  if b.PageForAnchor("hidden")!=-1 || b.PageForAnchor("visible")<0 {t.Fatal("fence leaked heading")}
+ }
+ for _,lines:=range [][]string{{"Title","==="},{"Title","---"},{"Two","line title","==="}} {
+  doc:=formatDocument(lines,40,false)
+  if len(doc.anchors)!=1 || !strings.HasPrefix(doc.lines[0].text,"#") {t.Fatalf("setext lost: %+v",doc)}
+ }
+}
+
+func TestLexicalBoundaries(t *testing.T) {
+ for _,sep:=range []string{"\n","\r","\r\n"} {
+  got:=splitLines([]byte("a"+sep+"b"+sep))
+  if !reflect.DeepEqual(got,[]string{"a","b",""}) {t.Fatalf("line ending %q: %q",sep,got)}
+ }
+ for s,want:=range map[string]bool{"    x":true,"\tx":true," \tx":true,"   x":false,"x":false,"":false} {
+  if IsIndentedCodeLine(s)!=want {t.Fatalf("indent %q",s)}
+ }
+ for s,want:=range map[string]bool{"1. x":true,"12) x":true,"1.x":false,". x":false,"12":false} {
+  if isOrderedListItem(s)!=want {t.Fatalf("list %q",s)}
+ }
+ if titleCase("hello world")!="Hello World" {t.Fatal("title boundary")}
+}
+
+func TestLayoutReflowAndPositions(t *testing.T) {
+ texts:=[]string{"", "# A\n\none two three four five\n\n# A\nlast", "Title\n===\n\nword word\n\n    code", "```\n# Hidden\n```\n# End", "a\r\nb\rc\n"}
+ for _,plain:=range []bool{false,true} {for _,text:=range texts {
+  b,err:=Read(strings.NewReader(text),"t",5,2,plain);if err!=nil {t.Fatal(err)}
+  links:=b.sourceLinks.links
+  for _,width:=range []int{1,2,5,20} {for _,height:=range []int{1,3} {
+   b.Reflow(width,height)
+   fresh,err:=Read(strings.NewReader(text),"t",width,height,plain);if err!=nil {t.Fatal(err)}
+   if !reflect.DeepEqual(b.pages,fresh.pages)||!reflect.DeepEqual(b.pagePositions,fresh.pagePositions)||!reflect.DeepEqual(b.anchors,fresh.anchors) {t.Fatal("stale layout after reflow")}
+   if !reflect.DeepEqual(links,b.sourceLinks.links){t.Fatal("source links changed")}
+   for page:=0;page<b.PageCount();page++ {
+    pos:=b.PositionForPage(page);resolved:=b.PageForPosition(pos)
+    if resolved<0||resolved>=b.PageCount(){t.Fatal("position outside layout")}
+    copy:=b.Page(page);if len(copy.Lines)>0 {copy.Lines[0]="mutated";if b.Page(page).Lines[0]=="mutated" {t.Fatal("page aliases book")}}
+   }
+   for raw:=-1;raw<=len(b.rawLines)+1;raw++ {p:=b.PageForRawLine(raw);if p<0||p>=b.PageCount(){t.Fatal("raw lookup outside layout")}}
+  }}
+ }}
+ formatted:=[]formattedLine{{text:"a",raw:0},{text:"bc",raw:0},{text:"",raw:-1},{text:"z",raw:1}}
+ if got:=lineSources(formatted);got[1].Offset!=1||got[3].Offset!=0 {t.Fatalf("offset continuation %+v",got)}
+ if got:=rawLinePages(formatted,1);got[0]!=0 {t.Fatal("first occurrence overwritten")}
+ b,_:=Read(strings.NewReader("# A\n\npadding\n\n# A"),"t",40,1,false)
+ if b.anchors["a"]!=4 {t.Fatal("duplicate heading did not overwrite")}
+ b.rawLinePages=nil
+ if b.PageForAnchor("a")<0 {t.Fatal("lazy mapping failed")}
+}
+
+func TestProvenanceAndAnchorSelection(t *testing.T) {
+ formatted:=formatParagraphsWithProvenance([]string{"one two", "three four five"},4)
+ last:=-1
+ for _,line:=range formatted {if line.raw>=0 {if line.raw<last {t.Fatal("provenance moved backward")};last=line.raw}}
+ f:=[]formattedLine{{text:"start",raw:0},{text:"# heading",raw:1}}
+ if pagePositions(f,2)[0].Raw!=0 {t.Fatal("first page skipped start")}
+ f=append(f,formattedLine{text:"",raw:-1},formattedLine{text:"",raw:-1})
+ p:=pagePositions(f,2)
+ if p[1]!=p[0] {t.Fatalf("blank page carry %+v",p)}
+ for _,text:=range []string{"  界", "[a b](#x)", "([long label](#target))", "a\tb", "``literal``"} {
+  for width:=1;width<=6;width++ {for _,line:=range FormatParagraphs([]string{text},width) {if runewidth.StringWidth(line)>max(width,2) {t.Fatalf("indent fallback overflow %q width%d",line,width)}}}
+ }
+}

@@ -1,0 +1,24 @@
+---
+title: "Open a document and exit"
+---
+stateDiagram-v2
+  s0: Arguments
+  s1: Usage error
+  s2: Loading
+  s3: Error screen
+  s4: Reading
+  s5: Dump complete
+  s6: Exited
+  s7: Load error
+  s8: Program error
+  [*] --> s0
+  s0 --> s1: finish arguments or give an invalid count
+  s0 --> s2: finish arguments
+  s2 --> s3: load document
+  s2 --> s4: load document
+  s3 --> s6: quit reader
+  s3 --> s8: terminal program fails
+  s2 --> s5: load document
+  s2 --> s7: load document
+  s4 --> s6: quit reader
+  s4 --> s8: terminal program fails
