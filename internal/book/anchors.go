@@ -55,7 +55,7 @@ func extractLinkMatches(text string) []linkMatch {
 	spans := codeSpanCursor{spans: InlineCodeSpans(text)}
 	var links []linkMatch
 	for _, m := range matches {
-		if spans.overlaps(m[0], m[1]) {
+		if (m[0] > 0 && text[m[0]-1] == '!') || spans.overlaps(m[0], m[1]) {
 			continue
 		}
 		links = append(links, linkMatch{

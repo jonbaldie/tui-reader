@@ -1151,7 +1151,7 @@ func newWrapLinkScanner(line string) wrapLinkScanner {
 		case '[':
 			open = i
 		case ']':
-			if open >= 0 && i > open+1 && strings.HasPrefix(line[i:], "](#") {
+			if open >= 0 && (open == 0 || line[open-1] != '!') && i > open+1 && strings.HasPrefix(line[i:], "](#") {
 				matches = append(matches, wrapLinkRange{start: open, end: i + 3})
 			}
 			open = -1
