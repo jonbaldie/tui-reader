@@ -47,6 +47,10 @@ type linkMatch struct {
 	start int
 }
 
+func isImageOpener(text string, start int) bool {
+	return start > 0 && text[start-1] == '!'
+}
+
 func extractLinkMatches(text string) []linkMatch {
 	matches := linkRegex.FindAllStringSubmatchIndex(text, -1)
 	if matches == nil {
@@ -55,7 +59,7 @@ func extractLinkMatches(text string) []linkMatch {
 	spans := codeSpanCursor{spans: InlineCodeSpans(text)}
 	var links []linkMatch
 	for _, m := range matches {
-		if spans.overlaps(m[0], m[1]) {
+		if isImageOpener(text, m[0]) || spans.overlaps(m[0], m[1]) {
 			continue
 		}
 		links = append(links, linkMatch{
